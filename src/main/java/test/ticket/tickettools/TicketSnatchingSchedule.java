@@ -38,9 +38,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class TicketSnatchingSchedule {
 
     //获取场次url
-    private static String getScheduleUrl = "https://pcticket.cstm.org.cn/prod-api/pool/getScheduleByHallId?hallId=1&openPerson=1&queryDate=2023/07/19&saleMode=1&single=true";
+    private static String getScheduleUrl = "https://pcticket.cstm.org.cn/prod-api/pool/getScheduleByHallId?hallId=1&openPerson=1&queryDate=2023/07/25&saleMode=1&single=true";
     //获取场次下余票url
-    private static String getPriceByScheduleIdUrl = "https://pcticket.cstm.org.cn/prod-api/pool/getPriceByScheduleId?hallId=1&openPerson=1&queryDate=2023/07/19&saleMode=1&scheduleId=";
+    private static String getPriceByScheduleIdUrl = "https://pcticket.cstm.org.cn/prod-api/pool/getPriceByScheduleId?hallId=1&openPerson=1&queryDate=2023/07/25&saleMode=1&scheduleId=";
     //添加人员url
     private static String addUrl = "https://pcticket.cstm.org.cn/prod-api/system/individualContact/add";
     //获取验证码图片
@@ -48,7 +48,7 @@ public class TicketSnatchingSchedule {
     //提交订单
     private static String shoppingCartUrl = "https://pcticket.cstm.org.cn/prod-api/config/orderRule/shoppingCart";
     private static String getCurrentUserUrl="https://pcticket.cstm.org.cn/prod-api/getUserInfoToIndividual";
-    private String useDate = "2023-07-19 00:00:00";
+    private String useDate = "2023-07-25 00:00:00";
     private String authorization = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJsb2dpbl91c2VyX2tleSI6IjYzNjJhOTY4LTNiYjQtNDk2My05ZmUyLTllZmY4MmU2ZjA3ZiJ9.MWFgdH9sD7BBkuEgVe5paPRZeWPJlPGAK-T03rnXb73Q9k94oJOpBwT1N7NuPWmfUwBhKxDXNpDFe66yo_SOMA";
 
 
@@ -114,7 +114,7 @@ public class TicketSnatchingSchedule {
             Object body = response.getBody();
             //log.info("获取到的场次信息为:{}",body);
             JSONObject responseJson = JSON.parseObject(body.toString());
-            Integer hallScheduleId = responseJson == null ? null : responseJson.getJSONArray("data") == null ? null : responseJson.getJSONArray("data").getJSONObject(0).getInteger("hallScheduleId");
+            Integer hallScheduleId = responseJson == null ? null : responseJson.getJSONArray("data").isEmpty() ? null : responseJson.getJSONArray("data").getJSONObject(0).getInteger("hallScheduleId");
             if (ObjectUtils.isEmpty(hallScheduleId)) {
                 log.info("获取到的场次失败");
             }
@@ -126,6 +126,7 @@ public class TicketSnatchingSchedule {
             JSONArray getPriceByScheduleData = getPriceByScheduleJson == null ? null : getPriceByScheduleJson.getJSONArray("data");
             if (ObjectUtils.isEmpty(getPriceByScheduleData)) {
                 log.info("获取到的场次失败");
+                return;
             }
             boolean flag = true;
             int priceId = 0;
@@ -443,6 +444,7 @@ public class TicketSnatchingSchedule {
         }
         return -1;
     }
+
 
     /**
      * 构建添加人员入参
