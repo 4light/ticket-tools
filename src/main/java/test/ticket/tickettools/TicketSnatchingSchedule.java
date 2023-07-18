@@ -185,14 +185,14 @@ public class TicketSnatchingSchedule {
                 if ("普通票".equals(item.getString("priceName")) || "儿童免费票".equals(item.getString("priceName")) || "老人免费票".equals(item.getString("priceName"))) {
                     log.info("{}余票：{}", item.getString("priceName"), item.getIntValue("ticketPool"));
                     if ("普通票".equals(item.getString("priceName"))&&priceNameCountMap.get("normalTicket") != null) {
-                        flag = flag && ticketPool > priceNameCountMap.get("normalTicket");
+                        flag = flag && ticketPool >= priceNameCountMap.get("normalTicket");
                         if(flag) {
                             ticketPool=ticketPool - priceNameCountMap.get("normalTicket");
                         }
 
                     }
                     if ("儿童免费票".equals(item.getString("priceName"))&&priceNameCountMap.get("childrenTicket") != null) {
-                        flag = flag && childrenTicketPool > priceNameCountMap.get("childrenTicket");
+                        flag = flag && childrenTicketPool >= priceNameCountMap.get("childrenTicket");
                         //如果余票不足看普票数量
                         if(!flag){
                             if((ticketPool-priceNameCountMap.get("childrenTicket"))>priceNameCountMap.get("childrenTicket")){
@@ -202,7 +202,7 @@ public class TicketSnatchingSchedule {
                         }
                     }
                     if ("老人免费票".equals(item.getString("priceName"))&&priceNameCountMap.get("olderTicket") != null) {
-                        flag = flag && olderTicketPool > priceNameCountMap.get("olderTicket");
+                        flag = flag && olderTicketPool >= priceNameCountMap.get("olderTicket");
                         //如果余票不足看普票数量
                         if(!flag){
                             if((ticketPool-priceNameCountMap.get("olderTicket"))>priceNameCountMap.get("olderTicket")){
