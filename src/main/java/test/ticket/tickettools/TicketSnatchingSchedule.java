@@ -49,7 +49,7 @@ public class TicketSnatchingSchedule {
     private static String shoppingCartUrl = "https://pcticket.cstm.org.cn/prod-api/config/orderRule/shoppingCart";
     private static String getCurrentUserUrl="https://pcticket.cstm.org.cn/prod-api/getUserInfoToIndividual";
     private String useDate = "2023-07-23 00:00:00";
-    private String authorization = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJsb2dpbl91c2VyX2tleSI6IjYzNjJhOTY4LTNiYjQtNDk2My05ZmUyLTllZmY4MmU2ZjA3ZiJ9.MWFgdH9sD7BBkuEgVe5paPRZeWPJlPGAK-T03rnXb73Q9k94oJOpBwT1N7NuPWmfUwBhKxDXNpDFe66yo_SOMA";
+    private String authorization = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJsb2dpbl91c2VyX2tleSI6IjlhZjJkN2UwLTk1YWQtNDMyNC04MDRhLWI1OWY2MWNhOGY0YiJ9.-JtEZvXdov3R-E2v912TDi9AVKmgzx96phxx3FFEcC30B_hVzxi2THsktaY3K4bymuti2Wyst-VoY9pqQ63meQ";
 
 
     @Resource
@@ -184,27 +184,27 @@ public class TicketSnatchingSchedule {
                 JSONObject item = getPriceByScheduleData.getJSONObject(i);
                 if ("普通票".equals(item.getString("priceName")) || "儿童免费票".equals(item.getString("priceName")) || "老人免费票".equals(item.getString("priceName"))) {
                     log.info("{}余票：{}", item.getString("priceName"), item.getIntValue("ticketPool"));
-                    if ("普通票".equals(item.getString("priceName"))) {
-                        flag = flag && ticketPool > (priceNameCountMap.get("normalTicket") == null ? 0 : priceNameCountMap.get("normalTicket"));
+                    if ("普通票".equals(item.getString("priceName"))&&priceNameCountMap.get("normalTicket") != null) {
+                        flag = flag && ticketPool > priceNameCountMap.get("normalTicket");
                         if(flag&&priceNameCountMap.get("normalTicket") != null ) {
                             ticketPool=ticketPool - priceNameCountMap.get("normalTicket");
                         }
 
                     }
-                    if ("儿童免费票".equals(item.getString("priceName"))) {
-                        flag = flag && childrenTicketPool > ( priceNameCountMap.get("childrenTicket")== null ? 0 : priceNameCountMap.get("childrenTicket"));
+                    if ("儿童免费票".equals(item.getString("priceName"))&&priceNameCountMap.get("childrenTicket") != null) {
+                        flag = flag && childrenTicketPool > priceNameCountMap.get("childrenTicket");
                         //如果余票不足看普票数量
-                        if(!flag&&priceNameCountMap.get("childrenTicket") != null){
+                        if(!flag){
                             if((ticketPool-priceNameCountMap.get("childrenTicket"))>priceNameCountMap.get("childrenTicket")){
                                 ticketPool=ticketPool - priceNameCountMap.get("childrenTicket");
                                 flag=true;
                             }
                         }
                     }
-                    if ("老人免费票".equals(item.getString("priceName"))) {
-                        flag = flag && olderTicketPool > (priceNameCountMap.get("olderTicket") == null ? 0 : priceNameCountMap.get("olderTicket"));
+                    if ("老人免费票".equals(item.getString("priceName"))&&priceNameCountMap.get("olderTicket") != null) {
+                        flag = flag && olderTicketPool > priceNameCountMap.get("olderTicket");
                         //如果余票不足看普票数量
-                        if(!flag&&priceNameCountMap.get("olderTicket") != null){
+                        if(!flag){
                             if((ticketPool-priceNameCountMap.get("olderTicket"))>priceNameCountMap.get("olderTicket")){
                                 ticketPool=ticketPool- priceNameCountMap.get("olderTicket");
                                 flag=true;
