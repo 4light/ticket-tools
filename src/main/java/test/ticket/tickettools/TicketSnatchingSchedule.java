@@ -38,9 +38,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class TicketSnatchingSchedule {
 
     //获取场次url
-    private static String getScheduleUrl = "https://pcticket.cstm.org.cn/prod-api/pool/getScheduleByHallId?hallId=1&openPerson=1&queryDate=2023/07/23&saleMode=1&single=true";
+    private static String getScheduleUrl = "https://pcticket.cstm.org.cn/prod-api/pool/getScheduleByHallId?hallId=1&openPerson=1&queryDate=2023/07/25&saleMode=1&single=true";
     //获取场次下余票url
-    private static String getPriceByScheduleIdUrl = "https://pcticket.cstm.org.cn/prod-api/pool/getPriceByScheduleId?hallId=1&openPerson=1&queryDate=2023/07/23&saleMode=1&scheduleId=";
+    private static String getPriceByScheduleIdUrl = "https://pcticket.cstm.org.cn/prod-api/pool/getPriceByScheduleId?hallId=1&openPerson=1&queryDate=2023/07/25&saleMode=1&scheduleId=";
     //添加人员url
     private static String addUrl = "https://pcticket.cstm.org.cn/prod-api/system/individualContact/add";
     //获取验证码图片
@@ -48,17 +48,18 @@ public class TicketSnatchingSchedule {
     //提交订单
     private static String shoppingCartUrl = "https://pcticket.cstm.org.cn/prod-api/config/orderRule/shoppingCart";
     private static String getCurrentUserUrl="https://pcticket.cstm.org.cn/prod-api/getUserInfoToIndividual";
-    private String useDate = "2023-07-23 00:00:00";
-    private String authorization = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJsb2dpbl91c2VyX2tleSI6IjlhZjJkN2UwLTk1YWQtNDMyNC04MDRhLWI1OWY2MWNhOGY0YiJ9.-JtEZvXdov3R-E2v912TDi9AVKmgzx96phxx3FFEcC30B_hVzxi2THsktaY3K4bymuti2Wyst-VoY9pqQ63meQ";
+    private String useDate = "2023-07-25 00:00:00";
+    private String authorization = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJsb2dpbl91c2VyX2tleSI6ImIyNjZlYWQxLWIwNGItNDc0YS05NTRkLTQ4MWE5MWJmZjk0YiJ9.czm9RP-5jFqeq4G6tM9TV6w5AKurCl5PQD_AlwpFPU4IsauEQiLoC4nqGemlaCZ_c2_Rrdr9GfIQwcilqMGCmw";
 
 
     @Resource
     private TaskExecutorConfig taskExecutorConfig;
+
     private static Map<String, String> nameIDMap = new HashMap() {{
         put("张阳", "13082819891227801X");
         put("珠珠", "130828201708027824");
-        //put("李连强", "231083198812110717");
-        //put("高珊", "230715199308160147");
+        put("李连强", "231083198812110717");
+        put("高珊", "230715199308160147");
         //put("王吉振", "210811197401120518");
         //put("王思茗", "210811201107110027");
         //put("王玉娟", "210803196507311529");
@@ -82,14 +83,14 @@ public class TicketSnatchingSchedule {
         engine.getContext().getWriter();//获取正文并且写入
     }
 
-    //@Scheduled(cron = "0/3 * * * * ?")
+    @Scheduled(cron = "0/3 * * * * ?")
     public void run() {
         for (int i = 0; i < 5; i++) {
             CompletableFuture.runAsync(() -> doSnatching(), taskExecutorConfig.getAsyncExecutor());
         }
     }
 
-    @Scheduled(cron = "0/3 * * * * ?")
+    //@Scheduled(cron = "0/2 * * * * ?")
     public void doSnatching() {
         try {
             RestTemplate restTemplate = new RestTemplate();
@@ -183,16 +184,16 @@ public class TicketSnatchingSchedule {
             for (int i = 0; i < getPriceByScheduleData.size(); i++) {
                 JSONObject item = getPriceByScheduleData.getJSONObject(i);
                 if ("普通票".equals(item.getString("priceName")) || "儿童免费票".equals(item.getString("priceName")) || "老人免费票".equals(item.getString("priceName"))) {
-                    log.info("{}余票：{}", item.getString("priceName"), item.getIntValue("ticketPool"));
+                    //log.info("{}余票：{}", item.getString("priceName"), item.getIntValue("ticketPool"));
                     if ("普通票".equals(item.getString("priceName"))&&priceNameCountMap.get("normalTicket") != null) {
-                        flag = flag && ticketPool > priceNameCountMap.get("normalTicket");
-                        if(flag&&priceNameCountMap.get("normalTicket") != null ) {
+                        flag = flag && ticketPool >= priceNameCountMap.get("normalTicket");
+                        if(flag) {
                             ticketPool=ticketPool - priceNameCountMap.get("normalTicket");
                         }
 
                     }
                     if ("儿童免费票".equals(item.getString("priceName"))&&priceNameCountMap.get("childrenTicket") != null) {
-                        flag = flag && childrenTicketPool > priceNameCountMap.get("childrenTicket");
+                        flag = flag && childrenTicketPool >= priceNameCountMap.get("childrenTicket");
                         //如果余票不足看普票数量
                         if(!flag){
                             if((ticketPool-priceNameCountMap.get("childrenTicket"))>priceNameCountMap.get("childrenTicket")){
@@ -202,7 +203,7 @@ public class TicketSnatchingSchedule {
                         }
                     }
                     if ("老人免费票".equals(item.getString("priceName"))&&priceNameCountMap.get("olderTicket") != null) {
-                        flag = flag && olderTicketPool > priceNameCountMap.get("olderTicket");
+                        flag = flag && olderTicketPool >= priceNameCountMap.get("olderTicket");
                         //如果余票不足看普票数量
                         if(!flag){
                             if((ticketPool-priceNameCountMap.get("olderTicket"))>priceNameCountMap.get("olderTicket")){
@@ -334,7 +335,7 @@ public class TicketSnatchingSchedule {
         JSONObject param = new JSONObject();
         param.put("captchaToken",captchaToken);
         param.put("childTicketNum",childTicketNum);
-        param.put("date", "2023-07-18");
+        param.put("date", useDate);
         param.put("phone",phone);
         param.put("platform",1);
         param.put("pointJson",point);
