@@ -1,5 +1,7 @@
 package test.ticket.tickettools;
 
+import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -27,6 +29,8 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -38,9 +42,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class TicketSnatchingSchedule {
 
     //获取场次url
-    private static String getScheduleUrl = "https://pcticket.cstm.org.cn/prod-api/pool/getScheduleByHallId?hallId=1&openPerson=1&queryDate=2023/07/28&saleMode=1&single=true";
+    private static String getScheduleUrl = "https://pcticket.cstm.org.cn/prod-api/pool/getScheduleByHallId?hallId=1&openPerson=1&queryDate=%s&saleMode=1&single=true";
     //获取场次下余票url
-    private static String getPriceByScheduleIdUrl = "https://pcticket.cstm.org.cn/prod-api/pool/getPriceByScheduleId?hallId=1&openPerson=1&queryDate=2023/07/28&saleMode=1&scheduleId=";
+    private static String getPriceByScheduleIdUrl = "https://pcticket.cstm.org.cn/prod-api/pool/getPriceByScheduleId?hallId=1&openPerson=1&queryDate=%s&saleMode=1&scheduleId=";
     //添加人员url
     private static String addUrl = "https://pcticket.cstm.org.cn/prod-api/system/individualContact/add";
     //获取验证码图片
@@ -48,44 +52,31 @@ public class TicketSnatchingSchedule {
     //提交订单
     private static String shoppingCartUrl = "https://pcticket.cstm.org.cn/prod-api/config/orderRule/shoppingCart";
     private static String getCurrentUserUrl="https://pcticket.cstm.org.cn/prod-api/getUserInfoToIndividual";
-    private String useDate = "2023-07-28 00:00:00";
-    private String authorization = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJsb2dpbl91c2VyX2tleSI6ImZiOWNjNDg4LWQ3NzYtNGMyYi05ZDg0LTcwNjc5NjBhYmUzOCJ9.LR7Il_asFQqtLXMhzA0uzBM8EIcvkw61j5uV2pS2L-7LFFpY-SSli7dr_pNxunUkc_jyfkE3GXocv31ThcT_Sw";
+    private static String useDate = "2023-07-25 00:00:00";
+    private static String authorization = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJsb2dpbl91c2VyX2tleSI6Ijg5N2E4MDJkLWQ0YzgtNDRkMS05ZjU1LWU2OGVhM2Q0MjYwMCJ9.UIZmO-5t0EYRFI6ufajTUT6MTbV28DlqMuUNUu7Nckcfwn6dUiB2kTzX_1ZjMtbl32CX_LWW4R5rD3rrlU5ScQ";
 
 
     @Resource
     private TaskExecutorConfig taskExecutorConfig;
 
     private static Map<String, String> nameIDMap = new HashMap() {{
-        //put("何文环", "210804198209301029");
-        //put("沈大智", "210804201003051014");
-        //put("侯玉清", "210824195401130225");
-        //put("任广辉", "210881201102230010");
-        //put("马瑛", "210803197212030521");
-        //put("张越洋", "210803201201050024");
-        //put("徐静", "210882198604021544");
-        //put("汪静萱", "210881200908246789");
-        put("汪薇", "210881198603096783");
-        put("丛梦妍", "210881201109066786");
-        //put("于姗姗", "21088119881107436x");
-        //put("曲勃鑫", "210881201302281955");
-        //put("赵殿宫", "210881197502274697");
-        //put("田菠", "210881197703074683");
-        //put("赵子怡", "210804201004124043");
-        //put("王秀美", "232126198709160942");
-        //put("赵鹏飞", "230126200802061170");
-        //put("王美艳", "210881198103054528");
-        //put("李晗伊", "210804201604182028");
-        //put("李仕朋", "211322197911037012");
-        //put("王明雪", "21088119850110202x");
-        //put("杨昌鑫", "21088120091029195x");
-        //put("王明丽", "210881198501102003");
-        //put("关宇轩", "210881201107101971");
-        //put("李英光", "21082419630617198x");
-        //put("关梓琳", "210881200506121967");
-        //put("汤和平", "210804200807155519");
-        //put("鲍琳琳", "210881198605131861");
-        //put("汤晴羽", "210804201711085522");
-        //put("张楠", "210303198305210617");
+        put("张阳", "13082819891227801X");
+        put("珠珠", "130828201708027824");
+        put("李连强", "231083198812110717");
+        put("高珊", "230715199308160147");
+        //put("王吉振", "210811197401120518");
+        //put("王思茗", "210811201107110027");
+        //put("王玉娟", "210803196507311529");
+        //put("高玉瑞", "210821196006060314");
+        //put("李思儒", "210803201107312024");
+        //put("高运浤", "210881201511223516");
+        //put("高景烽", "210881199001283535");
+        //put("周思明", "210881199009245226");
+        //put("曲彤韫", "21088120110713196X");
+        //put("黄腾飞", "210881200810161955");
+        //put("黄平俊", "210881198706171969");
+        //put("冯仪", "210881198211265226");
+        //put("关世霖", "210881201504262111");
     }};
 
     public static ScriptEngine engine;//脚本引擎
@@ -94,20 +85,20 @@ public class TicketSnatchingSchedule {
         ScriptEngineManager manager = new ScriptEngineManager();//脚本引擎管理
         engine = manager.getEngineByName("nashorn");//获取nashorn脚本引擎
         engine.getContext().getWriter();//获取正文并且写入
+        getScheduleUrl=String.format(getScheduleUrl,DateUtil.format(DateUtil.parse(useDate),"yyyy-MM-dd"));
+        getPriceByScheduleIdUrl=String.format(getPriceByScheduleIdUrl,DateUtil.format(DateUtil.parse(useDate),"yyyy-MM-dd"));
     }
 
     @Scheduled(cron = "0/3 * * * * ?")
     public void run() {
-        for (Map.Entry<String, String> entry : nameIDMap.entrySet()) {
-            Map<String,String> newMap=new HashMap(){{
-                put(entry.getKey(),entry.getValue());
-            }};
-            CompletableFuture.runAsync(() -> doSnatching(newMap), taskExecutorConfig.getAsyncExecutor());
+        for (int i = 0; i < 5; i++) {
+            CompletableFuture.runAsync(() -> doSnatching(), taskExecutorConfig.getAsyncExecutor());
         }
     }
 
-    //@Scheduled(cron = "0/1 * * * * ?")
-    public void doSnatching(Map<String,String> iDMap) {
+    //@Scheduled(cron = "0/2 * * * * ?")
+    public void doSnatching() {
+
         try {
             RestTemplate restTemplate = new RestTemplate();
             HttpHeaders headers = new HttpHeaders();
@@ -134,6 +125,7 @@ public class TicketSnatchingSchedule {
             Integer hallScheduleId = responseJson == null ? null : responseJson.getJSONArray("data").isEmpty() ? null : responseJson.getJSONArray("data").getJSONObject(0).getInteger("hallScheduleId");
             if (ObjectUtils.isEmpty(hallScheduleId)) {
                 log.info("获取到的场次失败");
+                return;
             }
             //获取场次下余票
             ResponseEntity getPriceByScheduleRes = restTemplate.exchange(getPriceByScheduleIdUrl + hallScheduleId, HttpMethod.GET, entity, String.class);
@@ -150,7 +142,7 @@ public class TicketSnatchingSchedule {
             int childrenPriceId = 0;
             int olderPriceId = 0;
             Map<String, Integer> priceNameCountMap = new HashMap<>();
-            for (String value : iDMap.values()) {
+            for (String value : nameIDMap.values()) {
                 int ageForIdcard = getAgeForIdcard(value);
                 if (ageForIdcard > 0 && ageForIdcard <= 8) {
                     if (priceNameCountMap.containsKey("childrenTicket")) {
@@ -196,7 +188,6 @@ public class TicketSnatchingSchedule {
                     olderPriceId=obj.getInteger("priceId");
                 }
             };
-            //log.info("余票信息：{},{},{}",ticketPool,childrenTicketPool,olderTicketPool);
             //儿童票、老人票不足分配普票
             for (int i = 0; i < getPriceByScheduleData.size(); i++) {
                 JSONObject item = getPriceByScheduleData.getJSONObject(i);
@@ -234,7 +225,7 @@ public class TicketSnatchingSchedule {
             //余票充足
             if (flag) {
                 //几个人添加几次
-                for (Map.Entry<String, String> entry : iDMap.entrySet()) {
+                for (Map.Entry<String, String> entry : nameIDMap.entrySet()) {
                     HttpEntity addEntity = new HttpEntity<>(buildAddParam(entry.getValue(), entry.getKey(), userId), headers);
                     restTemplate.exchange(addUrl, HttpMethod.POST, addEntity, String.class);
                 }
@@ -256,7 +247,7 @@ public class TicketSnatchingSchedule {
                     log.info("uuid的值为：{}", imageUuid);
                     log.info("x的值为：{}", x);
                     String point = doSecretKey(x, secretKey);
-                    HttpEntity shoppingCartUrlEntity = new HttpEntity<>(buildParam(token, priceNameCountMap.get("childrenTicket"), point, hallScheduleId, useDate, priceId, childrenPriceId, olderPriceId, phone,iDMap), headers);
+                    HttpEntity shoppingCartUrlEntity = new HttpEntity<>(buildParam(token, priceNameCountMap.get("childrenTicket"), point, hallScheduleId, useDate, priceId, childrenPriceId, olderPriceId, phone), headers);
                     ResponseEntity<String> exchange = restTemplate.exchange(shoppingCartUrl, HttpMethod.POST, shoppingCartUrlEntity, String.class);
                     System.out.println(exchange.getBody());
                     try {
@@ -282,8 +273,8 @@ public class TicketSnatchingSchedule {
     public Double getPoint(String backImagePath, String sliderImagePath, String uid) {
         Mat backImageMat = opencv_imgcodecs.imread(backImagePath, opencv_imgcodecs.IMREAD_GRAYSCALE);
         Mat sliderImageMat = opencv_imgcodecs.imread(sliderImagePath, opencv_imgcodecs.IMREAD_GRAYSCALE);
-        opencv_imgproc.threshold(backImageMat, backImageMat, 215, 255, opencv_imgproc.THRESH_BINARY);
-        opencv_imgproc.threshold(sliderImageMat, sliderImageMat, 215, 255, opencv_imgproc.THRESH_BINARY);
+        opencv_imgproc.threshold(backImageMat, backImageMat, 200, 255, opencv_imgproc.THRESH_BINARY);
+        opencv_imgproc.threshold(sliderImageMat, sliderImageMat, 200, 255, opencv_imgproc.THRESH_BINARY);
         //保存为黑白图片
         opencv_imgcodecs.imwrite("./" + uid + "_backBlack.png", backImageMat);
         opencv_imgcodecs.imwrite("./" + uid + "_sliderBlack.png", sliderImageMat);
@@ -300,7 +291,7 @@ public class TicketSnatchingSchedule {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        int real =maxLoc.x()* 330 / 310;
+        int real =maxLoc.x() * 330 / 310;
         log.info("real:{}", real);
         return real * 310 / 330.0;
     }
@@ -348,7 +339,7 @@ public class TicketSnatchingSchedule {
      * @param phone
      * @return
      */
-    public Object buildParam(String captchaToken, Integer childTicketNum,String point,Integer hallScheduleId, String useDate,Integer priceId, Integer childrenPriceId,Integer olderTicketPriceId,String phone,Map<String,String> iDMap) {
+    public Object buildParam(String captchaToken, Integer childTicketNum,String point,Integer hallScheduleId, String useDate,Integer priceId, Integer childrenPriceId,Integer olderTicketPriceId,String phone) {
         JSONObject param = new JSONObject();
         param.put("captchaToken",captchaToken);
         param.put("childTicketNum",childTicketNum);
@@ -359,10 +350,10 @@ public class TicketSnatchingSchedule {
         param.put("poolFlag",1);
         param.put("realNameFlag",1);
         param.put("saleMode",1);
-        param.put("ticketNum",iDMap.size());
+        param.put("ticketNum",nameIDMap.size());
         param.put("useTicketType",1);
         List ticketInfoList=new ArrayList();
-        for (Map.Entry<String, String> entry : iDMap.entrySet()) {
+        for (Map.Entry<String, String> entry : nameIDMap.entrySet()) {
             int ageForIdCard=getAgeForIdcard(entry.getValue());
             JSONObject ticketInfo = new JSONObject();
             ticketInfo.put("certificate",1);
