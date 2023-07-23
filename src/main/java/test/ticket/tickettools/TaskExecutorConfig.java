@@ -13,8 +13,8 @@ public class TaskExecutorConfig {
     @Bean
     public ThreadPoolTaskExecutor getAsyncExecutor() {
         ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
-        pool.setCorePoolSize(5);//核心线程数
-        pool.setMaxPoolSize(5);//最大线程
+        pool.setCorePoolSize(10);//核心线程数
+        pool.setMaxPoolSize(10);//最大线程
         pool.setQueueCapacity(10);//线程队列
         pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());//拒绝策略
         pool.initialize();//线程初始化
