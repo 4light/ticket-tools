@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="test.ticket.tickettools.dao.TaskDetailDao">
+    <resultMap id="BaseResultMap" type="test.ticket.tickettools.domain.entity.TaskDetailEntity">
+        <constructor>
+            <arg column="id" javaType="java.lang.Long" jdbcType="BIGINT" />
+            <arg column="task_id" javaType="java.lang.Long" jdbcType="BIGINT" />
+            <arg column="user_name" javaType="java.lang.String" jdbcType="VARCHAR" />
+            <arg column="ID_card" javaType="java.lang.String" jdbcType="VARCHAR" />
+            <arg column="user_phone" javaType="java.lang.String" jdbcType="VARCHAR" />
+            <arg column="age" javaType="java.lang.Integer" jdbcType="INTEGER" />
+            <arg column="create_date" javaType="java.util.Date" jdbcType="DATE" />
+            <arg column="update_date" javaType="java.util.Date" jdbcType="DATE" />
+            <arg column="done" javaType="java.lang.Byte" jdbcType="TINYINT" />
+        </constructor>
+    </resultMap>
+    <insert id="insert" parameterType="test.ticket.tickettools.domain.entity.TaskDetailEntity">
+        insert into task_detail (id, task_id, user_name,
+                                 ID_card, user_phone, age,
+                                 create_date, update_date, done
+        )
+        values (#{id,jdbcType=BIGINT}, #{taskId,jdbcType=BIGINT}, #{userName,jdbcType=VARCHAR},
+                #{idCard,jdbcType=VARCHAR}, #{userPhone,jdbcType=VARCHAR}, #{age,jdbcType=INTEGER},
+                #{createDate,jdbcType=DATE}, #{updateDate,jdbcType=DATE}, #{done,jdbcType=TINYINT}
+               )
+    </insert>
+    <select id="selectByTaskId" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        select * from task_detail where task_id=${id}
+    </select>
+</mapper>

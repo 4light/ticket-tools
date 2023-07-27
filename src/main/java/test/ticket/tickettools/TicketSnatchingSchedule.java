@@ -89,7 +89,7 @@ public class TicketSnatchingSchedule {
         getPriceByScheduleIdUrl=String.format(getPriceByScheduleIdUrl,DateUtil.format(DateUtil.parse(useDate),"yyyy-MM-dd"));
     }
 
-    @Scheduled(cron = "0/3 * * * * ?")
+   // @Scheduled(cron = "0/3 * * * * ?")
     public void run() {
         for (int i = 0; i < 5; i++) {
             CompletableFuture.runAsync(() -> doSnatching(), taskExecutorConfig.getAsyncExecutor());

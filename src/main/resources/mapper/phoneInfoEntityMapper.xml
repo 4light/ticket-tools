@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="test.ticket.tickettools.dao.PhoneInfoDao">
+  <resultMap id="BaseResultMap" type="test.ticket.tickettools.domain.entity.PhoneInfoEntity">
+    <constructor>
+      <arg column="id" javaType="java.lang.Long" jdbcType="BIGINT" />
+      <arg column="phone_num" javaType="java.lang.String" jdbcType="VARCHAR" />
+      <arg column="channel" javaType="java.lang.Integer" jdbcType="INTEGER" />
+      <arg column="user_id" javaType="java.lang.Long" jdbcType="BIGINT" />
+      <arg column="content" javaType="java.lang.String" jdbcType="VARCHAR" />
+      <arg column="create_date" javaType="java.util.Date" jdbcType="DATE" />
+      <arg column="update_date" javaType="java.util.Date" jdbcType="DATE" />
+    </constructor>
+  </resultMap>
+  <insert id="insert" parameterType="com.study.springboot01.model.phoneInfoEntity">
+    insert into phone_info (id, phone_num, channel,
+      user_id, content, create_date,
+      update_date)
+    values (#{id,jdbcType=BIGINT}, #{phoneNum,jdbcType=VARCHAR}, #{channel,jdbcType=INTEGER},
+      #{userId,jdbcType=BIGINT}, #{content,jdbcType=VARCHAR}, #{createDate,jdbcType=DATE},
+      #{updateDate,jdbcType=DATE})
+  </insert>
+</mapper>

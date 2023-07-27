@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="test.ticket.tickettools.dao.TaskDao">
+    <resultMap id="BaseResultMap" type="test.ticket.tickettools.domain.entity.TaskEntity">
+        <constructor>
+            <arg column="id" javaType="java.lang.Long" jdbcType="BIGINT" />
+            <arg column="login_phone" javaType="java.lang.String" jdbcType="VARCHAR" />
+            <arg column="ip" javaType="java.lang.String" jdbcType="VARCHAR" />
+            <arg column="use_date" javaType="java.util.Date" jdbcType="DATE" />
+            <arg column="auth" javaType="java.lang.String" jdbcType="VARCHAR" />
+            <arg column="done" javaType="java.lang.Byte" jdbcType="TINYINT" />
+            <arg column="create_date" javaType="java.util.Date" jdbcType="DATE" />
+            <arg column="update_date" javaType="java.util.Date" jdbcType="DATE" />
+            <arg column="user_id" javaType="java.lang.Integer" jdbcType="INTEGER" />
+            <arg column="channel" javaType="java.lang.Integer" jdbcType="INTEGER" />
+            <arg column="venue" javaType="java.lang.Integer" jdbcType="INTEGER" />
+            <arg column="session" javaType="java.lang.Integer" jdbcType="INTEGER" />
+        </constructor>
+    </resultMap>
+    <sql id="Base_Column_List">
+        id, login_phone, ip,use_date, auth, done, create_date,update_date, user_id, channel,venue, session
+    </sql>
+    <insert id="insert" parameterType="test.ticket.tickettools.domain.entity.TaskEntity">
+        insert into task (id, login_phone, ip,
+                          use_date, auth, done, create_date,
+                          update_date, user_id, channel,
+                          venue, session)
+        values (#{id,jdbcType=BIGINT}, #{loginPhone,jdbcType=VARCHAR}, #{ip,jdbcType=VARCHAR},
+                #{useDate,jdbcType=DATE}, #{auth,jdbcType=VARCHAR}, #{done,jdbcType=TINYINT}, #{createDate,jdbcType=DATE},
+                #{updateDate,jdbcType=DATE}, #{userId,jdbcType=INTEGER}, #{channel,jdbcType=INTEGER},
+                #{venue,jdbcType=INTEGER}, #{session,jdbcType=INTEGER})
+    </insert>
+    <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from task
+        where id = #{id,jdbcType=BIGINT}
+    </select>
+    <select id="fuzzyQueryTestSheet" parameterType="test.ticket.tickettools.domain.entity.TaskEntity" resultMap="BaseResultMap">
+        SELECT * FROM task
+        where
+        1=1
+        <if test='taskEntity.loginPhone!=null and taskEntity.loginPhone!=""'>
+            AND login_phone = #{taskEntity.loginPhone}
+        </if>
+        <if test='taskEntity.useDate!=null and taskEntity.useDate!=""'>
+            AND use_date =#{taskEntity.useDate}
+        </if>
+        order by id DESC
+    </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+        delete from task
+        where id = #{id,jdbcType=BIGINT}
+    </delete>
+</mapper>
