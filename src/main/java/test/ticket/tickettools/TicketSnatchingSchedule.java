@@ -1,5 +1,6 @@
 package test.ticket.tickettools;
 
+import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -13,6 +14,7 @@ import org.bytedeco.opencv.opencv_core.Point;
 import org.bytedeco.opencv.opencv_core.Scalar;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.*;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.util.ObjectUtils;
@@ -38,9 +40,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class TicketSnatchingSchedule {
 
     //获取场次url
-    private static String getScheduleUrl = "https://pcticket.cstm.org.cn/prod-api/pool/getScheduleByHallId?hallId=1&openPerson=1&queryDate=2023/07/28&saleMode=1&single=true";
+    private static String getScheduleUrl = "https://pcticket.cstm.org.cn/prod-api/pool/getScheduleByHallId?hallId=1&openPerson=1&queryDate=%s&saleMode=1&single=true";
     //获取场次下余票url
-    private static String getPriceByScheduleIdUrl = "https://pcticket.cstm.org.cn/prod-api/pool/getPriceByScheduleId?hallId=1&openPerson=1&queryDate=2023/07/28&saleMode=1&scheduleId=";
+    private static String getPriceByScheduleIdUrl = "https://pcticket.cstm.org.cn/prod-api/pool/getPriceByScheduleId?hallId=1&openPerson=1&queryDate=%s&saleMode=1&scheduleId=";
     //添加人员url
     private static String addUrl = "https://pcticket.cstm.org.cn/prod-api/system/individualContact/add";
     //获取验证码图片
@@ -48,44 +50,19 @@ public class TicketSnatchingSchedule {
     //提交订单
     private static String shoppingCartUrl = "https://pcticket.cstm.org.cn/prod-api/config/orderRule/shoppingCart";
     private static String getCurrentUserUrl="https://pcticket.cstm.org.cn/prod-api/getUserInfoToIndividual";
-    private String useDate = "2023-07-28 00:00:00";
-    private String authorization = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJsb2dpbl91c2VyX2tleSI6ImZiOWNjNDg4LWQ3NzYtNGMyYi05ZDg0LTcwNjc5NjBhYmUzOCJ9.LR7Il_asFQqtLXMhzA0uzBM8EIcvkw61j5uV2pS2L-7LFFpY-SSli7dr_pNxunUkc_jyfkE3GXocv31ThcT_Sw";
+    private static String useDate = "2023-08-03 00:00:00";
+    private String authorization = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJsb2dpbl91c2VyX2tleSI6IjE4Y2JhZDZkLTk1YWEtNGQ4Zi1hMzgxLWQ3YWExM2VkNzBhNSJ9.8gDO15EhJHJ0-tpODHdcc-nzkDZq0ajbmO8zvvt9W9D59Nr3iY2yB8y_YCzKtyeO5jjU2TlvVJ96TXcpyhGGXQ";
 
 
     @Resource
     private TaskExecutorConfig taskExecutorConfig;
 
     private static Map<String, String> nameIDMap = new HashMap() {{
-        //put("何文环", "210804198209301029");
-        //put("沈大智", "210804201003051014");
-        //put("侯玉清", "210824195401130225");
-        //put("任广辉", "210881201102230010");
-        //put("马瑛", "210803197212030521");
-        //put("张越洋", "210803201201050024");
-        //put("徐静", "210882198604021544");
-        //put("汪静萱", "210881200908246789");
-        put("汪薇", "210881198603096783");
-        put("丛梦妍", "210881201109066786");
-        //put("于姗姗", "21088119881107436x");
-        //put("曲勃鑫", "210881201302281955");
-        //put("赵殿宫", "210881197502274697");
-        //put("田菠", "210881197703074683");
-        //put("赵子怡", "210804201004124043");
-        //put("王秀美", "232126198709160942");
-        //put("赵鹏飞", "230126200802061170");
-        //put("王美艳", "210881198103054528");
-        //put("李晗伊", "210804201604182028");
-        //put("李仕朋", "211322197911037012");
-        //put("王明雪", "21088119850110202x");
-        //put("杨昌鑫", "21088120091029195x");
-        //put("王明丽", "210881198501102003");
-        //put("关宇轩", "210881201107101971");
-        //put("李英光", "21082419630617198x");
-        //put("关梓琳", "210881200506121967");
-        //put("汤和平", "210804200807155519");
-        //put("鲍琳琳", "210881198605131861");
-        //put("汤晴羽", "210804201711085522");
-        //put("张楠", "210303198305210617");
+        //put("赵庆山", "320925200911043915");
+        //put("王一鸣", "371312200812066930");
+        //put("李思彤", "231024200710084722");
+        //put("李珩源", "371302200912154011");
+        //put("李国政", "371302201307154077");
     }};
 
     public static ScriptEngine engine;//脚本引擎
@@ -94,9 +71,11 @@ public class TicketSnatchingSchedule {
         ScriptEngineManager manager = new ScriptEngineManager();//脚本引擎管理
         engine = manager.getEngineByName("nashorn");//获取nashorn脚本引擎
         engine.getContext().getWriter();//获取正文并且写入
+        getScheduleUrl=String.format(getScheduleUrl, DateUtil.format(DateUtil.parse(useDate),"yyyy/MM/dd"));
+        getPriceByScheduleIdUrl=String.format(getPriceByScheduleIdUrl,DateUtil.format(DateUtil.parse(useDate),"yyyy/MM/dd"));
     }
 
-    @Scheduled(cron = "0/3 * * * * ?")
+    @Scheduled(cron = "0/1 * * * * ?")
     public void run() {
         for (Map.Entry<String, String> entry : nameIDMap.entrySet()) {
             Map<String,String> newMap=new HashMap(){{
@@ -110,6 +89,12 @@ public class TicketSnatchingSchedule {
     public void doSnatching(Map<String,String> iDMap) {
         try {
             RestTemplate restTemplate = new RestTemplate();
+            restTemplate.setRequestFactory(new SimpleClientHttpRequestFactory() {
+                {
+                    setConnectTimeout(20000);
+                    setReadTimeout(20000);
+                }
+            });
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.set("authority", "pcticket.cstm.org.cn");
@@ -118,15 +103,17 @@ public class TicketSnatchingSchedule {
             headers.set("cookie", "SL_G_WPT_TO=zh; SL_GWPT_Show_Hide_tmp=1; SL_wptGlobTipTmp=1");
             headers.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
             HttpEntity entity = new HttpEntity<>(headers);
-            ResponseEntity getUserRes = restTemplate.exchange(getCurrentUserUrl, HttpMethod.GET, entity, String.class);
+            /*ResponseEntity getUserRes = restTemplate.exchange(getCurrentUserUrl, HttpMethod.GET, entity, String.class);
             String userInfoStr = getUserRes.getBody().toString();
             JSONObject userInfoJson = JSON.parseObject(userInfoStr);
             JSONObject userInfo = userInfoJson == null ? null : userInfoJson.getJSONObject("user");
             if (userInfo == null) {
                 log.info("获取用户信息失败：{}", userInfoJson);
-            }
-            long userId = userInfo.getLongValue("userId");
-            String phone = userInfo.getString("phoneNumber");
+            }*/
+            //long userId = userInfo.getLongValue("userId");
+            long userId = 2077998;
+            //String phone = userInfo.getString("phoneNumber");
+            String phone = "18310327323";
             ResponseEntity response = restTemplate.exchange(getScheduleUrl, HttpMethod.GET, entity, String.class);
             Object body = response.getBody();
             //log.info("获取到的场次信息为:{}",body);
@@ -134,6 +121,7 @@ public class TicketSnatchingSchedule {
             Integer hallScheduleId = responseJson == null ? null : responseJson.getJSONArray("data").isEmpty() ? null : responseJson.getJSONArray("data").getJSONObject(0).getInteger("hallScheduleId");
             if (ObjectUtils.isEmpty(hallScheduleId)) {
                 log.info("获取到的场次失败");
+                return;
             }
             //获取场次下余票
             ResponseEntity getPriceByScheduleRes = restTemplate.exchange(getPriceByScheduleIdUrl + hallScheduleId, HttpMethod.GET, entity, String.class);
@@ -148,6 +136,7 @@ public class TicketSnatchingSchedule {
             boolean flag = true;
             int priceId = 0;
             int childrenPriceId = 0;
+            int discountPriceId = 0;
             int olderPriceId = 0;
             Map<String, Integer> priceNameCountMap = new HashMap<>();
             for (String value : iDMap.values()) {
@@ -157,6 +146,14 @@ public class TicketSnatchingSchedule {
                         priceNameCountMap.put("childrenTicket", priceNameCountMap.get("childrenTicket") + 1);
                     } else {
                         priceNameCountMap.put("childrenTicket", 1);
+                    }
+                    continue;
+                }
+                if (ageForIdcard > 8 && ageForIdcard <= 18) {
+                    if (priceNameCountMap.containsKey("discountTicket")) {
+                        priceNameCountMap.put("discountTicket", priceNameCountMap.get("discountTicket") + 1);
+                    } else {
+                        priceNameCountMap.put("discountTicket", 1);
                     }
                     continue;
                 }
@@ -178,27 +175,70 @@ public class TicketSnatchingSchedule {
             }
             int ticketPool= 0;
             int childrenTicketPool= 0;
+            int discountTicketPool= 0;
             int olderTicketPool= 0;
             for (int i = 0; i < getPriceByScheduleData.size(); i++) {
                 JSONObject obj=getPriceByScheduleData.getJSONObject(i);
-                if ("普通票".equals(obj.getString("priceName")) || "儿童免费票".equals(obj.getString("priceName")) || "老人免费票".equals(obj.getString("priceName"))){
-                    if ("普通票".equals(obj.getString("priceName"))&&obj.getIntValue("ticketPool")>0) {
+                if ("普通票".equals(obj.getString("priceName")) || "儿童免费票".equals(obj.getString("priceName")) ||"优惠票".equals(obj.getString("priceName"))|| "老人免费票".equals(obj.getString("priceName"))){
+                    if ("普通票".equals(obj.getString("priceName"))) {
                         ticketPool=obj.getIntValue("ticketPool");
                         priceId=obj.getInteger("priceId");
                     }
                 }
-                if ("儿童免费票".equals(obj.getString("priceName"))&&obj.getIntValue("ticketPool")>0) {
+                if ("儿童免费票".equals(obj.getString("priceName"))) {
                     childrenTicketPool=obj.getIntValue("ticketPool");
                     childrenPriceId=obj.getInteger("priceId");
                 }
-                if ("老人免费票".equals(obj.getString("priceName"))&&obj.getIntValue("ticketPool")>0) {
+                if ("优惠票".equals(obj.getString("priceName"))) {
+                    discountTicketPool=obj.getIntValue("ticketPool");
+                    discountPriceId=obj.getInteger("priceId");
+                }
+                if ("老人免费票".equals(obj.getString("priceName"))) {
                     olderTicketPool=obj.getIntValue("ticketPool");
                     olderPriceId=obj.getInteger("priceId");
                 }
             };
+            for (Map.Entry<String, Integer> priceNameCountEntry : priceNameCountMap.entrySet()) {
+                if("normalTicket".equals(priceNameCountEntry.getKey())){
+                    flag = flag && ticketPool >= priceNameCountEntry.getValue();
+                    if(flag) {
+                        ticketPool=ticketPool - priceNameCountEntry.getValue();
+                    }
+                }
+                if("childrenTicket".equals(priceNameCountEntry.getKey())){
+                    flag = flag && childrenTicketPool >= priceNameCountEntry.getValue();
+                    //如果余票不足看普票数量
+                    if(!flag){
+                        if((ticketPool-priceNameCountEntry.getValue())>=0){
+                            ticketPool=ticketPool - priceNameCountEntry.getValue();
+                            flag=true;
+                        }
+                    }
+                }
+                if("discountTicket".equals(priceNameCountEntry.getKey())){
+                    flag = flag && discountTicketPool >= priceNameCountEntry.getValue();
+                    //如果余票不足看普票数量
+                    if(!flag){
+                        if((ticketPool-priceNameCountEntry.getValue())>=0){
+                            ticketPool=ticketPool - priceNameCountEntry.getValue();
+                            flag=true;
+                        }
+                    }
+                }
+                if("olderTicket".equals(priceNameCountEntry.getKey())){
+                    flag = flag && olderTicketPool >= priceNameCountEntry.getValue();
+                    //如果余票不足看普票数量
+                    if(!flag){
+                        if((ticketPool-priceNameCountEntry.getValue())>=0){
+                            ticketPool=ticketPool - priceNameCountEntry.getValue();
+                            flag=true;
+                        }
+                    }
+                }
+            }
             //log.info("余票信息：{},{},{}",ticketPool,childrenTicketPool,olderTicketPool);
             //儿童票、老人票不足分配普票
-            for (int i = 0; i < getPriceByScheduleData.size(); i++) {
+            /*for (int i = 0; i < getPriceByScheduleData.size(); i++) {
                 JSONObject item = getPriceByScheduleData.getJSONObject(i);
                 if ("普通票".equals(item.getString("priceName")) || "儿童免费票".equals(item.getString("priceName")) || "老人免费票".equals(item.getString("priceName"))) {
                     //log.info("{}余票：{}", item.getString("priceName"), item.getIntValue("ticketPool"));
@@ -230,7 +270,7 @@ public class TicketSnatchingSchedule {
                         }
                     }
                 }
-            }
+            }*/
             //余票充足
             if (flag) {
                 //几个人添加几次
@@ -253,12 +293,14 @@ public class TicketSnatchingSchedule {
                     imagCreate(originalImageBase64, backImageName, 310);
                     //图片验证码处理
                     Double x = getPoint(sliderImageName, backImageName, imageUuid);
-                    log.info("uuid的值为：{}", imageUuid);
-                    log.info("x的值为：{}", x);
+                    //log.info("uuid的值为：{}", imageUuid);
+                    //log.info("x的值为：{}", x);
                     String point = doSecretKey(x, secretKey);
-                    HttpEntity shoppingCartUrlEntity = new HttpEntity<>(buildParam(token, priceNameCountMap.get("childrenTicket"), point, hallScheduleId, useDate, priceId, childrenPriceId, olderPriceId, phone,iDMap), headers);
+                    HttpEntity shoppingCartUrlEntity = new HttpEntity<>(buildParam(token, priceNameCountMap.get("childrenTicket"), point, hallScheduleId, useDate, priceId, childrenPriceId, discountPriceId,olderPriceId, phone,iDMap), headers);
                     ResponseEntity<String> exchange = restTemplate.exchange(shoppingCartUrl, HttpMethod.POST, shoppingCartUrlEntity, String.class);
-                    System.out.println(exchange.getBody());
+                    if(exchange.getBody().contains("\"code\":200")){
+                        System.out.println(exchange.getBody());
+                    }
                     try {
                         Files.delete(Paths.get(sliderImageName));
                         Files.delete(Paths.get(backImageName));
@@ -301,7 +343,7 @@ public class TicketSnatchingSchedule {
             e.printStackTrace();
         }
         int real =maxLoc.x()* 330 / 310;
-        log.info("real:{}", real);
+        //log.info("real:{}", real);
         return real * 310 / 330.0;
     }
 
@@ -348,7 +390,7 @@ public class TicketSnatchingSchedule {
      * @param phone
      * @return
      */
-    public Object buildParam(String captchaToken, Integer childTicketNum,String point,Integer hallScheduleId, String useDate,Integer priceId, Integer childrenPriceId,Integer olderTicketPriceId,String phone,Map<String,String> iDMap) {
+    public Object buildParam(String captchaToken, Integer childTicketNum,String point,Integer hallScheduleId, String useDate,Integer priceId, Integer childrenPriceId,Integer discountPriceId,Integer olderTicketPriceId,String phone,Map<String,String> iDMap) {
         JSONObject param = new JSONObject();
         param.put("captchaToken",captchaToken);
         param.put("childTicketNum",childTicketNum);
@@ -384,6 +426,9 @@ public class TicketSnatchingSchedule {
             }
             if(ageForIdCard>0&&ageForIdCard<=8){
                 ticketInfo.put("ticketPriceId",childrenPriceId);
+            }
+            if(ageForIdCard>8&&ageForIdCard<=18){
+                ticketInfo.put("ticketPriceId",discountPriceId);
             }
             if(ageForIdCard>=60&&ageForIdCard<=199){
                 ticketInfo.put("ticketPriceId",olderTicketPriceId);
