@@ -140,6 +140,7 @@ public class TicketSnatchingSchedule {
             boolean flag = true;
             int priceId = 0;
             int childrenPriceId = 0;
+            int discountPriceId = 0;
             int olderPriceId = 0;
             Map<String, Integer> priceNameCountMap = new HashMap<>();
             for (String value : nameIDMap.values()) {
@@ -149,6 +150,14 @@ public class TicketSnatchingSchedule {
                         priceNameCountMap.put("childrenTicket", priceNameCountMap.get("childrenTicket") + 1);
                     } else {
                         priceNameCountMap.put("childrenTicket", 1);
+                    }
+                    continue;
+                }
+                if (ageForIdcard > 8 && ageForIdcard <= 18) {
+                    if (priceNameCountMap.containsKey("discountTicket")) {
+                        priceNameCountMap.put("discountTicket", priceNameCountMap.get("discountTicket") + 1);
+                    } else {
+                        priceNameCountMap.put("discountTicket", 1);
                     }
                     continue;
                 }
@@ -170,10 +179,11 @@ public class TicketSnatchingSchedule {
             }
             int ticketPool= 0;
             int childrenTicketPool= 0;
+            int discountTicketPool= 0;
             int olderTicketPool= 0;
             for (int i = 0; i < getPriceByScheduleData.size(); i++) {
                 JSONObject obj=getPriceByScheduleData.getJSONObject(i);
-                if ("普通票".equals(obj.getString("priceName")) || "儿童免费票".equals(obj.getString("priceName")) || "老人免费票".equals(obj.getString("priceName"))){
+                if ("普通票".equals(obj.getString("priceName")) || "儿童免费票".equals(obj.getString("priceName")) ||"优惠票".equals(obj.getString("priceName"))|| "老人免费票".equals(obj.getString("priceName"))){
                     if ("普通票".equals(obj.getString("priceName"))&&obj.getIntValue("ticketPool")>0) {
                         ticketPool=obj.getIntValue("ticketPool");
                         priceId=obj.getInteger("priceId");
@@ -183,12 +193,54 @@ public class TicketSnatchingSchedule {
                     childrenTicketPool=obj.getIntValue("ticketPool");
                     childrenPriceId=obj.getInteger("priceId");
                 }
+                if ("优惠票".equals(obj.getString("priceName"))&&obj.getIntValue("ticketPool")>0) {
+                    discountTicketPool=obj.getIntValue("ticketPool");
+                    discountPriceId=obj.getInteger("priceId");
+                }
                 if ("老人免费票".equals(obj.getString("priceName"))&&obj.getIntValue("ticketPool")>0) {
                     olderTicketPool=obj.getIntValue("ticketPool");
                     olderPriceId=obj.getInteger("priceId");
                 }
             };
-            //儿童票、老人票不足分配普票
+            for (Map.Entry<String, Integer> priceNameCountEntry : priceNameCountMap.entrySet()) {
+                if("normalTicket".equals(priceNameCountEntry.getKey())){
+                    flag = flag && ticketPool >= priceNameCountEntry.getValue();
+                    if(flag) {
+                        ticketPool=ticketPool - priceNameCountEntry.getValue();
+                    }
+                }
+                if("childrenTicket".equals(priceNameCountEntry.getKey())){
+                    flag = flag && childrenTicketPool >= priceNameCountEntry.getValue();
+                    //如果余票不足看普票数量
+                    if(!flag){
+                        if((ticketPool-priceNameCountMap.get("childrenTicket"))>0){
+                            ticketPool=ticketPool - priceNameCountMap.get("childrenTicket");
+                            flag=true;
+                        }
+                    }
+                }
+                if("discountTicket".equals(priceNameCountEntry.getKey())){
+                    flag = flag && discountTicketPool >= priceNameCountEntry.getValue();
+                    //如果余票不足看普票数量
+                    if(!flag){
+                        if((ticketPool-priceNameCountMap.get("discountTicket"))>0){
+                            ticketPool=ticketPool - priceNameCountMap.get("discountTicket");
+                            flag=true;
+                        }
+                    }
+                }
+                if("olderTicket".equals(priceNameCountEntry.getKey())){
+                    flag = flag && olderTicketPool >= priceNameCountEntry.getValue();
+                    //如果余票不足看普票数量
+                    if(!flag){
+                        if((ticketPool-priceNameCountMap.get("olderTicket"))>0){
+                            ticketPool=ticketPool - priceNameCountMap.get("olderTicket");
+                            flag=true;
+                        }
+                    }
+                }
+            }
+            /*//儿童票、老人票不足分配普票
             for (int i = 0; i < getPriceByScheduleData.size(); i++) {
                 JSONObject item = getPriceByScheduleData.getJSONObject(i);
                 if ("普通票".equals(item.getString("priceName")) || "儿童免费票".equals(item.getString("priceName")) || "老人免费票".equals(item.getString("priceName"))) {
@@ -221,7 +273,7 @@ public class TicketSnatchingSchedule {
                         }
                     }
                 }
-            }
+            }*/
             //余票充足
             if (flag) {
                 //几个人添加几次
