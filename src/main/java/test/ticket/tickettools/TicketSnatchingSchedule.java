@@ -85,8 +85,8 @@ public class TicketSnatchingSchedule {
         ScriptEngineManager manager = new ScriptEngineManager();//脚本引擎管理
         engine = manager.getEngineByName("nashorn");//获取nashorn脚本引擎
         engine.getContext().getWriter();//获取正文并且写入
-        getScheduleUrl=String.format(getScheduleUrl,DateUtil.format(DateUtil.parse(useDate),"yyyy-MM-dd"));
-        getPriceByScheduleIdUrl=String.format(getPriceByScheduleIdUrl,DateUtil.format(DateUtil.parse(useDate),"yyyy-MM-dd"));
+        getScheduleUrl=String.format(getScheduleUrl,DateUtil.format(DateUtil.parse(useDate),"yyyy/MM/dd"));
+        getPriceByScheduleIdUrl=String.format(getPriceByScheduleIdUrl,DateUtil.format(DateUtil.parse(useDate),"yyyy/MM/dd"));
     }
 
     @Scheduled(cron = "0/3 * * * * ?")
@@ -213,8 +213,8 @@ public class TicketSnatchingSchedule {
                     flag = flag && childrenTicketPool >= priceNameCountEntry.getValue();
                     //如果余票不足看普票数量
                     if(!flag){
-                        if((ticketPool-priceNameCountMap.get("childrenTicket"))>0){
-                            ticketPool=ticketPool - priceNameCountMap.get("childrenTicket");
+                        if((ticketPool-priceNameCountEntry.getValue())>=0){
+                            ticketPool=ticketPool - priceNameCountEntry.getValue();
                             flag=true;
                         }
                     }
@@ -223,8 +223,8 @@ public class TicketSnatchingSchedule {
                     flag = flag && discountTicketPool >= priceNameCountEntry.getValue();
                     //如果余票不足看普票数量
                     if(!flag){
-                        if((ticketPool-priceNameCountMap.get("discountTicket"))>0){
-                            ticketPool=ticketPool - priceNameCountMap.get("discountTicket");
+                        if((ticketPool-priceNameCountEntry.getValue())>=0){
+                            ticketPool=ticketPool - priceNameCountEntry.getValue();
                             flag=true;
                         }
                     }
@@ -233,8 +233,8 @@ public class TicketSnatchingSchedule {
                     flag = flag && olderTicketPool >= priceNameCountEntry.getValue();
                     //如果余票不足看普票数量
                     if(!flag){
-                        if((ticketPool-priceNameCountMap.get("olderTicket"))>0){
-                            ticketPool=ticketPool - priceNameCountMap.get("olderTicket");
+                        if((ticketPool-priceNameCountEntry.getValue())>0){
+                            ticketPool=ticketPool - priceNameCountEntry.getValue();
                             flag=true;
                         }
                     }
@@ -299,7 +299,7 @@ public class TicketSnatchingSchedule {
                     log.info("uuid的值为：{}", imageUuid);
                     log.info("x的值为：{}", x);
                     String point = doSecretKey(x, secretKey);
-                    HttpEntity shoppingCartUrlEntity = new HttpEntity<>(buildParam(token, priceNameCountMap.get("childrenTicket"), point, hallScheduleId, useDate, priceId, childrenPriceId, olderPriceId, phone), headers);
+                    HttpEntity shoppingCartUrlEntity = new HttpEntity<>(buildParam(token, priceNameCountMap.get("childrenTicket"), point, hallScheduleId, useDate, priceId, childrenPriceId,discountPriceId, olderPriceId, phone), headers);
                     ResponseEntity<String> exchange = restTemplate.exchange(shoppingCartUrl, HttpMethod.POST, shoppingCartUrlEntity, String.class);
                     System.out.println(exchange.getBody());
                     try {
@@ -391,7 +391,7 @@ public class TicketSnatchingSchedule {
      * @param phone
      * @return
      */
-    public Object buildParam(String captchaToken, Integer childTicketNum,String point,Integer hallScheduleId, String useDate,Integer priceId, Integer childrenPriceId,Integer olderTicketPriceId,String phone) {
+    public Object buildParam(String captchaToken, Integer childTicketNum,String point,Integer hallScheduleId, String useDate,Integer priceId,Integer discountPriceId, Integer childrenPriceId,Integer olderTicketPriceId,String phone) {
         JSONObject param = new JSONObject();
         param.put("captchaToken",captchaToken);
         param.put("childTicketNum",childTicketNum);
@@ -427,6 +427,9 @@ public class TicketSnatchingSchedule {
             }
             if(ageForIdCard>0&&ageForIdCard<=8){
                 ticketInfo.put("ticketPriceId",childrenPriceId);
+            }
+            if(ageForIdCard>8&&ageForIdCard<=18){
+                ticketInfo.put("ticketPriceId",discountPriceId);
             }
             if(ageForIdCard>=60&&ageForIdCard<=199){
                 ticketInfo.put("ticketPriceId",olderTicketPriceId);
