@@ -12,7 +12,7 @@
       <arg column="update_date" javaType="java.util.Date" jdbcType="DATE" />
     </constructor>
   </resultMap>
-  <insert id="insert" parameterType="com.study.springboot01.model.phoneInfoEntity">
+  <insert id="insert" parameterType="test.ticket.tickettools.domain.entity.PhoneInfoEntity">
     insert into phone_info (id, phone_num, channel,
       user_id, content, create_date,
       update_date)

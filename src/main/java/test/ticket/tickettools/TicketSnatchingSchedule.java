@@ -98,7 +98,6 @@ public class TicketSnatchingSchedule {
 
     //@Scheduled(cron = "0/2 * * * * ?")
     public void doSnatching() {
-
         try {
             RestTemplate restTemplate = new RestTemplate();
             HttpHeaders headers = new HttpHeaders();

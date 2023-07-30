@@ -1,50 +1,51 @@
 package test.ticket.tickettools.domain.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
 
 import java.util.Date;
 
-@TableName("task")
 public class TaskEntity {
 
-    @TableId(value = "pk_productId",type = IdType.AUTO)
     private Long id;
 
-    @TableField("login_phone")
     private String loginPhone;
 
-    @TableField("ip")
     private String ip;
 
-    @TableField("use_date")
     private Date useDate;
 
-    @TableField("auth")
     private String auth;
     //是否抢完
-    @TableField("done")
     private Boolean done;
 
-    @TableField("create_date")
     private Date createDate;
 
-    @TableField("update_date")
     private Date updateDate;
 
-    @TableField("user_id")
-    private Integer userId;
+    private Long userId;
     //渠道 如科技馆、故宫
-    @TableField("channel")
     private Integer channel;
     //场馆
-    @TableField("venue")
     private Integer venue;
     //场次
-    @TableField("session")
     private Integer session;
+
+    public TaskEntity() {
+    }
+
+    public TaskEntity(Long id, String loginPhone, String ip, Date useDate, String auth, Boolean done, Date createDate, Date updateDate, Long userId, Integer channel, Integer venue, Integer session) {
+        this.id = id;
+        this.loginPhone = loginPhone;
+        this.ip = ip;
+        this.useDate = useDate;
+        this.auth = auth;
+        this.done = done;
+        this.createDate = createDate;
+        this.updateDate = updateDate;
+        this.userId = userId;
+        this.channel = channel;
+        this.venue = venue;
+        this.session = session;
+    }
 
     public Long getId() {
         return id;
@@ -110,11 +111,11 @@ public class TaskEntity {
         this.updateDate = updateDate;
     }
 
-    public Integer getUserId() {
+    public Long getUserId() {
         return userId;
     }
 
-    public void setUserId(Integer userId) {
+    public void setUserId(Long userId) {
         this.userId = userId;
     }
 

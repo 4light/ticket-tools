@@ -4,6 +4,8 @@
 import Vue from 'vue'
 import App from './App'
 import routers from './router'
+import axios from 'axios'
+
 
 import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
@@ -17,6 +19,8 @@ Vue.use(ElementUI, {size: 'small'})
   routes: routers
 }
 const router = new VueRouter(RouterConfig)*/
+
+//axios.defaults.baseURL="http://localhost:8082"
 
 document.addEventListener('DOMContentLoaded', () => {
 new Vue({

@@ -8,6 +8,7 @@ public class QueryTaskInfo {
     private Integer channel;
     private Date useDate;
     private Boolean done;
+    private PageParam page;
 
     public String getLoginPhone() {
         return loginPhone;
@@ -35,6 +36,14 @@ public class QueryTaskInfo {
 
     public Boolean getDone() {
         return done;
+    }
+
+    public PageParam getPage() {
+        return page;
+    }
+
+    public void setPage(PageParam page) {
+        this.page = page;
     }
 
     public void setDone(Boolean done) {

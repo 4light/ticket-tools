@@ -1,41 +1,46 @@
 package test.ticket.tickettools.domain.entity;
 
-
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Date;
 
-@TableName("task_detail")
 public class TaskDetailEntity {
-    @TableId(value = "pk_productId",type = IdType.AUTO)
     private Long id;
 
-    @TableField("task_id")
     private Long taskId;
 
-    @TableField("user_name")
     private String userName;
 
-    @TableField("ID_card")
+    @JsonProperty(value="IDCard")
     private String IDCard;
 
-    @TableField("user_phone")
     private String userPhone;
 
-    @TableField("age")
     private Integer age;
 
-    @TableField("create_date")
     private Date createDate;
 
-    @TableField("update_date")
     private Date updateDate;
 
-    @TableField("done")
     private Boolean done;
+
+    private Boolean payment;
+
+    public TaskDetailEntity() {
+    }
+
+    public TaskDetailEntity(Long id, Long taskId, String userName, String IDCard, String userPhone, Integer age, Date createDate, Date updateDate, Boolean done, Boolean payment) {
+        this.id = id;
+        this.taskId = taskId;
+        this.userName = userName;
+        this.IDCard = IDCard;
+        this.userPhone = userPhone;
+        this.age = age;
+        this.createDate = createDate;
+        this.updateDate = updateDate;
+        this.done = done;
+        this.payment = payment;
+    }
 
     public Long getId() {
         return id;
@@ -107,5 +112,13 @@ public class TaskDetailEntity {
 
     public void setDone(Boolean done) {
         this.done = done;
+    }
+
+    public Boolean getPayment() {
+        return payment;
+    }
+
+    public void setPayment(Boolean payment) {
+        this.payment = payment;
     }
 }
