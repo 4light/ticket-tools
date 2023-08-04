@@ -13,15 +13,18 @@
             <arg column="update_date" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
             <arg column="done" javaType="java.lang.Boolean" jdbcType="BIT"/>
             <arg column="payment" javaType="java.lang.Boolean" jdbcType="BIT"/>
+            <arg column="ticket_id" javaType="java.lang.Long" jdbcType="BIGINT"/>
+            <arg column="children_ticket" javaType="java.lang.Boolean" jdbcType="BIT"/>
+
         </constructor>
     </resultMap>
     <insert id="insert" parameterType="test.ticket.tickettools.domain.entity.TaskDetailEntity">
         insert into task_detail (id, task_id, user_name,
                                  ID_card, user_phone, age,
-                                 create_date, update_date, done, payment)
+                                 create_date, update_date, done, payment,ticket_id,children_ticket)
         values (#{id,jdbcType=BIGINT}, #{taskId,jdbcType=BIGINT}, #{userName,jdbcType=VARCHAR},
                 #{idCard,jdbcType=VARCHAR}, #{userPhone,jdbcType=VARCHAR}, #{age,jdbcType=INTEGER},
-                #{createDate,jdbcType=TIMESTAMP}, #{updateDate,jdbcType=TIMESTAMP}, #{done,jdbcType=BIT}, #{payment,jdbcType=BIT})
+                #{createDate,jdbcType=TIMESTAMP}, #{updateDate,jdbcType=TIMESTAMP}, #{done,jdbcType=BIT}, #{payment,jdbcType=BIT},#{ticket_id,jdbcType=BIGINT}, #{children_ticket,jdbcType=BIT})
     </insert>
     <insert id="insertBatch" parameterType="java.util.List">
         insert into task_detail (task_id, user_name,
@@ -35,11 +38,11 @@
             )
         </foreach>
     </insert>
-    <update id="updateTaskDetailBath" parameterType="java.util.List">
+    <update id="updateTaskDetailBath" parameterType="test.ticket.tickettools.domain.entity.TaskDetailEntity">
         <foreach collection="list" item="entity" separator=";">
             UPDATE task_detail
-            SET done = #{entity.done}
-            WHERE id = #{entity.id}
+            SET done = 1, ticket_id = #{entity.ticketId}, children_ticket = #{entity.childrenTicket}
+            WHERE task_id = #{entity.taskId} and ID_card = #{entity.IDCard}
         </foreach>
     </update>
     <select id="selectByTaskId" parameterType="java.lang.Long" resultMap="BaseResultMap">
@@ -47,10 +50,15 @@
         from task_detail
         where task_id = ${id}
     </select>
+    <select id="selectByEntity" parameterType="test.ticket.tickettools.domain.entity.TaskDetailEntity" resultMap="BaseResultMap">
+        select *
+        from task_detail
+        where task_id = ${taskId} and done = ${done}
+    </select>
     <select id="selectByTaskIdLimit" parameterType="java.lang.Long" resultMap="BaseResultMap">
         select *
         from task_detail
-        where task_id = ${id} and done!=0 limit 5
+        where task_id = ${id} and done=0 limit 5
     </select>
     <update id="updateTaskDetail" parameterType="test.ticket.tickettools.domain.entity.TaskDetailEntity">
         update task_detail

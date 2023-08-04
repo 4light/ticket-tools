@@ -1,23 +1,55 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="test.ticket.tickettools.dao.PhoneInfoDao">
-  <resultMap id="BaseResultMap" type="test.ticket.tickettools.domain.entity.PhoneInfoEntity">
-    <constructor>
-      <arg column="id" javaType="java.lang.Long" jdbcType="BIGINT" />
-      <arg column="phone_num" javaType="java.lang.String" jdbcType="VARCHAR" />
-      <arg column="channel" javaType="java.lang.Integer" jdbcType="INTEGER" />
-      <arg column="user_id" javaType="java.lang.Long" jdbcType="BIGINT" />
-      <arg column="content" javaType="java.lang.String" jdbcType="VARCHAR" />
-      <arg column="create_date" javaType="java.util.Date" jdbcType="DATE" />
-      <arg column="update_date" javaType="java.util.Date" jdbcType="DATE" />
-    </constructor>
-  </resultMap>
-  <insert id="insert" parameterType="test.ticket.tickettools.domain.entity.PhoneInfoEntity">
-    insert into phone_info (id, phone_num, channel,
-      user_id, content, create_date,
-      update_date)
-    values (#{id,jdbcType=BIGINT}, #{phoneNum,jdbcType=VARCHAR}, #{channel,jdbcType=INTEGER},
-      #{userId,jdbcType=BIGINT}, #{content,jdbcType=VARCHAR}, #{createDate,jdbcType=DATE},
-      #{updateDate,jdbcType=DATE})
-  </insert>
+    <resultMap id="BaseResultMap" type="test.ticket.tickettools.domain.entity.PhoneInfoEntity">
+        <constructor>
+            <arg column="id" javaType="java.lang.Long" jdbcType="BIGINT"/>
+            <arg column="phone_num" javaType="java.lang.String" jdbcType="VARCHAR"/>
+            <arg column="channel" javaType="java.lang.Integer" jdbcType="INTEGER"/>
+            <arg column="user_id" javaType="java.lang.Long" jdbcType="BIGINT"/>
+            <arg column="content" javaType="java.lang.String" jdbcType="VARCHAR"/>
+            <arg column="create_date" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
+            <arg column="update_date" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
+        </constructor>
+    </resultMap>
+    <insert id="insert" parameterType="test.ticket.tickettools.domain.entity.PhoneInfoEntity">
+        insert into phone_info (id, phone_num, channel,
+                                user_id, content, create_date,
+                                update_date)
+        values (#{id,jdbcType=BIGINT}, #{phoneNum,jdbcType=VARCHAR}, #{channel,jdbcType=INTEGER},
+                #{userId,jdbcType=BIGINT}, #{content,jdbcType=VARCHAR}, #{createDate,jdbcType=TIMESTAMP},
+                #{updateDate,jdbcType=TIMESTAMP})
+    </insert>
+    <insert id="insertOrUpdate" parameterType="test.ticket.tickettools.domain.entity.PhoneInfoEntity">
+        insert into phone_info (id, phone_num, channel,
+                                user_id, content, create_date,
+                                update_date)
+        values (#{id,jdbcType=BIGINT}, #{phoneNum,jdbcType=VARCHAR}, #{channel,jdbcType=INTEGER},
+                #{userId,jdbcType=BIGINT}, #{content,jdbcType=VARCHAR}, #{createDate,jdbcType=TIMESTAMP},
+                #{updateDate,jdbcType=TIMESTAMP}) on duplicate key
+        update
+            `id`=
+        values (`id`),
+            phone_num=
+        values (phone_num),
+            channel=
+        values (channel),
+            user_id=
+        values (user_id),
+            content=
+        values (content),
+            create_date=
+        values (create_date),
+            update_date=
+        values (update_date)
+    </insert>
+    <select id="select" parameterType="test.ticket.tickettools.domain.entity.PhoneInfoEntity" resultMap="BaseResultMap">
+        select * from phone_info
+        <where>
+            1=1
+            <if test='phoneNum!=null and phoneNum!=""'>
+                AND phone_num = #{phoneNum}
+            </if>
+        </where>
+    </select>
 </mapper>

@@ -26,10 +26,14 @@ public class TaskDetailEntity {
 
     private Boolean payment;
 
+    private Long ticketId;
+    //是否被别人抢到
+    private Boolean childrenTicket;
+
     public TaskDetailEntity() {
     }
 
-    public TaskDetailEntity(Long id, Long taskId, String userName, String IDCard, String userPhone, Integer age, Date createDate, Date updateDate, Boolean done, Boolean payment) {
+    public TaskDetailEntity(Long id, Long taskId, String userName, String IDCard, String userPhone, Integer age, Date createDate, Date updateDate, Boolean done, Boolean payment, Long ticketId, Boolean childrenTicket) {
         this.id = id;
         this.taskId = taskId;
         this.userName = userName;
@@ -40,6 +44,8 @@ public class TaskDetailEntity {
         this.updateDate = updateDate;
         this.done = done;
         this.payment = payment;
+        this.ticketId = ticketId;
+        this.childrenTicket = childrenTicket;
     }
 
     public Long getId() {
@@ -120,5 +126,21 @@ public class TaskDetailEntity {
 
     public void setPayment(Boolean payment) {
         this.payment = payment;
+    }
+
+    public Long getTicketId() {
+        return ticketId;
+    }
+
+    public void setTicketId(Long ticketId) {
+        this.ticketId = ticketId;
+    }
+
+    public Boolean getChildrenTicket() {
+        return childrenTicket;
+    }
+
+    public void setChildrenTicket(Boolean childrenTicket) {
+        this.childrenTicket = childrenTicket;
     }
 }

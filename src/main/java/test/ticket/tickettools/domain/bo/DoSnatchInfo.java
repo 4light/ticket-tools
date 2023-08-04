@@ -4,7 +4,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-public class DoSnatchingInfo {
+public class DoSnatchInfo {
+    private Long taskId;
     private List<Long> taskDetailIds;
     private Long userId;
     private String loginPhone;
@@ -12,6 +13,14 @@ public class DoSnatchingInfo {
     private Date useDate;
     private Integer session;
     private Map<String,String> nameIDMap;
+
+    public Long getTaskId() {
+        return taskId;
+    }
+
+    public void setTaskId(Long taskId) {
+        this.taskId = taskId;
+    }
 
     public List<Long> getTaskDetailIds() {
         return taskDetailIds;

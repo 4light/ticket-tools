@@ -12,5 +12,8 @@ public interface TaskDao{
     TaskEntity selectByPrimaryKey(Long id);
     Integer updateTask(TaskEntity taskEntity);
     List<TaskEntity> fuzzyQuery(TaskEntity taskEntity);
-    List<TaskEntity> getDoneTasks(TaskEntity taskEntity);
+    //获取需要抢票的任务
+    List<TaskEntity> getUnDoneTasks(TaskEntity taskEntity);
+    //获取所有需要抢票的任务
+    List<TaskEntity> getAllUnDoneTasks(TaskEntity taskEntity);
 }

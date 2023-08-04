@@ -5,8 +5,6 @@ import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.github.pagehelper.Page;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -31,12 +29,13 @@ import test.ticket.tickettools.dao.PhoneInfoDao;
 import test.ticket.tickettools.dao.TaskDetailDao;
 import test.ticket.tickettools.dao.TaskDao;
 import test.ticket.tickettools.domain.bo.*;
-import test.ticket.tickettools.domain.constant.ResponseCodeEnum;
 import test.ticket.tickettools.domain.entity.PhoneInfoEntity;
 import test.ticket.tickettools.domain.entity.TaskDetailEntity;
 import test.ticket.tickettools.domain.entity.TaskEntity;
 import test.ticket.tickettools.service.TicketService;
+import test.ticket.tickettools.service.WebSocketServer;
 import test.ticket.tickettools.utils.DateUtils;
+import test.ticket.tickettools.utils.ImageUtils;
 
 import javax.annotation.Resource;
 import javax.imageio.ImageIO;
@@ -70,6 +69,10 @@ public class TicketServiceImpl implements TicketService {
     //提交订单
     private static String shoppingCartUrl = "https://pcticket.cstm.org.cn/prod-api/config/orderRule/shoppingCart";
     private static String getCurrentUserUrl = "https://pcticket.cstm.org.cn/prod-api/getUserInfoToIndividual";
+    //购物车接口
+    private static String getShoppingCart = "https://pcticket.cstm.org.cn/prod-api/query/order/getShoppingCart";
+    //提交订单
+    private static String placeOrderUrl = "https://pcticket.cstm.org.cn/prod-api/config/orderRule/placeOrder";
 
     private static CloseableHttpClient httpClient = HttpClientBuilder.create()
             .setMaxConnTotal(100) // 设置最大连接数
@@ -158,12 +161,15 @@ public class TicketServiceImpl implements TicketService {
             for (TaskDetailEntity taskDetailEntity : taskDetailEntities) {
                 TaskInfoListResponse taskInfoListResponse = new TaskInfoListResponse();
                 taskInfoListResponse.setTaskId(id);
+                taskInfoListResponse.setAuthorization(taskEntity.getAuth());
                 taskInfoListResponse.setLoginPhone(taskEntity.getLoginPhone());
                 taskInfoListResponse.setUseDate(taskEntity.getUseDate());
                 taskInfoListResponse.setUserName(taskDetailEntity.getUserName());
                 taskInfoListResponse.setIDCard(taskDetailEntity.getIDCard());
                 taskInfoListResponse.setDone(taskDetailEntity.getDone());
                 taskInfoListResponse.setPayment(taskDetailEntity.getPayment());
+                taskInfoListResponse.setUpdateDate(taskDetailEntity.getUpdateDate());
+                taskInfoListResponse.setChildrenTicket(taskDetailEntity.getChildrenTicket());
                 list.add(taskInfoListResponse);
             }
         }
@@ -183,27 +189,33 @@ public class TicketServiceImpl implements TicketService {
     @Override
     public ServiceResponse addPhoneInfo(PhoneInfoEntity phoneInfoEntity) {
         log.info("手机信息:{}",phoneInfoEntity);
-        Integer res = phoneInfoDao.insert(phoneInfoEntity);
+        Integer res = phoneInfoDao.insertOrUpdate(phoneInfoEntity);
         if (res > 0) {
             ServiceResponse.createBySuccess();
         }
         return ServiceResponse.createByError();
     }
 
+    @Override
+    public ServiceResponse getPhoneMsg(String phoneNum) {
+        PhoneInfoEntity phoneInfoEntity=new PhoneInfoEntity();
+        phoneInfoEntity.setPhoneNum(phoneNum);
+        return ServiceResponse.createBySuccess(phoneInfoDao.select(phoneInfoEntity).getContent());
+    }
 
     @Override
-    public Map<String, DoSnatchingInfo> getTaskForRun() {
-        Map<String, DoSnatchingInfo> result=new HashMap<>();
+    public Map<String, DoSnatchInfo> getTaskForRun() {
+        Map<String, DoSnatchInfo> result=new HashMap<>();
         LocalDate now = LocalDate.now();
         LocalDate snatchDate = now.plusDays(7L);
         TaskEntity taskEntity=new TaskEntity();
         taskEntity.setUseDate(DateUtils.localDateToDate(snatchDate));
-        List<TaskEntity> taskEntities = taskDao.getDoneTasks(taskEntity);
+        List<TaskEntity> taskEntities = taskDao.getUnDoneTasks(taskEntity);
         if(ObjectUtils.isEmpty(taskEntities)){
             return result;
         }
         for (TaskEntity entity : taskEntities) {
-            DoSnatchingInfo doSnatchingInfo=new DoSnatchingInfo();
+            DoSnatchInfo doSnatchInfo =new DoSnatchInfo();
             Long id = entity.getId();
             List<TaskDetailEntity> taskDetailEntities = taskDetailDao.selectByTaskId(id);
             if(ObjectUtils.isEmpty(taskDetailEntities)){
@@ -215,14 +227,52 @@ public class TicketServiceImpl implements TicketService {
                     .collect(Collectors.toList());
             Map<String, String> nameIdMap = taskDetailEntities.stream()
                     .collect(Collectors.toMap(TaskDetailEntity::getUserName, TaskDetailEntity::getIDCard));
-            doSnatchingInfo.setUserId(entity.getUserId());
-            doSnatchingInfo.setLoginPhone(entity.getLoginPhone());
-            doSnatchingInfo.setAuthorization(entity.getAuth());
-            doSnatchingInfo.setSession(entity.getSession());
-            doSnatchingInfo.setUseDate(entity.getUseDate());
-            doSnatchingInfo.setTaskDetailIds(taskDetailIds);
-            doSnatchingInfo.setNameIDMap(nameIdMap);
-            result.put(entity.getLoginPhone(),doSnatchingInfo);
+            doSnatchInfo.setTaskId(id);
+            doSnatchInfo.setUserId(entity.getUserId());
+            doSnatchInfo.setLoginPhone(entity.getLoginPhone());
+            doSnatchInfo.setAuthorization(entity.getAuth());
+            doSnatchInfo.setSession(entity.getSession());
+            doSnatchInfo.setUseDate(entity.getUseDate());
+            doSnatchInfo.setTaskDetailIds(taskDetailIds);
+            doSnatchInfo.setNameIDMap(nameIdMap);
+            result.put(entity.getLoginPhone(), doSnatchInfo);
+        }
+        return result;
+    }
+
+
+    @Override
+    public List<DoSnatchInfo> getAllTaskForRun() {
+        List<DoSnatchInfo> result=new ArrayList<>();
+        TaskEntity taskEntity=new TaskEntity();
+        taskEntity.setUseDate(DateUtils.localDateToDate(LocalDate.now()));
+        List<TaskEntity> allUnDoneTasks = taskDao.getAllUnDoneTasks(taskEntity);
+        if(ObjectUtils.isEmpty(allUnDoneTasks)){
+            return result;
+        }
+        for (TaskEntity entity : allUnDoneTasks) {
+            TaskDetailEntity query=new TaskDetailEntity();
+            query.setTaskId(entity.getId());
+            query.setDone(false);
+            List<TaskDetailEntity> taskDetailEntities = taskDetailDao.selectByEntity(query);
+            if(ObjectUtils.isEmpty(taskDetailEntities)){
+                entity.setDone(true);
+                taskDao.updateTask(entity);
+            }
+            for (TaskDetailEntity taskDetailEntity : taskDetailEntities) {
+                DoSnatchInfo doSnatchInfo=new DoSnatchInfo();
+                doSnatchInfo.setTaskId(entity.getId());
+                doSnatchInfo.setUserId(entity.getUserId());
+                doSnatchInfo.setLoginPhone(entity.getLoginPhone());
+                doSnatchInfo.setAuthorization(entity.getAuth());
+                doSnatchInfo.setUseDate(entity.getUseDate());
+                doSnatchInfo.setSession(entity.getSession());
+                doSnatchInfo.setTaskDetailIds(Arrays.asList(taskDetailEntity.getId()));
+                doSnatchInfo.setNameIDMap(new HashMap<String,String>(){{
+                    put(taskDetailEntity.getUserName(),taskDetailEntity.getIDCard());
+                }});
+                result.add(doSnatchInfo);
+            }
         }
         return result;
     }
@@ -244,11 +294,11 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
-    public void snatchingTicket(DoSnatchingInfo doSnatchingInfo) {
-        Map<String, String> nameIDMap = doSnatchingInfo.getNameIDMap();
-        String useDate = DateUtil.format(doSnatchingInfo.getUseDate(), "yyyy-MM-dd hh:mm:ss");
-        getScheduleUrl = String.format(getScheduleUrl, DateUtil.format(doSnatchingInfo.getUseDate(), "yyyy/MM/dd"));
-        getPriceByScheduleIdUrl = String.format(getPriceByScheduleIdUrl, DateUtil.format(doSnatchingInfo.getUseDate(), "yyyy/MMdd"));
+    public void snatchingTicket(DoSnatchInfo doSnatchInfo) {
+        Map<String, String> nameIDMap = doSnatchInfo.getNameIDMap();
+        String useDate = DateUtil.format(doSnatchInfo.getUseDate(), "yyyy-MM-dd hh:mm:ss");
+        getScheduleUrl = String.format(getScheduleUrl, DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"));
+        getPriceByScheduleIdUrl = String.format(getPriceByScheduleIdUrl, DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"));
         try {
             RestTemplate restTemplate = new RestTemplate();
             restTemplate.setRequestFactory(new SimpleClientHttpRequestFactory() {
@@ -261,14 +311,14 @@ public class TicketServiceImpl implements TicketService {
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.set("authority", "pcticket.cstm.org.cn");
             headers.set("accept", "application/json");
-            headers.set("authorization", doSnatchingInfo.getAuthorization());
+            headers.set("authorization", doSnatchInfo.getAuthorization());
             headers.set("cookie", "SL_G_WPT_TO=zh; SL_GWPT_Show_Hide_tmp=1; SL_wptGlobTipTmp=1");
             headers.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
             HttpEntity entity = new HttpEntity<>(headers);
-            long userId = doSnatchingInfo.getUserId();
-            String phone = doSnatchingInfo.getLoginPhone();
+            long userId = doSnatchInfo.getUserId();
+            String phone = doSnatchInfo.getLoginPhone();
             //获取场次下余票
-            ResponseEntity getPriceByScheduleRes = restTemplate.exchange(getPriceByScheduleIdUrl + doSnatchingInfo.getSession(), HttpMethod.GET, entity, String.class);
+            ResponseEntity getPriceByScheduleRes = restTemplate.exchange(getPriceByScheduleIdUrl + doSnatchInfo.getSession(), HttpMethod.GET, entity, String.class);
             JSONObject getPriceByScheduleJson = JSON.parseObject(getPriceByScheduleRes.getBody().toString());
             //log.info("获取到的场次下余票为:{}",getPriceByScheduleJson);
             //获取成人票和儿童票
@@ -400,18 +450,47 @@ public class TicketServiceImpl implements TicketService {
                     String imageUuid = UUID.randomUUID().toString();
                     String sliderImageName = "." + File.separator + imageUuid + "_" + "slider.png";
                     String backImageName = "." + File.separator + imageUuid + "_" + "back.png";
-                    imagCreate(jigsawImageBase64, sliderImageName, 47);
-                    imagCreate(originalImageBase64, backImageName, 310);
+                    ImageUtils.imagCreate(jigsawImageBase64, sliderImageName, 155,47);
+                    ImageUtils.imagCreate(originalImageBase64, backImageName, 155,310);
                     //图片验证码处理
                     Double x = getPoint(sliderImageName, backImageName, imageUuid);
                     //log.info("uuid的值为：{}", imageUuid);
                     //log.info("x的值为：{}", x);
                     String point = doSecretKey(x, secretKey);
-                    HttpEntity shoppingCartUrlEntity = new HttpEntity<>(buildParam(token, priceNameCountMap.get("childrenTicket"), point, doSnatchingInfo.getSession(), useDate, priceId, childrenPriceId, discountPriceId, olderPriceId, phone, nameIDMap), headers);
+                    HttpEntity shoppingCartUrlEntity = new HttpEntity<>(buildParam(token, priceNameCountMap.get("childrenTicket"), point, doSnatchInfo.getSession(), useDate, priceId, childrenPriceId, discountPriceId, olderPriceId, phone, nameIDMap), headers);
                     ResponseEntity<String> exchange = restTemplate.exchange(shoppingCartUrl, HttpMethod.POST, shoppingCartUrlEntity, String.class);
                     log.info(exchange.getBody());
-                    if (exchange.getBody().contains("\"code\":200")) {
-                        taskDetailDao.updateTaskDetailBath(doSnatchingInfo.getTaskDetailIds());
+                    String body = exchange.getBody();
+                    JSONObject bodyJson = JSON.parseObject(body);
+                    //WebSocketServer.sendInfo("余票不足","web");
+                    if (!ObjectUtils.isEmpty(bodyJson)&&bodyJson.getIntValue("code")==200) {
+                        ResponseEntity<String> shoppingCartRes = restTemplate.exchange(getShoppingCart, HttpMethod.GET,entity, String.class);
+                        String shoppingCartBody = shoppingCartRes.getBody();
+                        JSONObject shoppingCartJson = JSON.parseObject(shoppingCartBody);
+                        JSONArray dataArr = shoppingCartJson == null ? null : shoppingCartJson.getJSONArray("data");
+                        List<TaskDetailEntity> taskDetailEntities=new ArrayList<>();
+                        StringBuffer stringBuffer=new StringBuffer();
+                        if(!ObjectUtils.isEmpty(dataArr)){
+                            for (int i = 0; i < dataArr.size(); i++) {
+                                JSONObject item = dataArr.getJSONObject(i);
+                                String certificateInfo = item.getString("certificateInfo");
+                                nameIDMap.forEach((key,val)->{
+                                    stringBuffer.append("用户:").append(key).append("\n");
+                                    stringBuffer.append("身份证号:").append(val).append("\n");
+                                    if(ObjectUtils.nullSafeEquals(val,certificateInfo)){
+                                        TaskDetailEntity taskDetailEntity=new TaskDetailEntity();
+                                        taskDetailEntity.setTaskId(doSnatchInfo.getTaskId());
+                                        taskDetailEntity.setIDCard(val);
+                                        taskDetailEntity.setUpdateDate(new Date());
+                                        taskDetailEntity.setChildrenTicket(item.getIntValue("isChildFreeTicket")==1);
+                                        taskDetailEntity.setTicketId(item.getLongValue("id"));
+                                        taskDetailEntities.add(taskDetailEntity);
+                                    }
+                                });
+                            }
+                        }
+                        taskDetailDao.updateTaskDetailBath(taskDetailEntities);
+                        WebSocketServer.sendInfo(stringBuffer.toString(),"web");
                     }
                     try {
                         Files.delete(Paths.get(sliderImageName));
@@ -422,7 +501,30 @@ public class TicketServiceImpl implements TicketService {
                 }
             }
         } catch (Exception e) {
+            //e.printStackTrace();
         }
+    }
+
+
+    @Override
+    public Boolean pay() {
+        /*RestTemplate restTemplate = new RestTemplate();
+        restTemplate.setRequestFactory(new SimpleClientHttpRequestFactory() {
+            {
+                setConnectTimeout(20000);
+                setReadTimeout(20000);
+            }
+        });
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("authority", "pcticket.cstm.org.cn");
+        headers.set("accept", "application/json");
+        headers.set("authorization", doSnatchInfo.getAuthorization());
+        headers.set("cookie", "SL_G_WPT_TO=zh; SL_GWPT_Show_Hide_tmp=1; SL_wptGlobTipTmp=1");
+        headers.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
+        HttpEntity entity = new HttpEntity<>(headers);*/
+
+        return null;
     }
 
     /**
@@ -470,7 +572,7 @@ public class TicketServiceImpl implements TicketService {
         ScriptEngineManager manager = new ScriptEngineManager();
         ScriptEngine engine = manager.getEngineByName("javascript");
         try {
-            engine.eval(new java.io.InputStreamReader(TicketSnatchingSchedule.class.getResourceAsStream("/META-INF/resources/webjars/crypto-js/3.1.9-1/crypto-js.js")));
+            engine.eval(new java.io.InputStreamReader(TicketServiceImpl.class.getResourceAsStream("/META-INF/resources/webjars/crypto-js/3.1.9-1/crypto-js.js")));
 
             // 读取 JavaScript 文件并执行
             String scriptFile = "./getPoint.js";
@@ -553,37 +655,6 @@ public class TicketServiceImpl implements TicketService {
         }
         param.put("ticketInfoList", ticketInfoList);
         return param;
-    }
-
-    /**
-     * base64转图片
-     *
-     * @param base64String
-     * @param imagePath
-     * @param width
-     */
-    public void imagCreate(String base64String, String imagePath, Integer width) {
-        try {
-            // 将 Base64 字符串解码为字节数组
-            byte[] imageBytes = Base64.getDecoder().decode(base64String);
-            // 创建 ByteArrayInputStream 以读取字节数组
-            ByteArrayInputStream bis = new ByteArrayInputStream(imageBytes);
-            // 使用 ImageIO 读取 ByteArrayInputStream 中的图像数据
-            BufferedImage originalImage = ImageIO.read(bis);
-            // 指定所需的宽度和高度
-            int desiredWidth = width;
-            int desiredHeight = 155;
-            // 创建调整后尺寸的图像
-            BufferedImage adjustedImage = new BufferedImage(desiredWidth, desiredHeight, BufferedImage.TYPE_INT_RGB);
-            Graphics2D g = adjustedImage.createGraphics();
-            g.drawImage(originalImage, 0, 0, desiredWidth, desiredHeight, null);
-            g.dispose();
-            // 将图像保存到文件中
-            File outputImage = new File(imagePath);
-            ImageIO.write(adjustedImage, "png", outputImage);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
 

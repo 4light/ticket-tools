@@ -13,6 +13,7 @@ public interface TaskDetailDao {
     Integer insertBatch(List<TaskDetailEntity> taskDetailEntityList);
     Integer updateTaskDetail(TaskDetailEntity taskDetailEntity);
     List<TaskDetailEntity> selectByTaskId(Long id);
+    List<TaskDetailEntity> selectByEntity(TaskDetailEntity entity);
     List<TaskDetailEntity> selectByTaskIdLimit(Long id);
-    void updateTaskDetailBath(@Param("list")List<Long> taskDetailIds);
+    void updateTaskDetailBath(@Param("list")List<TaskDetailEntity> taskDetailIds);
 }

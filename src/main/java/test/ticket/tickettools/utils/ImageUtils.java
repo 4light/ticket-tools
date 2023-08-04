@@ -1,5 +1,10 @@
 package test.ticket.tickettools.utils;
 
+import org.bytedeco.opencv.global.opencv_imgcodecs;
+import org.bytedeco.opencv.global.opencv_imgproc;
+import org.bytedeco.opencv.opencv_core.Mat;
+import org.bytedeco.tesseract.TessBaseAPI;
+
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -38,5 +43,30 @@ public class ImageUtils {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static void toBlackImag(String path,String name){
+        Mat imageMat = opencv_imgcodecs.imread(path, opencv_imgcodecs.IMREAD_GRAYSCALE);
+        opencv_imgproc.threshold(imageMat, imageMat, 215, 255, opencv_imgproc.THRESH_BINARY);
+        opencv_imgcodecs.imwrite("./" + name + "_black.png", imageMat);
+    }
+
+    public static String getCaptchaCode(String path){
+        Mat imagePath = opencv_imgcodecs.imread(path);
+        Mat grayImage = new Mat();
+        opencv_imgproc.cvtColor(imagePath, grayImage, opencv_imgproc.COLOR_BGR2GRAY);
+        Mat binaryImage = new Mat();
+        opencv_imgproc.threshold(grayImage, binaryImage, 215, 255, opencv_imgproc.THRESH_BINARY_INV | opencv_imgproc.THRESH_OTSU);
+        // Perform OCR
+        TessBaseAPI tesseract = new TessBaseAPI();
+        tesseract.Init("", "chi_sim"); // 指定tessdata路径和需要的语言数据
+        tesseract.SetImage(binaryImage.data(), binaryImage.cols(), binaryImage.rows(), 1, binaryImage.cols());
+        String result = tesseract.GetUTF8Text().getString();
+        return result.trim().replaceAll(" ","").replaceAll("\n","");
+    }
+
+    public static void main(String[] args) {
+        String captchaCode = ImageUtils.getCaptchaCode("./6e8e6d56-0a3e-46ae-bf66-170081c9b512_black.png");
+        System.out.println(captchaCode);
     }
 }

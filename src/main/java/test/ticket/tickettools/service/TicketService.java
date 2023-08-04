@@ -17,13 +17,22 @@ public interface TicketService {
     ServiceResponse addTaskDetail(TaskDetailEntity taskDetailEntity);
 
     ServiceResponse<PageableResponse<TaskInfoListResponse>> queryTask(QueryTaskInfo queryTaskInfo);
+
     ServiceResponse<TaskEntity> getTask(Long taskId);
+
     ServiceResponse<List<TaskDetailEntity>> queryTaskDetail(Long taskId);
+
     ServiceResponse updateTaskDetail(UpdateTaskDetailRequest updateTaskDetailRequest);
     //添加手机信息
     ServiceResponse addPhoneInfo(PhoneInfoEntity phoneInfoEntity);
 
+    ServiceResponse getPhoneMsg(String phoneNum);
     //获取需要执行的任务
-    Map<String,DoSnatchingInfo> getTaskForRun();
-    void snatchingTicket(DoSnatchingInfo doSnatchingInfo);
+    Map<String, DoSnatchInfo> getTaskForRun();
+    //获取所有需要单个执行的任务
+    List<DoSnatchInfo> getAllTaskForRun();
+    //执行抢票任务
+    void snatchingTicket(DoSnatchInfo doSnatchInfo);
+    //支付
+    Boolean pay();
 }

@@ -5,5 +5,6 @@ import test.ticket.tickettools.domain.entity.PhoneInfoEntity;
 
 @Repository
 public interface PhoneInfoDao {
-    Integer insert(PhoneInfoEntity phoneInfoEntity);
+    Integer insertOrUpdate(PhoneInfoEntity phoneInfoEntity);
+    PhoneInfoEntity select(PhoneInfoEntity phoneInfoEntity);
 }

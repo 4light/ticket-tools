@@ -19,6 +19,8 @@
       <el-form-item>
         <el-button type="primary" @click="onSubmit" size="small" round>查询</el-button>
         <el-button type="primary" @click="addTask" size="small" round>新建任务</el-button>
+        <el-button type="primary" @click="getMsg" size="small" round>查询验证码</el-button>
+        <el-button type="success" @click="pay" size="small" round>支付</el-button>
       </el-form-item>
     </el-form>
     <div>
@@ -27,7 +29,9 @@
         :span-method="objectSpanMethod"
         border
         height="80vh"
-        style="width: 100%; margin-top: 20px">
+        style="width: 100%; margin-top: 20px"
+        @selection-change="handleSelectionChange"
+      >
         <el-table-column
           prop="loginPhone"
           label="登陆手机号">
@@ -62,21 +66,9 @@
           prop="updateDate"
           label="过期时间">
         </el-table-column>
-        <el-table-column label="操作">
-          <template slot-scope="scope">
-            <el-button
-              round
-              size="mini"
-              title="已支付"
-              type="primary" @click="updateState(scope.row,true)">已支付
-            </el-button>
-            <el-button
-              round
-              size="mini"
-              title="未支付"
-              type="primary" @click="updateState(scope.row,false)">未支付
-            </el-button>
-          </template>
+        <el-table-column
+          type="selection"
+          width="55">
         </el-table-column>
       </el-table>
       <el-pagination
@@ -102,11 +94,16 @@
 <script>
 import taskEditView from "./TaskEditView"
 import axios from "axios";
+import { socket } from "../utils/websocket";
+
 
 export default {
   name: "TaskView",
   components: {
     taskEditView
+  },
+  created() {
+    this.initWebSocket()
   },
   mounted() {
     this.onSubmit()
@@ -124,10 +121,55 @@ export default {
         pageSize: 30,
         total: 0
       },
-      showDialog: false
+      showDialog: false,
+      msg: "",
+      websocketCount: -1,
+      //查询条件
+      queryCondition: {
+        type: "message",
+      },
+      ticketId:[]
     }
   },
   methods: {
+    initWebSocket () {
+      let ws = 'ws://localhost:8082/api/pushMessage/web'
+      this.websock = new WebSocket(ws)
+      this.websock.onmessage = this.websocketOnMessage
+      this.websock.onopen = this.websocketOnOpen
+      this.websock.onerror = this.websocketOnError
+      this.websock.onclose = this.websocketClose
+    },
+    // websocket连接后发送数据(send发送)
+    websocketOnOpen () {
+      console.log('websock已打开')
+    },
+    // 连接建立失败重连
+    websocketOnError () {
+      this.initWebSocket()
+    },
+    // 数据接收
+    websocketOnMessage (e) {
+      /*console.log(this.websock.readyState)
+      this.$message.error(e.data)
+      console.log(e.data)*/
+      this.$notify({
+        title: '出票成功',
+        message: e.data,
+        duration: 0,
+        type: 'success'
+      });
+      this.onSubmit()
+      this.websocketClose()
+    },
+    // 数据发送
+    websocketSend (Data) {
+      this.websock.send(Data)
+    },
+    // 关闭
+    websocketClose (e) {
+      console.log('断开连接', e)
+    },
     onSubmit() {
       this.queryParam.page=this.page
       axios.post("/ticket/task/list",this.queryParam).then(res=>{
@@ -233,9 +275,30 @@ export default {
         }
       })
     },
+    getMsg(){
+      if(!this.queryParam.loginPhone){
+        this.$alert("请输入电话号")
+        return
+      }
+      axios.get("/ticket/phone/msg",{
+        params:{
+          phoneNum:this.queryParam.loginPhone
+        }
+      }).then(res=>{
+        this.$alert(res.data.data,"短信内容",{
+          confirmButtonText: '确定',
+        })
+      })
+    },
     closeDialog(){
       this.showDialog=false
       this.onSubmit()
+    },
+    handleSelectionChange(val) {
+      console.log(val)
+    },
+    pay(){
+
     }
   }
 }

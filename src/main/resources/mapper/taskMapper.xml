@@ -33,7 +33,7 @@
         from task
         where id = #{id,jdbcType=BIGINT}
     </select>
-    <select id="getDoneTasks" parameterType="test.ticket.tickettools.domain.entity.TaskEntity" resultMap="BaseResultMap">
+    <select id="getUnDoneTasks" parameterType="test.ticket.tickettools.domain.entity.TaskEntity" resultMap="BaseResultMap">
         select
         *
         from task
@@ -41,6 +41,17 @@
             done =0
             <if test='useDate!=null'>
                 AND use_date = #{useDate}
+            </if>
+        </where>
+    </select>
+    <select id="getAllUnDoneTasks" parameterType="test.ticket.tickettools.domain.entity.TaskEntity" resultMap="BaseResultMap">
+        select
+        *
+        from task
+        <where>
+            done =0
+            <if test='useDate!=null'>
+                AND use_date > #{useDate}
             </if>
         </where>
     </select>

@@ -15,6 +15,19 @@ public class PhoneInfoEntity {
     private Date createDate;
     private Date updateDate;
 
+    public PhoneInfoEntity() {
+    }
+
+    public PhoneInfoEntity(Long id, String phoneNum, Integer channel, Long userId, String content, Date createDate, Date updateDate) {
+        this.id = id;
+        this.phoneNum = phoneNum;
+        this.channel = channel;
+        this.userId = userId;
+        this.content = content;
+        this.createDate = createDate;
+        this.updateDate = updateDate;
+    }
+
     public Long getId() {
         return id;
     }

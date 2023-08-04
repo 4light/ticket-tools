@@ -10,6 +10,7 @@ public class TaskInfoListResponse implements Serializable {
     private static final long serialVersionUID = 5742328233333096415L;
     private Long taskId;
     private String loginPhone;
+    private String authorization;
     @JsonFormat(pattern = "yyyy-MM-dd", timezone="GMT+8")
     private Date useDate;
     private String userName;
@@ -18,6 +19,7 @@ public class TaskInfoListResponse implements Serializable {
     private Boolean done;
     private Boolean payment;
     private Date updateDate;
+    private Boolean childrenTicket;
 
     public Long getTaskId() {
         return taskId;
@@ -33,6 +35,14 @@ public class TaskInfoListResponse implements Serializable {
 
     public void setLoginPhone(String loginPhone) {
         this.loginPhone = loginPhone;
+    }
+
+    public String getAuthorization() {
+        return authorization;
+    }
+
+    public void setAuthorization(String authorization) {
+        this.authorization = authorization;
     }
 
     public Date getUseDate() {
@@ -81,5 +91,13 @@ public class TaskInfoListResponse implements Serializable {
 
     public void setUpdateDate(Date updateDate) {
         this.updateDate = updateDate;
+    }
+
+    public Boolean getChildrenTicket() {
+        return childrenTicket;
+    }
+
+    public void setChildrenTicket(Boolean childrenTicket) {
+        this.childrenTicket = childrenTicket;
     }
 }
