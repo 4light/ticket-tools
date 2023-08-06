@@ -10,6 +10,7 @@ import javax.websocket.*;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 
@@ -127,15 +128,17 @@ public class WebSocketServer {
     }
 
     /**
-     * 发送自定
-     * 义消息
+     * 广播通知所有用户
      **/
     public static void sendInfo(String message, String userId) {
-        log.info("发送消息到:" + userId + "，报文:" + message);
+        /*log.info("发送消息到:" + userId + "，报文:" + message);
         if (StringUtils.isNotBlank(userId) && webSocketMap.containsKey(userId)) {
             webSocketMap.get(userId).sendMessage(message);
         } else {
             log.error("用户" + userId + ",不在线！");
+        }*/
+        for (Map.Entry<String, WebSocketServer> stringWebSocketServerEntry : webSocketMap.entrySet()) {
+            stringWebSocketServerEntry.getValue().sendMessage(message);
         }
     }
 

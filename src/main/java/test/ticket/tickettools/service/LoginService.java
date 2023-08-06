@@ -15,6 +15,9 @@ import test.ticket.tickettools.utils.ImageUtils;
 
 import javax.annotation.Resource;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -52,10 +55,17 @@ public class LoginService {
             String uuid = captchaImageJson.getString("uuid");
             String captchaUuid = UUID.randomUUID().toString();
             String path = "." + File.separator + captchaUuid + "captcha.png";
-            ImageUtils.imagCreate(img, path, 55, 155);
-            ImageUtils.toBlackImag(path,captchaUuid);
-            String captchaCode = ImageUtils.getCaptchaCode("./" + captchaUuid + "_black.png");
+            ImageUtils.imagCreate(img, path, 24, 64);
+            String captchaCode = ImageUtils.getCaptchaCode(path);
             log.info("获取到的验证码为:{}",captchaCode);
+            if(!captchaCode.matches("^[A-Za-z0-9]{4}$")){
+                return null;
+            }
+            try {
+                Files.delete(Paths.get(path));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             JSONObject param=new JSONObject();
             param.put("smsType",1);
             param.put("username",loginPhone);
@@ -84,7 +94,7 @@ public class LoginService {
                 if(ObjectUtils.isEmpty(result)){
                     continue;
                 }
-                if(result.getCreateDate().before(DateUtils.localDateToDate(now))){
+                if(result.getCreateDate().after(DateUtils.localDateToDate(now))){
                     String content = result.getContent();
                     Matcher matcher = pattern.matcher(content);
                     if (matcher.find()) {
@@ -110,10 +120,11 @@ public class LoginService {
             loginParam.put("password",verificationCode);
             loginParam.put("userType",1);
             loginParam.put("username",loginPhone);
-            ResponseEntity<String> getLoginRes = restTemplate.exchange(sendMessageUrl, HttpMethod.POST, getMsgCodeEntity, String.class);
-            HttpHeaders headers1 = getLoginRes.getHeaders();
-            for (Map.Entry<String, List<String>> stringListEntry : headers1.entrySet()) {
-                System.out.println(stringListEntry.getKey()+":"+stringListEntry.getValue());
+            HttpEntity loginEntity=new HttpEntity(loginParam,getBaseHeader());
+            ResponseEntity<JSONObject> getLoginRes = restTemplate.exchange(loginUrl, HttpMethod.POST, loginEntity, JSONObject.class);
+            JSONObject loginRes = getLoginRes.getBody();
+            if(loginRes!=null){
+                return loginRes.getString("token")==null?"":"Bearer "+loginRes.getString("token");
             }
         }
         return null;

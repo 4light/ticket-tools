@@ -74,7 +74,18 @@
     </delete>
     <update id="updateTask" parameterType="test.ticket.tickettools.domain.entity.TaskEntity">
         update task
-        set done = #{done}
+        set
+        <set>
+            <if test='done!=null'>
+                done = #{done},
+            </if>
+            <if test='auth!=null'>
+                auth = #{auth}
+            </if>
+            <if test='updateDate!=null'>
+                update_date = #{updateDate}
+            </if>
+        </set>
         where id = #{id}
     </update>
 </mapper>

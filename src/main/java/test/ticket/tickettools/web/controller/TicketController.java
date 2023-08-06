@@ -1,16 +1,18 @@
 package test.ticket.tickettools.web.controller;
 import cn.hutool.core.date.DateUtil;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
-import test.ticket.tickettools.dao.TaskDao;
 import test.ticket.tickettools.dao.TaskDetailDao;
 import test.ticket.tickettools.domain.bo.*;
 import test.ticket.tickettools.domain.entity.PhoneInfoEntity;
 import test.ticket.tickettools.service.LoginService;
 import test.ticket.tickettools.service.TicketService;
+import test.ticket.tickettools.service.WebSocketServer;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
 
@@ -31,9 +33,21 @@ public class TicketController {
         return ticketServiceImpl.queryTask(queryTaskInfo);
     }
 
+
+
     @PostMapping(value = "/add/taskInfo")
-    public ServiceResponse addTask(@RequestBody TaskInfoRequest taskInfoRequest) {
-        return ticketServiceImpl.addTaskInfo(taskInfoRequest);
+    public ServiceResponse addTask(@RequestBody TaskInfo taskInfo) {
+        return ticketServiceImpl.addTaskInfo(taskInfo);
+    }
+
+    @GetMapping(value = "/get/detail")
+    public ServiceResponse addTask(@RequestParam Long taskId) {
+        return ticketServiceImpl.getTask(taskId);
+    }
+
+    @GetMapping(value = "/delete")
+    public ServiceResponse delete(@RequestParam Long taskId) {
+        return ticketServiceImpl.delete(taskId);
     }
 
     @PostMapping(value = "/update/taskInfo")
@@ -80,10 +94,21 @@ public class TicketController {
         return ticketServiceImpl.getPhoneMsg(phoneNum);
     }
 
-    @GetMapping(value = "/test")
-    public ServiceResponse test() {
-        loginService.longinCSTM("17610773273");
-        return ServiceResponse.createBySuccess();
+    @PostMapping(value = "/pay")
+    public ServiceResponse pay(@RequestBody PlaceOrderInfo placeOrderInfo) {
+        String pay = ticketServiceImpl.pay(placeOrderInfo);
+        if(ObjectUtils.isEmpty(pay)){
+            return ServiceResponse.createByErrorMessage("获取支付链接失败");
+        }
+        return ServiceResponse.createBySuccess(pay);
     }
 
+    @GetMapping(value = "/test")
+    public void sss(){
+        JSONObject res=new JSONObject();
+        res.put("title","测试");
+        res.put("msg","233223");
+        res.put("time",0);
+        WebSocketServer.sendInfo(JSON.toJSONString(res), "web");
+    }
 }

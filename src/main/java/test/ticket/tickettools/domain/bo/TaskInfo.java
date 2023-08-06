@@ -6,8 +6,9 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
-public class TaskInfoRequest implements Serializable {
+public class TaskInfo implements Serializable {
     private static final long serialVersionUID = 2517797866070411812L;
+    private Long taskId;
     private String loginPhone;
     private String auth;
     //渠道
@@ -18,6 +19,14 @@ public class TaskInfoRequest implements Serializable {
     private Integer session;
     private Date useDate;
     private List<TaskDetailEntity> userList;
+
+    public Long getTaskId() {
+        return taskId;
+    }
+
+    public void setTaskId(Long taskId) {
+        this.taskId = taskId;
+    }
 
     public String getLoginPhone() {
         return loginPhone;

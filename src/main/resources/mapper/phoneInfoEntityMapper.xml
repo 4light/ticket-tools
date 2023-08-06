@@ -21,15 +21,13 @@
                 #{updateDate,jdbcType=TIMESTAMP})
     </insert>
     <insert id="insertOrUpdate" parameterType="test.ticket.tickettools.domain.entity.PhoneInfoEntity">
-        insert into phone_info (id, phone_num, channel,
+        insert into phone_info (phone_num, channel,
                                 user_id, content, create_date,
                                 update_date)
-        values (#{id,jdbcType=BIGINT}, #{phoneNum,jdbcType=VARCHAR}, #{channel,jdbcType=INTEGER},
+        values (#{phoneNum,jdbcType=VARCHAR}, #{channel,jdbcType=INTEGER},
                 #{userId,jdbcType=BIGINT}, #{content,jdbcType=VARCHAR}, #{createDate,jdbcType=TIMESTAMP},
                 #{updateDate,jdbcType=TIMESTAMP}) on duplicate key
         update
-            `id`=
-        values (`id`),
             phone_num=
         values (phone_num),
             channel=

@@ -1,14 +1,24 @@
 package test.ticket.tickettools.schedule;
 
+import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.*;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestTemplate;
 import test.ticket.tickettools.TaskExecutorConfig;
 import test.ticket.tickettools.domain.bo.DoSnatchInfo;
+import test.ticket.tickettools.domain.entity.TaskDetailEntity;
+import test.ticket.tickettools.domain.entity.TaskEntity;
+import test.ticket.tickettools.service.LoginService;
 import test.ticket.tickettools.service.TicketService;
 
 import javax.annotation.Resource;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -18,24 +28,97 @@ import java.util.concurrent.CompletableFuture;
 @EnableScheduling
 public class DoSnatchingSchedule {
 
+    private static String getCurrentUserUrl="https://pcticket.cstm.org.cn/prod-api/getUserInfoToIndividual";
+    private static String searchByOrderNoUrl="https://pcticket.cstm.org.cn/prod-api/order/OrderInfo/updateSearchByOrderNo";
+    private static RestTemplate restTemplate=new RestTemplate();
+
     @Resource
     TicketService ticketServiceImpl;
     @Resource
     TaskExecutorConfig taskExecutorConfig;
+    @Resource
+    LoginService loginService;
 
 
-    @Scheduled(cron = "0/1 * 18-19 * * ?")
+    @Scheduled(cron = "0/1 0-30 18 * * ?")
     public void doSnatching(){
         Map<String, DoSnatchInfo> taskForRun = ticketServiceImpl.getTaskForRun();
+        if(ObjectUtils.isEmpty(taskForRun)){
+            return;
+        }
         for (Map.Entry<String, DoSnatchInfo> entity : taskForRun.entrySet()) {
             CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(entity.getValue()), taskExecutorConfig.getAsyncExecutor());
         }
     }
-    @Scheduled(cron = "0/1 * 0-17,19-23 * * ?")
+    @Scheduled(cron = "0/1 31-59 18 * * ?")
     public void doSingleSnatch(){
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
         for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
             CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo), taskExecutorConfig.getAsyncExecutor());
         }
+    }
+
+    @Scheduled(cron = "0/1 * 8-17,19-23 * * ?")
+    public void doSingleSnatchOtherTime(){
+        List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
+        for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
+            CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo), taskExecutorConfig.getAsyncExecutor());
+        }
+    }
+
+
+
+    public void updateAuth(){
+        List<TaskEntity> allUnDoneTask = ticketServiceImpl.getAllUnDoneTask();
+        for (TaskEntity taskEntity : allUnDoneTask) {
+            if(ObjectUtils.isEmpty(taskEntity.getAuth())){
+                String auth = loginService.longinCSTM(taskEntity.getLoginPhone());
+                if(checkAuth(auth)){
+                    taskEntity.setAuth(auth);
+                    taskEntity.setUpdateDate(new Date());
+                    ticketServiceImpl.updateTask(taskEntity);
+                }
+            }else {
+                if(!checkAuth(taskEntity.getAuth())){
+                    while(true){
+                        String auth = loginService.longinCSTM(taskEntity.getLoginPhone());
+                        if(checkAuth(auth)){
+                            taskEntity.setAuth(auth);
+                            taskEntity.setUpdateDate(new Date());
+                            ticketServiceImpl.updateTask(taskEntity);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private Boolean checkAuth(String authorization){
+        if(StringUtils.isEmpty(authorization)){
+            return false;
+        }
+        restTemplate.setRequestFactory(new SimpleClientHttpRequestFactory() {
+            {
+                setConnectTimeout(20000);
+                setReadTimeout(20000);
+            }
+        });
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("authority", "pcticket.cstm.org.cn");
+        headers.set("accept", "application/json");
+        headers.set("authorization", authorization);
+        headers.set("cookie", "SL_G_WPT_TO=zh; SL_GWPT_Show_Hide_tmp=1; SL_wptGlobTipTmp=1");
+        headers.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
+        HttpEntity entity = new HttpEntity<>(headers);
+        ResponseEntity<JSONObject> getUserRes = restTemplate.exchange(getCurrentUserUrl, HttpMethod.GET, entity, JSONObject.class);
+        JSONObject body = getUserRes.getBody();
+        if (!ObjectUtils.isEmpty(body)) {
+            if (body.getIntValue("code") == 200) {
+                return true;
+            }
+        }
+        return false;
     }
 }

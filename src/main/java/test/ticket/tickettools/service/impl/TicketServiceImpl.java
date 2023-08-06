@@ -24,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
-import test.ticket.tickettools.TicketSnatchingSchedule;
 import test.ticket.tickettools.dao.PhoneInfoDao;
 import test.ticket.tickettools.dao.TaskDetailDao;
 import test.ticket.tickettools.dao.TaskDao;
@@ -38,14 +37,10 @@ import test.ticket.tickettools.utils.DateUtils;
 import test.ticket.tickettools.utils.ImageUtils;
 
 import javax.annotation.Resource;
-import javax.imageio.ImageIO;
 import javax.script.Invocable;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -73,6 +68,7 @@ public class TicketServiceImpl implements TicketService {
     private static String getShoppingCart = "https://pcticket.cstm.org.cn/prod-api/query/order/getShoppingCart";
     //提交订单
     private static String placeOrderUrl = "https://pcticket.cstm.org.cn/prod-api/config/orderRule/placeOrder";
+    private static String wxPayForPcUrl = "https://pcticket.cstm.org.cn/prod-api/order/OrderInfo/wxPayForPc";
 
     private static CloseableHttpClient httpClient = HttpClientBuilder.create()
             .setMaxConnTotal(100) // 设置最大连接数
@@ -99,45 +95,63 @@ public class TicketServiceImpl implements TicketService {
 
     @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRED)
     @Override
-    public ServiceResponse addTaskInfo(TaskInfoRequest taskInfoRequest) {
+    public ServiceResponse addTaskInfo(TaskInfo taskInfo) {
         TaskEntity taskEntity = new TaskEntity();
-        BeanUtil.copyProperties(taskInfoRequest, taskEntity);
-        taskEntity.setCreateDate(new Date());
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("authority", "pcticket.cstm.org.cn");
-        headers.set("accept", "application/json");
-        headers.set("authorization", taskInfoRequest.getAuth());
-        headers.set("cookie", "SL_G_WPT_TO=zh; SL_GWPT_Show_Hide_tmp=1; SL_wptGlobTipTmp=1");
-        headers.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
-        HttpEntity entity = new HttpEntity<>(headers);
-        ResponseEntity getUserRes = restTemplate.exchange(getCurrentUserUrl, HttpMethod.GET, entity, String.class);
-        String userInfoStr = getUserRes.getBody().toString();
-        JSONObject userInfoJson = JSON.parseObject(userInfoStr);
-        JSONObject userInfo = userInfoJson == null ? null : userInfoJson.getJSONObject("user");
-        if (userInfo == null) {
-            log.info("获取用户信息失败：{}", userInfoJson);
-        }
-        long userId = userInfo.getLongValue("userId");
-        taskEntity.setUserId(userId);
-        Integer insert = taskDao.insert(taskEntity);
-        if (insert > 0) {
-            List<TaskDetailEntity> userList = taskInfoRequest.getUserList();
-            if (ObjectUtils.isEmpty(userList)) {
-                return ServiceResponse.createBySuccessMessgge("详情数据为空");
+        BeanUtil.copyProperties(taskInfo, taskEntity);
+        if (ObjectUtils.isEmpty(taskInfo.getTaskId())) {
+            taskEntity.setCreateDate(new Date());
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("authority", "pcticket.cstm.org.cn");
+            headers.set("accept", "application/json");
+            headers.set("authorization", taskInfo.getAuth());
+            headers.set("cookie", "SL_G_WPT_TO=zh; SL_GWPT_Show_Hide_tmp=1; SL_wptGlobTipTmp=1");
+            headers.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
+            HttpEntity entity = new HttpEntity<>(headers);
+            ResponseEntity getUserRes = restTemplate.exchange(getCurrentUserUrl, HttpMethod.GET, entity, String.class);
+            String userInfoStr = getUserRes.getBody().toString();
+            JSONObject userInfoJson = JSON.parseObject(userInfoStr);
+            JSONObject userInfo = userInfoJson == null ? null : userInfoJson.getJSONObject("user");
+            if (userInfo == null) {
+                log.info("获取用户信息失败：{}", userInfoJson);
             }
-            userList.forEach(o -> {
-                o.setTaskId(taskEntity.getId());
-                o.setCreateDate(new Date());
-            });
-            Integer res = taskDetailDao.insertBatch(userList);
-            if (res == userList.size()) {
-                return ServiceResponse.createBySuccess();
-            } else {
-                return ServiceResponse.createByErrorMessage("保存任务详情异常");
+            long userId = userInfo.getLongValue("userId");
+            taskEntity.setUserId(userId);
+            Integer insert = taskDao.insert(taskEntity);
+            if (insert > 0) {
+                List<TaskDetailEntity> userList = taskInfo.getUserList();
+                if (ObjectUtils.isEmpty(userList)) {
+                    return ServiceResponse.createBySuccessMessgge("详情数据为空");
+                }
+                userList.forEach(o -> {
+                    o.setTaskId(taskEntity.getId());
+                    o.setCreateDate(new Date());
+                });
+                Integer res = taskDetailDao.insertBatch(userList);
+                if (res == userList.size()) {
+                    return ServiceResponse.createBySuccess();
+                } else {
+                    return ServiceResponse.createByErrorMessage("保存任务详情异常");
+                }
             }
+            return ServiceResponse.createByErrorMessage("保存任务异常");
+        } else {
+            taskEntity.setUpdateDate(new Date());
+            Integer insert = taskDao.insert(taskEntity);
+            if (insert > 0) {
+                List<TaskDetailEntity> userList = taskInfo.getUserList();
+                userList.forEach(o -> {
+                    o.setUpdateDate(new Date());
+                });
+                Integer res = taskDetailDao.insertBatch(userList);
+                if (res == userList.size()) {
+                    return ServiceResponse.createBySuccess();
+                } else {
+                    return ServiceResponse.createByErrorMessage("保存任务详情异常");
+                }
+            }
+            return ServiceResponse.createByErrorMessage("保存任务异常");
         }
-        return ServiceResponse.createByErrorMessage("保存任务异常");
     }
 
     @Override
@@ -146,6 +160,16 @@ public class TicketServiceImpl implements TicketService {
             return ServiceResponse.createBySuccess();
         }
         return ServiceResponse.createByError();
+    }
+
+    @Override
+    public void updateTask(TaskEntity taskEntity) {
+        Integer integer = taskDao.updateTask(taskEntity);
+        if (integer > 0) {
+            log.info("更新任务成功");
+        } else {
+            log.error("更新任务失败");
+        }
     }
 
     @Override
@@ -161,6 +185,7 @@ public class TicketServiceImpl implements TicketService {
             for (TaskDetailEntity taskDetailEntity : taskDetailEntities) {
                 TaskInfoListResponse taskInfoListResponse = new TaskInfoListResponse();
                 taskInfoListResponse.setTaskId(id);
+                taskInfoListResponse.setId(taskDetailEntity.getId());
                 taskInfoListResponse.setAuthorization(taskEntity.getAuth());
                 taskInfoListResponse.setLoginPhone(taskEntity.getLoginPhone());
                 taskInfoListResponse.setUseDate(taskEntity.getUseDate());
@@ -169,6 +194,7 @@ public class TicketServiceImpl implements TicketService {
                 taskInfoListResponse.setDone(taskDetailEntity.getDone());
                 taskInfoListResponse.setPayment(taskDetailEntity.getPayment());
                 taskInfoListResponse.setUpdateDate(taskDetailEntity.getUpdateDate());
+                taskInfoListResponse.setTicketId(taskDetailEntity.getTicketId());
                 taskInfoListResponse.setChildrenTicket(taskDetailEntity.getChildrenTicket());
                 list.add(taskInfoListResponse);
             }
@@ -177,18 +203,43 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
-    public ServiceResponse<TaskEntity> getTask(Long taskId) {
-        return ServiceResponse.createBySuccess(taskDao.selectByPrimaryKey(taskId));
+    public ServiceResponse<TaskInfo> getTask(Long taskId) {
+        TaskInfo taskInfo = new TaskInfo();
+        TaskEntity taskEntity = taskDao.selectByPrimaryKey(taskId);
+        taskInfo.setTaskId(taskEntity.getId());
+        taskInfo.setAuth(taskEntity.getAuth());
+        taskInfo.setChannel(taskEntity.getChannel());
+        taskInfo.setLoginPhone(taskEntity.getLoginPhone());
+        taskInfo.setUseDate(taskEntity.getUseDate());
+        taskInfo.setSession(taskEntity.getSession());
+        taskInfo.setVenue(taskEntity.getVenue());
+        taskInfo.setUserList(taskDetailDao.selectByTaskId(taskId));
+        return ServiceResponse.createBySuccess(taskInfo);
+    }
+
+
+    @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRED)
+    @Override
+    public ServiceResponse delete(Long taskId) {
+        Integer integer = taskDao.deleteByPrimaryKey(taskId);
+        if(integer>0){
+            Integer res = taskDetailDao.deleteByTaskId(taskId);
+            if(res>0){
+                return ServiceResponse.createBySuccess();
+            }
+            return ServiceResponse.createByErrorMessage("删除详情失败");
+        }
+        return ServiceResponse.createByErrorMessage("删除任务失败");
     }
 
     @Override
-    public ServiceResponse<List<TaskDetailEntity>> queryTaskDetail(Long taskId) {
-        return ServiceResponse.createBySuccess(taskDetailDao.selectByTaskId(taskId));
+    public List<TaskDetailEntity> selectUnpaid() {
+        return taskDetailDao.selectUnpaid();
     }
 
     @Override
     public ServiceResponse addPhoneInfo(PhoneInfoEntity phoneInfoEntity) {
-        log.info("手机信息:{}",phoneInfoEntity);
+        log.info("手机信息:{}", phoneInfoEntity);
         Integer res = phoneInfoDao.insertOrUpdate(phoneInfoEntity);
         if (res > 0) {
             ServiceResponse.createBySuccess();
@@ -198,27 +249,27 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     public ServiceResponse getPhoneMsg(String phoneNum) {
-        PhoneInfoEntity phoneInfoEntity=new PhoneInfoEntity();
+        PhoneInfoEntity phoneInfoEntity = new PhoneInfoEntity();
         phoneInfoEntity.setPhoneNum(phoneNum);
         return ServiceResponse.createBySuccess(phoneInfoDao.select(phoneInfoEntity).getContent());
     }
 
     @Override
     public Map<String, DoSnatchInfo> getTaskForRun() {
-        Map<String, DoSnatchInfo> result=new HashMap<>();
+        Map<String, DoSnatchInfo> result = new HashMap<>();
         LocalDate now = LocalDate.now();
         LocalDate snatchDate = now.plusDays(7L);
-        TaskEntity taskEntity=new TaskEntity();
+        TaskEntity taskEntity = new TaskEntity();
         taskEntity.setUseDate(DateUtils.localDateToDate(snatchDate));
         List<TaskEntity> taskEntities = taskDao.getUnDoneTasks(taskEntity);
-        if(ObjectUtils.isEmpty(taskEntities)){
+        if (ObjectUtils.isEmpty(taskEntities)) {
             return result;
         }
         for (TaskEntity entity : taskEntities) {
-            DoSnatchInfo doSnatchInfo =new DoSnatchInfo();
+            DoSnatchInfo doSnatchInfo = new DoSnatchInfo();
             Long id = entity.getId();
             List<TaskDetailEntity> taskDetailEntities = taskDetailDao.selectByTaskId(id);
-            if(ObjectUtils.isEmpty(taskDetailEntities)){
+            if (ObjectUtils.isEmpty(taskDetailEntities)) {
                 entity.setDone(true);
                 taskDao.updateTask(entity);
             }
@@ -243,24 +294,24 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     public List<DoSnatchInfo> getAllTaskForRun() {
-        List<DoSnatchInfo> result=new ArrayList<>();
-        TaskEntity taskEntity=new TaskEntity();
+        List<DoSnatchInfo> result = new ArrayList<>();
+        TaskEntity taskEntity = new TaskEntity();
         taskEntity.setUseDate(DateUtils.localDateToDate(LocalDate.now()));
         List<TaskEntity> allUnDoneTasks = taskDao.getAllUnDoneTasks(taskEntity);
-        if(ObjectUtils.isEmpty(allUnDoneTasks)){
+        if (ObjectUtils.isEmpty(allUnDoneTasks)) {
             return result;
         }
         for (TaskEntity entity : allUnDoneTasks) {
-            TaskDetailEntity query=new TaskDetailEntity();
+            TaskDetailEntity query = new TaskDetailEntity();
             query.setTaskId(entity.getId());
             query.setDone(false);
             List<TaskDetailEntity> taskDetailEntities = taskDetailDao.selectByEntity(query);
-            if(ObjectUtils.isEmpty(taskDetailEntities)){
+            if (ObjectUtils.isEmpty(taskDetailEntities)) {
                 entity.setDone(true);
                 taskDao.updateTask(entity);
             }
             for (TaskDetailEntity taskDetailEntity : taskDetailEntities) {
-                DoSnatchInfo doSnatchInfo=new DoSnatchInfo();
+                DoSnatchInfo doSnatchInfo = new DoSnatchInfo();
                 doSnatchInfo.setTaskId(entity.getId());
                 doSnatchInfo.setUserId(entity.getUserId());
                 doSnatchInfo.setLoginPhone(entity.getLoginPhone());
@@ -268,13 +319,20 @@ public class TicketServiceImpl implements TicketService {
                 doSnatchInfo.setUseDate(entity.getUseDate());
                 doSnatchInfo.setSession(entity.getSession());
                 doSnatchInfo.setTaskDetailIds(Arrays.asList(taskDetailEntity.getId()));
-                doSnatchInfo.setNameIDMap(new HashMap<String,String>(){{
-                    put(taskDetailEntity.getUserName(),taskDetailEntity.getIDCard());
+                doSnatchInfo.setNameIDMap(new HashMap<String, String>() {{
+                    put(taskDetailEntity.getUserName(), taskDetailEntity.getIDCard());
                 }});
                 result.add(doSnatchInfo);
             }
         }
         return result;
+    }
+
+    @Override
+    public List<TaskEntity> getAllUnDoneTask() {
+        TaskEntity taskEntity = new TaskEntity();
+        taskEntity.setUseDate(DateUtils.localDateToDate(LocalDate.now()));
+        return taskDao.getAllUnDoneTasks(taskEntity);
     }
 
     @Override
@@ -450,8 +508,8 @@ public class TicketServiceImpl implements TicketService {
                     String imageUuid = UUID.randomUUID().toString();
                     String sliderImageName = "." + File.separator + imageUuid + "_" + "slider.png";
                     String backImageName = "." + File.separator + imageUuid + "_" + "back.png";
-                    ImageUtils.imagCreate(jigsawImageBase64, sliderImageName, 155,47);
-                    ImageUtils.imagCreate(originalImageBase64, backImageName, 155,310);
+                    ImageUtils.imagCreate(jigsawImageBase64, sliderImageName, 155, 47);
+                    ImageUtils.imagCreate(originalImageBase64, backImageName, 155, 310);
                     //图片验证码处理
                     Double x = getPoint(sliderImageName, backImageName, imageUuid);
                     //log.info("uuid的值为：{}", imageUuid);
@@ -463,26 +521,26 @@ public class TicketServiceImpl implements TicketService {
                     String body = exchange.getBody();
                     JSONObject bodyJson = JSON.parseObject(body);
                     //WebSocketServer.sendInfo("余票不足","web");
-                    if (!ObjectUtils.isEmpty(bodyJson)&&bodyJson.getIntValue("code")==200) {
-                        ResponseEntity<String> shoppingCartRes = restTemplate.exchange(getShoppingCart, HttpMethod.GET,entity, String.class);
+                    if (!ObjectUtils.isEmpty(bodyJson) && bodyJson.getIntValue("code") == 200) {
+                        ResponseEntity<String> shoppingCartRes = restTemplate.exchange(getShoppingCart, HttpMethod.GET, entity, String.class);
                         String shoppingCartBody = shoppingCartRes.getBody();
                         JSONObject shoppingCartJson = JSON.parseObject(shoppingCartBody);
                         JSONArray dataArr = shoppingCartJson == null ? null : shoppingCartJson.getJSONArray("data");
-                        List<TaskDetailEntity> taskDetailEntities=new ArrayList<>();
-                        StringBuffer stringBuffer=new StringBuffer();
-                        if(!ObjectUtils.isEmpty(dataArr)){
+                        List<TaskDetailEntity> taskDetailEntities = new ArrayList<>();
+                        StringBuffer stringBuffer = new StringBuffer();
+                        if (!ObjectUtils.isEmpty(dataArr)) {
                             for (int i = 0; i < dataArr.size(); i++) {
                                 JSONObject item = dataArr.getJSONObject(i);
                                 String certificateInfo = item.getString("certificateInfo");
-                                nameIDMap.forEach((key,val)->{
-                                    stringBuffer.append("用户:").append(key).append("\n");
-                                    stringBuffer.append("身份证号:").append(val).append("\n");
-                                    if(ObjectUtils.nullSafeEquals(val,certificateInfo)){
-                                        TaskDetailEntity taskDetailEntity=new TaskDetailEntity();
+                                nameIDMap.forEach((key, val) -> {
+                                    stringBuffer.append("<p>用户:").append(key).append("</p>");
+                                    stringBuffer.append("<p>身份证号:").append(val).append("</p>");
+                                    if (ObjectUtils.nullSafeEquals(val, certificateInfo)) {
+                                        TaskDetailEntity taskDetailEntity = new TaskDetailEntity();
                                         taskDetailEntity.setTaskId(doSnatchInfo.getTaskId());
                                         taskDetailEntity.setIDCard(val);
                                         taskDetailEntity.setUpdateDate(new Date());
-                                        taskDetailEntity.setChildrenTicket(item.getIntValue("isChildFreeTicket")==1);
+                                        taskDetailEntity.setChildrenTicket(item.getIntValue("isChildFreeTicket") == 1);
                                         taskDetailEntity.setTicketId(item.getLongValue("id"));
                                         taskDetailEntities.add(taskDetailEntity);
                                     }
@@ -490,7 +548,7 @@ public class TicketServiceImpl implements TicketService {
                             }
                         }
                         taskDetailDao.updateTaskDetailBath(taskDetailEntities);
-                        WebSocketServer.sendInfo(stringBuffer.toString(),"web");
+                        WebSocketServer.sendInfo(socketMsg("抢票成功", stringBuffer.toString(), 0), null);
                     }
                     try {
                         Files.delete(Paths.get(sliderImageName));
@@ -507,8 +565,11 @@ public class TicketServiceImpl implements TicketService {
 
 
     @Override
-    public Boolean pay() {
-        /*RestTemplate restTemplate = new RestTemplate();
+    public String pay(PlaceOrderInfo placeOrderInfo) {
+        if (!ObjectUtils.isEmpty(placeOrderInfo)) {
+            return "weixin://wxpay/bizpayurl?pr=I1zL7CSzz";
+        }
+        RestTemplate restTemplate = new RestTemplate();
         restTemplate.setRequestFactory(new SimpleClientHttpRequestFactory() {
             {
                 setConnectTimeout(20000);
@@ -519,12 +580,51 @@ public class TicketServiceImpl implements TicketService {
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("authority", "pcticket.cstm.org.cn");
         headers.set("accept", "application/json");
-        headers.set("authorization", doSnatchInfo.getAuthorization());
+        headers.set("authorization", placeOrderInfo.getAuthorization());
         headers.set("cookie", "SL_G_WPT_TO=zh; SL_GWPT_Show_Hide_tmp=1; SL_wptGlobTipTmp=1");
         headers.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
-        HttpEntity entity = new HttpEntity<>(headers);*/
-
+        JSONObject param = new JSONObject();
+        param.put("childTicketNum", placeOrderInfo.getChildTicketNum());
+        param.put("date", DateUtil.format(placeOrderInfo.getDate(), "yyyy-MM-dd"));
+        param.put("phone", placeOrderInfo.getLoginPhone());
+        param.put("platform", 1);
+        param.put("poolFlag", 1);
+        param.put("realNameFlag", 1);
+        param.put("saleMode", 1);
+        param.put("ticketInfoList", placeOrderInfo.getTicketInfoList());
+        param.put("ticketNum", placeOrderInfo.getTicketNum());
+        param.put("useTicketType", 1);
+        HttpEntity entity = new HttpEntity<>(param, headers);
+        ResponseEntity<JSONObject> exchange = restTemplate.exchange(placeOrderUrl, HttpMethod.POST, entity, JSONObject.class);
+        JSONObject placeOrderRes = exchange.getBody();
+        if (!ObjectUtils.isEmpty(placeOrderRes)) {
+            JSONObject orderData = placeOrderRes.getJSONObject("data");
+            String orderNumber = orderData.getString("orderNumber");
+            TaskDetailEntity taskDetailEntity = new TaskDetailEntity();
+            taskDetailEntity.setId(placeOrderInfo.getId());
+            taskDetailEntity.setOrderNumber(orderNumber);
+            taskDetailEntity.setUpdateDate(new Date());
+            taskDetailDao.updateTaskDetail(taskDetailEntity);
+            int orderId = orderData.getIntValue("orderId");
+            JSONObject payParam = new JSONObject();
+            payParam.put("id", orderId);
+            payParam.put("payType", 0);
+            HttpEntity payEntity = new HttpEntity<>(payParam, headers);
+            ResponseEntity<JSONObject> payResEntity = restTemplate.exchange(wxPayForPcUrl, HttpMethod.POST, payEntity, JSONObject.class);
+            JSONObject payRes = payResEntity.getBody();
+            if (!ObjectUtils.isEmpty(payRes) && payRes.getIntValue("code") == 200) {
+                return payRes.getString("data");
+            }
+        }
         return null;
+    }
+
+    private String socketMsg(String title, String msg, Integer time) {
+        JSONObject res = new JSONObject();
+        res.put("title", title);
+        res.put("msg", msg);
+        res.put("time", time);
+        return JSON.toJSONString(res);
     }
 
     /**
@@ -573,7 +673,6 @@ public class TicketServiceImpl implements TicketService {
         ScriptEngine engine = manager.getEngineByName("javascript");
         try {
             engine.eval(new java.io.InputStreamReader(TicketServiceImpl.class.getResourceAsStream("/META-INF/resources/webjars/crypto-js/3.1.9-1/crypto-js.js")));
-
             // 读取 JavaScript 文件并执行
             String scriptFile = "./getPoint.js";
             engine.eval(new java.io.FileReader(scriptFile));

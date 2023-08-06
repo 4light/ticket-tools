@@ -9,6 +9,7 @@ import java.util.Date;
 public class TaskInfoListResponse implements Serializable {
     private static final long serialVersionUID = 5742328233333096415L;
     private Long taskId;
+    private Long id;
     private String loginPhone;
     private String authorization;
     @JsonFormat(pattern = "yyyy-MM-dd", timezone="GMT+8")
@@ -20,6 +21,8 @@ public class TaskInfoListResponse implements Serializable {
     private Boolean payment;
     private Date updateDate;
     private Boolean childrenTicket;
+    private Long ticketId;
+
 
     public Long getTaskId() {
         return taskId;
@@ -27,6 +30,14 @@ public class TaskInfoListResponse implements Serializable {
 
     public void setTaskId(Long taskId) {
         this.taskId = taskId;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getLoginPhone() {
@@ -99,5 +110,13 @@ public class TaskInfoListResponse implements Serializable {
 
     public void setChildrenTicket(Boolean childrenTicket) {
         this.childrenTicket = childrenTicket;
+    }
+
+    public Long getTicketId() {
+        return ticketId;
+    }
+
+    public void setTicketId(Long ticketId) {
+        this.ticketId = ticketId;
     }
 }

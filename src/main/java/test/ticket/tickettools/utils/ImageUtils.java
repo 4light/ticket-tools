@@ -13,6 +13,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Base64;
 
+import static org.bytedeco.opencv.global.opencv_imgcodecs.imread;
+
 public class ImageUtils {
 
     /**
@@ -46,7 +48,7 @@ public class ImageUtils {
     }
 
     public static void toBlackImag(String path,String name){
-        Mat imageMat = opencv_imgcodecs.imread(path, opencv_imgcodecs.IMREAD_GRAYSCALE);
+        Mat imageMat = imread(path, opencv_imgcodecs.IMREAD_GRAYSCALE);
         opencv_imgproc.threshold(imageMat, imageMat, 215, 255, opencv_imgproc.THRESH_BINARY);
         opencv_imgcodecs.imwrite("./" + name + "_black.png", imageMat);
     }
@@ -59,7 +61,7 @@ public class ImageUtils {
         opencv_imgproc.threshold(grayImage, binaryImage, 215, 255, opencv_imgproc.THRESH_BINARY_INV | opencv_imgproc.THRESH_OTSU);
         // Perform OCR
         TessBaseAPI tesseract = new TessBaseAPI();
-        tesseract.Init("", "chi_sim"); // 指定tessdata路径和需要的语言数据
+        tesseract.Init("./", "eng"); // 指定tessdata路径和需要的语言数据
         tesseract.SetImage(binaryImage.data(), binaryImage.cols(), binaryImage.rows(), 1, binaryImage.cols());
         String result = tesseract.GetUTF8Text().getString();
         return result.trim().replaceAll(" ","").replaceAll("\n","");

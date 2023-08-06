@@ -12,15 +12,19 @@ public interface TicketService {
     //获取场次信息
     List<ScheduleInfo> getScheduleInfo();
     //添加任务
-    ServiceResponse addTaskInfo(TaskInfoRequest taskInfoRequest);
+    ServiceResponse addTaskInfo(TaskInfo taskInfo);
     //添加任务详情
     ServiceResponse addTaskDetail(TaskDetailEntity taskDetailEntity);
+    //更新任务
+    void updateTask(TaskEntity taskEntity);
 
     ServiceResponse<PageableResponse<TaskInfoListResponse>> queryTask(QueryTaskInfo queryTaskInfo);
 
-    ServiceResponse<TaskEntity> getTask(Long taskId);
+    ServiceResponse<TaskInfo> getTask(Long taskId);
 
-    ServiceResponse<List<TaskDetailEntity>> queryTaskDetail(Long taskId);
+    ServiceResponse delete(Long taskId);
+
+    List<TaskDetailEntity> selectUnpaid();
 
     ServiceResponse updateTaskDetail(UpdateTaskDetailRequest updateTaskDetailRequest);
     //添加手机信息
@@ -31,8 +35,10 @@ public interface TicketService {
     Map<String, DoSnatchInfo> getTaskForRun();
     //获取所有需要单个执行的任务
     List<DoSnatchInfo> getAllTaskForRun();
+    //获取所有未执行完的任务
+    List<TaskEntity> getAllUnDoneTask();
     //执行抢票任务
     void snatchingTicket(DoSnatchInfo doSnatchInfo);
     //支付
-    Boolean pay();
+    String pay(PlaceOrderInfo placeOrderInfo);
 }

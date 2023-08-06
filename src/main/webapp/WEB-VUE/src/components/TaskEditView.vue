@@ -95,6 +95,9 @@ import axios from "axios";
 
 export default {
   name: "TaskEditView",
+  props:{
+    taskInfo:{}
+  },
   data() {
     return {
       form: {
@@ -130,6 +133,11 @@ export default {
      'userText': 'getNewData',
    },*/
   methods: {
+    edit(){
+      this.form=this.taskInfo
+      this.userList=this.taskInfo.userList
+      this.showUserList=true
+    },
     addUser() {
       this.isAddUser = true
       this.userText = ""

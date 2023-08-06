@@ -15,7 +15,7 @@
             <arg column="payment" javaType="java.lang.Boolean" jdbcType="BIT"/>
             <arg column="ticket_id" javaType="java.lang.Long" jdbcType="BIGINT"/>
             <arg column="children_ticket" javaType="java.lang.Boolean" jdbcType="BIT"/>
-
+            <arg column="order_number" javaType="java.lang.String" jdbcType="VARCHAR"/>
         </constructor>
     </resultMap>
     <insert id="insert" parameterType="test.ticket.tickettools.domain.entity.TaskDetailEntity">
@@ -41,7 +41,7 @@
     <update id="updateTaskDetailBath" parameterType="test.ticket.tickettools.domain.entity.TaskDetailEntity">
         <foreach collection="list" item="entity" separator=";">
             UPDATE task_detail
-            SET done = 1, ticket_id = #{entity.ticketId}, children_ticket = #{entity.childrenTicket}
+            SET done = 1, ticket_id = #{entity.ticketId}, children_ticket = #{entity.childrenTicket},order_number = #{entity.orderNumber}
             WHERE task_id = #{entity.taskId} and ID_card = #{entity.IDCard}
         </foreach>
     </update>
@@ -49,6 +49,11 @@
         select *
         from task_detail
         where task_id = ${id}
+    </select>
+    <select id="selectUnpaid" resultMap="BaseResultMap">
+        select *
+        from task_detail
+        where order_number IS NOT NULL and payment = 0
     </select>
     <select id="selectByEntity" parameterType="test.ticket.tickettools.domain.entity.TaskDetailEntity" resultMap="BaseResultMap">
         select *
@@ -69,7 +74,16 @@
             <if test='updateDate!=null'>
                 update_date = #{updateDate}
             </if>
+            <if test='ticketId!=null'>
+                ticket_id = #{ticketId}
+            </if>
+            <if test='orderNumber!=null'>
+                order_number = #{orderNumber}
+            </if>
         </set>
-        where task_id = #{taskId}
+        where id = #{id}
     </update>
+    <delete id="deleteByTaskId" parameterType="java.lang.Long">
+        delete from task_detail where task_id = #{taskId,jdbcType=BIGINT}
+    </delete>
 </mapper>

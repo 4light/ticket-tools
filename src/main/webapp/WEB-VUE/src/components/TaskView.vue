@@ -20,7 +20,6 @@
         <el-button type="primary" @click="onSubmit" size="small" round>查询</el-button>
         <el-button type="primary" @click="addTask" size="small" round>新建任务</el-button>
         <el-button type="primary" @click="getMsg" size="small" round>查询验证码</el-button>
-        <el-button type="success" @click="pay" size="small" round>支付</el-button>
       </el-form-item>
     </el-form>
     <div>
@@ -70,6 +69,17 @@
           type="selection"
           width="55">
         </el-table-column>
+        <el-table-column label="操作" prop="option">
+          <template slot-scope="scope">
+            <el-link
+              type="primary" @click="getTask(scope.row.taskId)">编辑
+            </el-link>
+            <el-link
+              type="danger" @click="delete(scope.row.taskId)">删除
+            </el-link>
+            <el-link type="success" @click="pay" >支付</el-link>
+          </template>
+        </el-table-column>
       </el-table>
       <el-pagination
         :current-page="page.pageNum"
@@ -86,7 +96,13 @@
       :visible.sync="showDialog"
       style="height: 50em;overflow: unset"
     >
-      <taskEditView @close="closeDialog" v-if="showDialog"></taskEditView>
+      <taskEditView @close="closeDialog" v-if="showDialog" :taskInfo="taskInfo" ref="taskEditView"></taskEditView>
+    </el-dialog>
+    <el-dialog
+      :visible.sync="showPayDialog"
+      style="height: 50em;overflow: unset"
+    >
+      <div id="qrcodeImg"></div>
     </el-dialog>
   </div>
 </template>
@@ -94,7 +110,7 @@
 <script>
 import taskEditView from "./TaskEditView"
 import axios from "axios";
-import { socket } from "../utils/websocket";
+import QRCode from 'qrcodejs2';
 
 
 export default {
@@ -128,12 +144,18 @@ export default {
       queryCondition: {
         type: "message",
       },
-      ticketId:[]
+      ticketId: [],
+      selectTicket: [],
+      payInfo: {},
+      payUrl: "",
+      showPayDialog: false,
+      taskInfo: {},
+      number:0
     }
   },
   methods: {
-    initWebSocket () {
-      let ws = 'ws://localhost:8082/api/pushMessage/web'
+    initWebSocket() {
+      let ws = 'ws://localhost:8082/api/pushMessage/'+Date.now()
       this.websock = new WebSocket(ws)
       this.websock.onmessage = this.websocketOnMessage
       this.websock.onopen = this.websocketOnOpen
@@ -141,48 +163,50 @@ export default {
       this.websock.onclose = this.websocketClose
     },
     // websocket连接后发送数据(send发送)
-    websocketOnOpen () {
+    websocketOnOpen() {
       console.log('websock已打开')
     },
     // 连接建立失败重连
-    websocketOnError () {
+    websocketOnError() {
       this.initWebSocket()
     },
     // 数据接收
-    websocketOnMessage (e) {
+    websocketOnMessage(e) {
       /*console.log(this.websock.readyState)
       this.$message.error(e.data)
       console.log(e.data)*/
+      let res = JSON.parse(e.data)
       this.$notify({
-        title: '出票成功',
-        message: e.data,
-        duration: 0,
+        title: res.title,
+        dangerouslyUseHTMLString: true,
+        message: res.msg,
+        duration: res.time,
         type: 'success'
       });
       this.onSubmit()
       this.websocketClose()
     },
     // 数据发送
-    websocketSend (Data) {
+    websocketSend(Data) {
       this.websock.send(Data)
     },
     // 关闭
-    websocketClose (e) {
+    websocketClose(e) {
       console.log('断开连接', e)
     },
     onSubmit() {
-      this.queryParam.page=this.page
-      axios.post("/ticket/task/list",this.queryParam).then(res=>{
-        if(res.data.status!=0){
+      this.queryParam.page = this.page
+      axios.post("/ticket/task/list", this.queryParam).then(res => {
+        if (res.data.status != 0) {
           this.$notify.error({
-            title:'查询失败',
+            title: '查询失败',
             message: res.data.msg,
             duration: 2000
           });
-        }else{
-          this.taskData=res.data.data.list
-          this.page.total=res.data.data.total
-          this.page.pageSize=res.data.data.pageSize
+        } else {
+          this.taskData = res.data.data.list
+          this.page.total = res.data.data.total
+          this.page.pageSize = res.data.data.pageSize
         }
       })
     },
@@ -211,6 +235,7 @@ export default {
               i = this.taskData.length; // 如果不相等，将索引值设置为table的数组长度，跳出循环
             }
           }
+          this.number=num
           return {
             rowspan: num, // 最终将合并的行数返回
             colspan: 1,
@@ -234,6 +259,7 @@ export default {
             i = this.taskData.length;
           }
         }
+        this.number=num
         return {
           rowspan: num,
           colspan: 1,
@@ -248,6 +274,8 @@ export default {
         // 通过传递不同的列索引和需要合并的属性名，可以实现不同列的合并（索引0,1 指的是页面上的0,1）
         case 0:
           return this.mergeCol("loginPhone", rowIndex);
+        case 8:
+          return this.mergeCol("loginPhone", rowIndex)
       }
     },
     handleSizeChange(val) {
@@ -258,47 +286,114 @@ export default {
       this.page.pageNum = val
       this.onSubmit()
     },
-    updateState(row,res){
-      row.payment=res
-      axios.post("/ticket/update/taskInfo",row).then(res=>{
-        if(res.data.status!=0){
+    getTask(taskId) {
+      axios.get("/ticket/get/detail", {
+        params: {
+          taskId: taskId
+        }
+      }).then(res => {
+        this.taskInfo = res.data.data
+        this.showDialog=true
+        setTimeout(()=>{
+          this.$refs.taskEditView.edit();
+        },200)
+      })
+    },
+    delete(taskId) {
+      axios.post("/ticket/delete?taskId="+taskId).then(res => {
+        if (res.data.status != 0) {
           this.$notify.error({
-            title:'更新失败',
+            title: '删除失败',
             message: res.data.msg,
             duration: 2000
           });
-        }else{
+        } else {
           this.$notify.success({
-            title:'更新成功',
+            title: '删除成功',
             duration: 1000
           });
         }
       })
     },
-    getMsg(){
-      if(!this.queryParam.loginPhone){
+    getMsg() {
+      if (!this.queryParam.loginPhone) {
         this.$alert("请输入电话号")
         return
       }
-      axios.get("/ticket/phone/msg",{
-        params:{
-          phoneNum:this.queryParam.loginPhone
+      axios.get("/ticket/phone/msg", {
+        params: {
+          phoneNum: this.queryParam.loginPhone
         }
-      }).then(res=>{
-        this.$alert(res.data.data,"短信内容",{
+      }).then(res => {
+        this.$alert(res.data.data, "短信内容", {
           confirmButtonText: '确定',
         })
       })
     },
-    closeDialog(){
-      this.showDialog=false
+    closeDialog() {
+      this.showDialog = false
       this.onSubmit()
     },
     handleSelectionChange(val) {
-      console.log(val)
+      this.selectTicket = val
+      let currentTaskId = 0
+      for (let item of this.selectTicket) {
+        if (currentTaskId == 0) {
+          currentTaskId = item.taskId
+        }
+        if (item.done !== true) {
+          this.$alert("该订单还未抢到票!")
+          return;
+        }
+        if (item.taskId != currentTaskId) {
+          this.$alert("只能选择同一个手机号下的订单!")
+          return
+        }
+      }
     },
-    pay(){
-
+    qrcode(url) {  // 前端根据 URL 生成微信支付二维码
+      return new QRCode('qrcodeImg', {
+        width: 100,
+        height: 100,
+        text: url,
+        colorDark: '#000',
+        colorLight: '#fff'
+      })
+    },
+    pay() {
+      let payParam = {}
+      let ticketList = []
+      let childrenCount = 0
+      for (let item of this.selectTicket) {
+        payParam.taskId = item.taskId
+        payParam.authorization = item.authorization
+        payParam.date = item.useDate
+        payParam.loginPhone = item.loginPhone
+        payParam.userName = item.userName
+        payParam.IDCard = item.IDCard
+        if (item.childrenTicket == true) {
+          childrenCount += 1
+        }
+        let ticketItem = {}
+        ticketItem.id = item.ticketId
+        ticketList.push(ticketItem)
+      }
+      payParam.ticketInfoList = ticketList
+      payParam.childTicketNum = childrenCount
+      payParam.ticketNum = this.selectTicket.length
+      axios.post("/ticket/pay", payParam).then(res => {
+        if (res.data.status != 0) {
+          this.$notify.error({
+            title: '失败',
+            message: res.data.msg,
+            duration: 2000
+          });
+        } else {
+          this.showPayDialog = true;
+          this.payUrl = res.data.data
+          this.qrcode(this.payUrl)
+        }
+      })
     }
   }
 }
