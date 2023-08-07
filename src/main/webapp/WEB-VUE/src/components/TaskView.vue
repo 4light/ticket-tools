@@ -75,7 +75,7 @@
               type="primary" @click="getTask(scope.row.taskId)">编辑
             </el-link>
             <el-link
-              type="danger" @click="delete(scope.row.taskId)">删除
+              type="danger" @click="deleteTask(scope.row.taskId)">删除
             </el-link>
             <el-link type="success" @click="pay" >支付</el-link>
           </template>
@@ -302,7 +302,7 @@ export default {
         },200)
       })
     },
-    delete(taskId) {
+    deleteTask(taskId) {
       axios.post("/ticket/delete?taskId="+taskId).then(res => {
         if (res.data.status != 0) {
           this.$notify.error({
