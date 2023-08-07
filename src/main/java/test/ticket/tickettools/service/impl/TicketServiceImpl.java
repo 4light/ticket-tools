@@ -674,7 +674,7 @@ public class TicketServiceImpl implements TicketService {
         try {
             engine.eval(new java.io.InputStreamReader(TicketServiceImpl.class.getResourceAsStream("/META-INF/resources/webjars/crypto-js/3.1.9-1/crypto-js.js")));
             // 读取 JavaScript 文件并执行
-            String scriptFile = "./getPoint.js";
+            String scriptFile = "getPoint.js";
             engine.eval(new java.io.FileReader(scriptFile));
             JSONObject param = new JSONObject();
             param.put("x", x);
