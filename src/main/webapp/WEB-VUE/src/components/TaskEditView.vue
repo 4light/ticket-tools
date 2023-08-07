@@ -1,5 +1,5 @@
 <template>
-  <div style="height:50em">
+  <div style="height:85vh">
     <el-form ref="form" :model="form" label-width="80px">
       <el-form-item label="手机号">
         <el-input v-model="form.loginPhone" style="width: 30%"></el-input>
@@ -41,7 +41,7 @@
         <el-date-picker type="date" placeholder="选择日期" v-model="form.useDate"
                         format="yyyy-MM-dd"></el-date-picker>
       </el-form-item>
-      <el-form-item label="添加用户" style="height: 23em">
+      <el-form-item label="添加用户" style="height: 35vh">
         <el-button type="primary" @click="addUser" round v-if="!isAddUser">添加</el-button>
         <el-input
           type="textarea"
@@ -55,7 +55,7 @@
         </el-input>
         <!--      <el-button type="primary" @click="ok" v-if="isAddUser" round>确定</el-button>-->
         <div v-if="showUserList">
-          <el-table :data="userList" style="overflow:auto;height: 23em">
+          <el-table :data="userList" style="overflow:auto;height: 30vh">
             <el-table-column
               lable="序号"
               type="index"
@@ -83,7 +83,7 @@
         </div>
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" @click="onSubmit" round style="margin-left: 40em">创建</el-button>
+        <el-button type="primary" @click="onSubmit" round style="margin-left: 20vw">创建</el-button>
         <el-button type="warning" @click="close" round>取消</el-button>
       </el-form-item>
     </el-form>

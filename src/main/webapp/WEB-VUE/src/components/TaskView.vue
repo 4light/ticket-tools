@@ -119,6 +119,7 @@ export default {
     taskEditView
   },
   created() {
+    this.currentUser=Date.now()
     this.initWebSocket()
   },
   mounted() {
@@ -150,12 +151,13 @@ export default {
       payUrl: "",
       showPayDialog: false,
       taskInfo: {},
-      number:0
+      number:0,
+      currentUser:''
     }
   },
   methods: {
     initWebSocket() {
-      let ws = 'ws://localhost:8082/api/pushMessage/'+Date.now()
+      let ws = 'ws://8.140.16.73/api/pushMessage/'+this.currentUser
       this.websock = new WebSocket(ws)
       this.websock.onmessage = this.websocketOnMessage
       this.websock.onopen = this.websocketOnOpen
@@ -192,6 +194,7 @@ export default {
     },
     // 关闭
     websocketClose(e) {
+      this.initWebSocket()
       console.log('断开连接', e)
     },
     onSubmit() {
