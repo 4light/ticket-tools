@@ -706,7 +706,7 @@ public class TicketServiceImpl implements TicketService {
         try {
             engine.eval(new java.io.InputStreamReader(TicketServiceImpl.class.getResourceAsStream("/META-INF/resources/webjars/crypto-js/3.1.9-1/crypto-js.js")));
             // 读取 JavaScript 文件并执行
-            engine.eval(new java.io.FileReader(ResourceUtils.getFile("classpath:getPoint.js")));
+            engine.eval(new java.io.InputStreamReader(TicketServiceImpl.class.getResourceAsStream("/META-INF/resources/getPoint.js")));
             JSONObject param = new JSONObject();
             param.put("x", x);
             param.put("y", 5);
@@ -716,7 +716,7 @@ public class TicketServiceImpl implements TicketService {
             if (result != null) {
                 return result.toString();
             }
-        } catch (ScriptException | java.io.FileNotFoundException | NoSuchMethodException e) {
+        } catch (ScriptException | NoSuchMethodException e) {
             e.printStackTrace();
         }
         return null;
