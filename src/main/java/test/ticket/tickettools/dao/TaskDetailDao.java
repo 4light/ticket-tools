@@ -17,5 +17,6 @@ public interface TaskDetailDao {
     List<TaskDetailEntity> selectByEntity(TaskDetailEntity entity);
     List<TaskDetailEntity> selectByTaskIdLimit(Long id);
     void updateTaskDetailBath(@Param("list")List<TaskDetailEntity> taskDetailIds);
+    void deleteTaskDetailBath(@Param("list")List<TaskDetailEntity> taskDetailIds);
     Integer deleteByTaskId(Long taskId);
 }

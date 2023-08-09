@@ -133,14 +133,29 @@ public class TicketServiceImpl implements TicketService {
             taskEntity.setUserId(userId);
             Integer insert = taskDao.updateTask(taskEntity);
             if (insert > 0) {
+                List<TaskDetailEntity> all = taskDetailDao.selectByTaskId(taskEntity.getId());
                 List<TaskDetailEntity> userList = taskInfo.getUserList();
-                userList.forEach(o -> {
-                    o.setUpdateDate(new Date());
-                });
                 List<TaskDetailEntity> addList = userList.stream().filter(o -> o.getId() == null).collect(Collectors.toList());
                 List<TaskDetailEntity> updateList = userList.stream().filter(o -> o.getId() != null).collect(Collectors.toList());
-                taskDetailDao.insertBatch(addList);
-                taskDetailDao.updateTaskDetailBath(updateList);
+                List<TaskDetailEntity> deleteList=new ArrayList<>();
+                List<Long> taskDetailIds = updateList.stream().map(TaskDetailEntity::getId).collect(Collectors.toList());
+                if(updateList.size()!=all.size()) {
+                    all.forEach(allEntity -> {
+                        if (!taskDetailIds.contains(allEntity.getId())) {
+                            deleteList.add(allEntity);
+                        }
+                    });
+                    taskDetailDao.deleteTaskDetailBath(deleteList);
+                }
+                if(!ObjectUtils.isEmpty(addList)) {
+                    addList.forEach(o->{
+                        o.setTaskId(taskEntity.getId());
+                    });
+                    taskDetailDao.insertBatch(addList);
+                }
+                if(!ObjectUtils.isEmpty(updateList)) {
+                    taskDetailDao.updateTaskDetailBath(updateList);
+                }
                 return ServiceResponse.createBySuccess();
             }
             return ServiceResponse.createByErrorMessage("保存任务异常");
@@ -543,6 +558,11 @@ public class TicketServiceImpl implements TicketService {
                         }
                         taskDetailDao.updateTaskDetailBath(taskDetailEntities);
                         WebSocketServer.sendInfo(socketMsg("抢票成功", stringBuffer.toString(), 0), null);
+                    }
+                    if (!ObjectUtils.isEmpty(bodyJson) && bodyJson.getIntValue("code") == 550) {
+                        if(bodyJson.getString("msg").contains("已有订单")){
+                            WebSocketServer.sendInfo(socketMsg("抢票失败", bodyJson.getString("msg"), 0), null);
+                        }
                     }
                     try {
                         Files.delete(Paths.get(sliderImageName));

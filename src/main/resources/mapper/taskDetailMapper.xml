@@ -43,42 +43,48 @@
         <foreach collection="list" item="entity" separator=";">
             UPDATE task_detail
             <set>
-            <if test='done!=null'>
-                done = #{done,jdbcType=BIT},
-            </if>
-            <if test='ticketId!=null'>
-                ticket_id = #{entity.ticketId},
-            </if>
-            <if test='childrenTicket!=null'>
-                children_ticket = #{entity.childrenTicket},
-            </if>
-            <if test='orderNumber!=null'>
-                order_number = #{entity.orderNumber},
-            </if>
-            <if test='userName!=null'>
-                user_name=#{entity.userName},
-            </if>
-            <if test='IDCard!=null'>
-                ID_card = #{entity.IDCard},
-            </if>
-            <if test='updateDate!=null'>
-                update_date = #{entity.updateDate}
-            </if>
+                <if test='entity.done!=null'>
+                    done = #{entity.done,jdbcType=BIT},
+                </if>
+                <if test='entity.ticketId!=null'>
+                    ticket_id = #{entity.ticketId},
+                </if>
+                <if test='entity.childrenTicket!=null'>
+                    children_ticket = #{entity.childrenTicket},
+                </if>
+                <if test='entity.orderNumber!=null'>
+                    order_number = #{entity.orderNumber},
+                </if>
+                <if test='entity.userName!=null'>
+                    user_name=#{entity.userName},
+                </if>
+                <if test='entity.IDCard!=null'>
+                    ID_card = #{entity.IDCard},
+                </if>
+                <if test='entity.updateDate!=null'>
+                    update_date = #{entity.updateDate}
+                </if>
             </set>
             <where>
                 1=1
-                <if test='id!=null'>
+                <if test='entity.id!=null'>
                     and id = #{entity.id}
                 </if>
-                <if test='taskId!=null'>
+                <if test='entity.taskId!=null'>
                     and task_id = #{entity.taskId}
                 </if>
-                <if test='IDCard!=null'>
+                <if test='entity.IDCard!=null'>
                     and ID_card = #{entity.IDCard}
                 </if>
             </where>
         </foreach>
     </update>
+    <delete id="deleteTaskDetailBath" parameterType="test.ticket.tickettools.domain.entity.TaskDetailEntity">
+        delete from task_detail where id IN
+        <foreach collection="list" item="entity"  open="(" separator="," close=")">
+            #{entity.id}
+        </foreach>
+    </delete>
     <select id="selectByTaskId" parameterType="java.lang.Long" resultMap="BaseResultMap">
         select *
         from task_detail
