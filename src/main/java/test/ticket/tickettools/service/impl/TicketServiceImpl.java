@@ -1,6 +1,6 @@
 package test.ticket.tickettools.service.impl;
 
-import cn.hutool.core.bean.BeanUtil;
+import org.springframework.beans.BeanUtils;
 import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 import test.ticket.tickettools.dao.PhoneInfoDao;
@@ -96,26 +97,14 @@ public class TicketServiceImpl implements TicketService {
     @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRED)
     @Override
     public ServiceResponse addTaskInfo(TaskInfo taskInfo) {
-        TaskEntity taskEntity = new TaskEntity();
-        BeanUtil.copyProperties(taskInfo, taskEntity);
-        if (ObjectUtils.isEmpty(taskInfo.getTaskId())) {
+        TaskEntity taskEntity = JSON.parseObject(JSON.toJSONString(taskInfo),TaskEntity.class);
+        BeanUtils.copyProperties(taskInfo, taskEntity);
+        if (ObjectUtils.isEmpty(taskInfo.getId())) {
             taskEntity.setCreateDate(new Date());
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("authority", "pcticket.cstm.org.cn");
-            headers.set("accept", "application/json");
-            headers.set("authorization", taskInfo.getAuth());
-            headers.set("cookie", "SL_G_WPT_TO=zh; SL_GWPT_Show_Hide_tmp=1; SL_wptGlobTipTmp=1");
-            headers.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
-            HttpEntity entity = new HttpEntity<>(headers);
-            ResponseEntity getUserRes = restTemplate.exchange(getCurrentUserUrl, HttpMethod.GET, entity, String.class);
-            String userInfoStr = getUserRes.getBody().toString();
-            JSONObject userInfoJson = JSON.parseObject(userInfoStr);
-            JSONObject userInfo = userInfoJson == null ? null : userInfoJson.getJSONObject("user");
-            if (userInfo == null) {
-                log.info("获取用户信息失败：{}", userInfoJson);
+            Long userId = getUserId(taskEntity.getAuth());
+            if(ObjectUtils.isEmpty(userId)){
+                return ServiceResponse.createByErrorMessage("获取用户Id失败");
             }
-            long userId = userInfo.getLongValue("userId");
             taskEntity.setUserId(userId);
             Integer insert = taskDao.insert(taskEntity);
             if (insert > 0) {
@@ -137,18 +126,22 @@ public class TicketServiceImpl implements TicketService {
             return ServiceResponse.createByErrorMessage("保存任务异常");
         } else {
             taskEntity.setUpdateDate(new Date());
-            Integer insert = taskDao.insert(taskEntity);
+            Long userId = getUserId(taskEntity.getAuth());
+            if(ObjectUtils.isEmpty(userId)){
+                return ServiceResponse.createByErrorMessage("获取用户Id失败");
+            }
+            taskEntity.setUserId(userId);
+            Integer insert = taskDao.updateTask(taskEntity);
             if (insert > 0) {
                 List<TaskDetailEntity> userList = taskInfo.getUserList();
                 userList.forEach(o -> {
                     o.setUpdateDate(new Date());
                 });
-                Integer res = taskDetailDao.insertBatch(userList);
-                if (res == userList.size()) {
-                    return ServiceResponse.createBySuccess();
-                } else {
-                    return ServiceResponse.createByErrorMessage("保存任务详情异常");
-                }
+                List<TaskDetailEntity> addList = userList.stream().filter(o -> o.getId() == null).collect(Collectors.toList());
+                List<TaskDetailEntity> updateList = userList.stream().filter(o -> o.getId() != null).collect(Collectors.toList());
+                taskDetailDao.insertBatch(addList);
+                taskDetailDao.updateTaskDetailBath(updateList);
+                return ServiceResponse.createBySuccess();
             }
             return ServiceResponse.createByErrorMessage("保存任务异常");
         }
@@ -206,7 +199,7 @@ public class TicketServiceImpl implements TicketService {
     public ServiceResponse<TaskInfo> getTask(Long taskId) {
         TaskInfo taskInfo = new TaskInfo();
         TaskEntity taskEntity = taskDao.selectByPrimaryKey(taskId);
-        taskInfo.setTaskId(taskEntity.getId());
+        taskInfo.setId(taskEntity.getId());
         taskInfo.setAuth(taskEntity.getAuth());
         taskInfo.setChannel(taskEntity.getChannel());
         taskInfo.setLoginPhone(taskEntity.getLoginPhone());
@@ -542,6 +535,7 @@ public class TicketServiceImpl implements TicketService {
                                         taskDetailEntity.setUpdateDate(new Date());
                                         taskDetailEntity.setChildrenTicket(item.getIntValue("isChildFreeTicket") == 1);
                                         taskDetailEntity.setTicketId(item.getLongValue("id"));
+                                        taskDetailEntity.setDone(true);
                                         taskDetailEntities.add(taskDetailEntity);
                                     }
                                 });
@@ -566,9 +560,6 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     public String pay(PlaceOrderInfo placeOrderInfo) {
-        if (!ObjectUtils.isEmpty(placeOrderInfo)) {
-            return "weixin://wxpay/bizpayurl?pr=I1zL7CSzz";
-        }
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.setRequestFactory(new SimpleClientHttpRequestFactory() {
             {
@@ -617,6 +608,27 @@ public class TicketServiceImpl implements TicketService {
             }
         }
         return null;
+    }
+
+    private Long getUserId(String auth){
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("authority", "pcticket.cstm.org.cn");
+        headers.set("accept", "application/json");
+        headers.set("authorization", auth);
+        headers.set("cookie", "SL_G_WPT_TO=zh; SL_GWPT_Show_Hide_tmp=1; SL_wptGlobTipTmp=1");
+        headers.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
+        HttpEntity entity = new HttpEntity<>(headers);
+        ResponseEntity getUserRes = restTemplate.exchange(getCurrentUserUrl, HttpMethod.GET, entity, String.class);
+        String userInfoStr = getUserRes.getBody().toString();
+        JSONObject userInfoJson = JSON.parseObject(userInfoStr);
+        JSONObject userInfo = userInfoJson == null ? null : userInfoJson.getJSONObject("user");
+        if (userInfo == null) {
+            log.info("获取用户信息失败：{}", userInfoJson);
+            return null;
+        }
+        long userId = userInfo.getLongValue("userId");
+        return userId;
     }
 
     private String socketMsg(String title, String msg, Integer time) {
@@ -674,8 +686,7 @@ public class TicketServiceImpl implements TicketService {
         try {
             engine.eval(new java.io.InputStreamReader(TicketServiceImpl.class.getResourceAsStream("/META-INF/resources/webjars/crypto-js/3.1.9-1/crypto-js.js")));
             // 读取 JavaScript 文件并执行
-            String scriptFile = "getPoint.js";
-            engine.eval(new java.io.FileReader(scriptFile));
+            engine.eval(new java.io.FileReader(ResourceUtils.getFile("classpath:getPoint.js")));
             JSONObject param = new JSONObject();
             param.put("x", x);
             param.put("y", 5);

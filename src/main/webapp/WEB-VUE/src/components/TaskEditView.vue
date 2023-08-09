@@ -157,7 +157,7 @@ export default {
         };
         list.push(obj);
       }
-      this.userList = list
+      this.userList=this.userList.concat(list)
       this.isAddUser = false
       this.showUserList = true
     },

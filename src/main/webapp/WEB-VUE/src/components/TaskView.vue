@@ -303,7 +303,7 @@ export default {
       })
     },
     deleteTask(taskId) {
-      axios.post("/ticket/delete?taskId="+taskId).then(res => {
+      axios.get("/ticket/delete?taskId="+taskId).then(res => {
         if (res.data.status != 0) {
           this.$notify.error({
             title: '删除失败',
@@ -311,6 +311,7 @@ export default {
             duration: 2000
           });
         } else {
+          this.onSubmit()
           this.$notify.success({
             title: '删除成功',
             duration: 1000

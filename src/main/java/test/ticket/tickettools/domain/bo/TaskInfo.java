@@ -8,7 +8,7 @@ import java.util.List;
 
 public class TaskInfo implements Serializable {
     private static final long serialVersionUID = 2517797866070411812L;
-    private Long taskId;
+    private Long id;
     private String loginPhone;
     private String auth;
     //渠道
@@ -20,12 +20,12 @@ public class TaskInfo implements Serializable {
     private Date useDate;
     private List<TaskDetailEntity> userList;
 
-    public Long getTaskId() {
-        return taskId;
+    public Long getId() {
+        return id;
     }
 
-    public void setTaskId(Long taskId) {
-        this.taskId = taskId;
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getLoginPhone() {

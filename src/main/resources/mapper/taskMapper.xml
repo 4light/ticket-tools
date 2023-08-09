@@ -74,13 +74,21 @@
     </delete>
     <update id="updateTask" parameterType="test.ticket.tickettools.domain.entity.TaskEntity">
         update task
-        set
         <set>
+            <if test='loginPhone!=null'>
+                login_phone = #{loginPhone},
+            </if>
             <if test='done!=null'>
                 done = #{done},
             </if>
+            <if test='userId!=null'>
+                user_id = #{userId},
+            </if>
+            <if test='useDate!=null'>
+                use_date = #{useDate},
+            </if>
             <if test='auth!=null'>
-                auth = #{auth}
+                auth = #{auth},
             </if>
             <if test='updateDate!=null'>
                 update_date = #{updateDate}
