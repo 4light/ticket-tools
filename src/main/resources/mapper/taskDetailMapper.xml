@@ -93,7 +93,7 @@
     <select id="selectUnpaid" resultMap="BaseResultMap">
         select *
         from task_detail
-        where order_number IS NOT NULL
+        where done = 1 and order_number IS NOT NULL
           and payment = 0
     </select>
     <select id="selectByEntity" parameterType="test.ticket.tickettools.domain.entity.TaskDetailEntity"
@@ -116,10 +116,10 @@
                 payment = #{payment},
             </if>
             <if test='updateDate!=null'>
-                update_date = #{updateDate}
+                update_date = #{updateDate},
             </if>
             <if test='ticketId!=null'>
-                ticket_id = #{ticketId}
+                ticket_id = #{ticketId},
             </if>
             <if test='orderNumber!=null'>
                 order_number = #{orderNumber}

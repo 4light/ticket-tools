@@ -64,6 +64,9 @@
         <el-table-column
           prop="updateDate"
           label="过期时间">
+          <template slot-scope="scope">
+            {{addDate(scope.row.updateDate)}}
+          </template>
         </el-table-column>
         <el-table-column
           type="selection"
@@ -393,11 +396,34 @@ export default {
             duration: 2000
           });
         } else {
-          this.showPayDialog = true;
-          this.payUrl = res.data.data
-          this.qrcode(this.payUrl)
+          if(res.data.data&&res.data.data!="") {
+            this.showPayDialog = true;
+            this.payUrl = res.data.data
+            this.qrcode(this.payUrl)
+          }
         }
       })
+    },
+    addDate(nowDate){
+      if(!nowDate){
+        return
+      }
+      let current=new Date(nowDate)
+      let newDate=current.setMinutes(current.getMinutes()+15)
+      let rd=new Date(newDate);
+      let y = rd.getFullYear();
+      let M = rd.getMonth() + 1;
+      let d = rd.getDate();
+      let H=rd.getHours();
+      let m=rd.getMinutes()
+      let s=rd.getSeconds()
+      if (M < 10) {
+        M = "0" + M;
+      }
+      if (d < 10) {
+        d = "0" + d;
+      }
+      return (y+"-"+M+"-"+d+" "+H+":"+m+":"+s)
     }
   }
 }

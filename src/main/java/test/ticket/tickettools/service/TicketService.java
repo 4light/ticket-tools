@@ -26,7 +26,7 @@ public interface TicketService {
 
     List<TaskDetailEntity> selectUnpaid();
 
-    ServiceResponse updateTaskDetail(UpdateTaskDetailRequest updateTaskDetailRequest);
+    Boolean updateTaskDetail(TaskDetailEntity taskDetailEntity);
     //添加手机信息
     ServiceResponse addPhoneInfo(PhoneInfoEntity phoneInfoEntity);
 

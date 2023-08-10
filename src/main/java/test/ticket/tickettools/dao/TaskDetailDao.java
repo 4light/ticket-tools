@@ -1,6 +1,5 @@
 package test.ticket.tickettools.dao;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 import test.ticket.tickettools.domain.entity.TaskDetailEntity;

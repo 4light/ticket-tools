@@ -1,5 +1,6 @@
 package test.ticket.tickettools.service.impl;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.springframework.beans.BeanUtils;
 import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSON;
@@ -149,6 +150,7 @@ public class TicketServiceImpl implements TicketService {
                 }
                 if(!ObjectUtils.isEmpty(addList)) {
                     addList.forEach(o->{
+                        o.setCreateDate(new Date());
                         o.setTaskId(taskEntity.getId());
                     });
                     taskDetailDao.insertBatch(addList);
@@ -344,19 +346,9 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
-    public ServiceResponse updateTaskDetail(UpdateTaskDetailRequest updateTaskDetailRequest) {
-        TaskDetailEntity taskDetailEntity = new TaskDetailEntity();
-        taskDetailEntity.setId(updateTaskDetailRequest.getTaskDetailId());
-        taskDetailEntity.setTaskId(updateTaskDetailRequest.getTaskId());
-        if (!ObjectUtils.isEmpty(updateTaskDetailRequest.getPayment())) {
-            taskDetailEntity.setPayment(updateTaskDetailRequest.getPayment());
-        }
-        taskDetailEntity.setUpdateDate(new Date());
+    public Boolean updateTaskDetail(TaskDetailEntity taskDetailEntity) {
         Integer integer = taskDetailDao.updateTaskDetail(taskDetailEntity);
-        if (integer > 0) {
-            return ServiceResponse.createBySuccess();
-        }
-        return ServiceResponse.createByErrorMessage("更新失败");
+        return integer>0;
     }
 
     @Override
@@ -525,7 +517,7 @@ public class TicketServiceImpl implements TicketService {
                     String point = doSecretKey(x, secretKey);
                     HttpEntity shoppingCartUrlEntity = new HttpEntity<>(buildParam(token, priceNameCountMap.get("childrenTicket"), point, doSnatchInfo.getSession(), useDate, priceId, childrenPriceId, discountPriceId, olderPriceId, phone, nameIDMap), headers);
                     ResponseEntity<String> exchange = restTemplate.exchange(shoppingCartUrl, HttpMethod.POST, shoppingCartUrlEntity, String.class);
-                    log.info(exchange.getBody());
+                    //log.info(exchange.getBody());
                     String body = exchange.getBody();
                     JSONObject bodyJson = JSON.parseObject(body);
                     //WebSocketServer.sendInfo("余票不足","web");
@@ -573,7 +565,7 @@ public class TicketServiceImpl implements TicketService {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
     }
 
@@ -607,15 +599,21 @@ public class TicketServiceImpl implements TicketService {
         param.put("useTicketType", 1);
         HttpEntity entity = new HttpEntity<>(param, headers);
         ResponseEntity<JSONObject> exchange = restTemplate.exchange(placeOrderUrl, HttpMethod.POST, entity, JSONObject.class);
+        log.info("提交订单结果:{}",exchange.getBody());
         JSONObject placeOrderRes = exchange.getBody();
         if (!ObjectUtils.isEmpty(placeOrderRes)) {
             JSONObject orderData = placeOrderRes.getJSONObject("data");
             String orderNumber = orderData.getString("orderNumber");
+            Integer needChargeCode = orderData.getInteger("needChargeCode");
             TaskDetailEntity taskDetailEntity = new TaskDetailEntity();
             taskDetailEntity.setId(placeOrderInfo.getId());
             taskDetailEntity.setOrderNumber(orderNumber);
             taskDetailEntity.setUpdateDate(new Date());
+            taskDetailEntity.setPayment(needChargeCode!=1);
             taskDetailDao.updateTaskDetail(taskDetailEntity);
+            if(needChargeCode!=1){
+                return null;
+            }
             int orderId = orderData.getIntValue("orderId");
             JSONObject payParam = new JSONObject();
             payParam.put("id", orderId);
@@ -623,6 +621,7 @@ public class TicketServiceImpl implements TicketService {
             HttpEntity payEntity = new HttpEntity<>(payParam, headers);
             ResponseEntity<JSONObject> payResEntity = restTemplate.exchange(wxPayForPcUrl, HttpMethod.POST, payEntity, JSONObject.class);
             JSONObject payRes = payResEntity.getBody();
+            log.info("后去支付url结果:{}",payRes);
             if (!ObjectUtils.isEmpty(payRes) && payRes.getIntValue("code") == 200) {
                 return payRes.getString("data");
             }

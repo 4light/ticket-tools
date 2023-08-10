@@ -19,6 +19,7 @@ public class TaskInfoListResponse implements Serializable {
     private String IDCard;
     private Boolean done;
     private Boolean payment;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone="GMT+8")
     private Date updateDate;
     private Boolean childrenTicket;
     private Long ticketId;

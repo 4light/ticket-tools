@@ -17,4 +17,5 @@ public interface TaskDao{
     List<TaskEntity> getUnDoneTasks(TaskEntity taskEntity);
     //获取所有需要抢票的任务
     List<TaskEntity> getAllUnDoneTasks(TaskEntity taskEntity);
+    List<TaskEntity> getUnpaidTasks();
 }

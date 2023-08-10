@@ -12,15 +12,22 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 import test.ticket.tickettools.config.TaskExecutorConfig;
 import test.ticket.tickettools.domain.bo.DoSnatchInfo;
+import test.ticket.tickettools.domain.bo.ServiceResponse;
+import test.ticket.tickettools.domain.bo.TaskInfo;
+import test.ticket.tickettools.domain.bo.UpdateTaskDetailRequest;
+import test.ticket.tickettools.domain.entity.TaskDetailEntity;
 import test.ticket.tickettools.domain.entity.TaskEntity;
 import test.ticket.tickettools.service.LoginService;
 import test.ticket.tickettools.service.TicketService;
+import test.ticket.tickettools.utils.DateUtils;
 
 import javax.annotation.Resource;
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Configuration
@@ -29,6 +36,7 @@ public class DoSnatchingSchedule {
 
     private static String getCurrentUserUrl="https://pcticket.cstm.org.cn/prod-api/getUserInfoToIndividual";
     private static String searchByOrderNoUrl="https://pcticket.cstm.org.cn/prod-api/order/OrderInfo/updateSearchByOrderNo";
+    private static String updateSearchByOrderNoUrl="https://pcticket.cstm.org.cn/prod-api/order/OrderInfo/updateSearchByOrderNo";
     private static RestTemplate restTemplate=new RestTemplate();
 
     @Resource
@@ -38,7 +46,9 @@ public class DoSnatchingSchedule {
     @Resource
     LoginService loginService;
 
-
+    /**
+     * 执行放票当天的任务
+     */
     @Scheduled(cron = "0/1 0-30 18 * * ?")
     public void doSnatching(){
         Map<String, DoSnatchInfo> taskForRun = ticketServiceImpl.getTaskForRun();
@@ -47,6 +57,20 @@ public class DoSnatchingSchedule {
         }
         for (Map.Entry<String, DoSnatchInfo> entity : taskForRun.entrySet()) {
             CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(entity.getValue()), taskExecutorConfig.getAsyncExecutor());
+        }
+    }
+
+    /**
+     * 去除放票当天的任务需要单个执行的任务
+     */
+    @Scheduled(cron = "0/1 0-30 18 * * ?")
+    public void doSnatchingExcludeTarget(){
+        List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
+        LocalDate localDate=LocalDate.now().plusDays(7L);
+        Date date = DateUtils.localDateToDate(localDate);
+        allTaskForRun=allTaskForRun.stream().filter(o->!date.equals(o.getUseDate())).collect(Collectors.toList());
+        for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
+            CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo), taskExecutorConfig.getAsyncExecutor());
         }
     }
     @Scheduled(cron = "0/1 31-59 18 * * ?")
@@ -64,7 +88,38 @@ public class DoSnatchingSchedule {
             CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo), taskExecutorConfig.getAsyncExecutor());
         }
     }
-
+    @Scheduled(cron = "* 0/1 * * * ?")
+    public void updateOrderPayStatus(){
+        List<TaskDetailEntity> taskDetailEntities = ticketServiceImpl.selectUnpaid();
+        for (TaskDetailEntity taskDetailEntity : taskDetailEntities) {
+            if(taskDetailEntity.getDone()&&!taskDetailEntity.getPayment()&&taskDetailEntity.getOrderNumber()!=null){
+                ServiceResponse<TaskInfo> task = ticketServiceImpl.getTask(taskDetailEntity.getTaskId());
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_JSON);
+                headers.set("authority", "pcticket.cstm.org.cn");
+                headers.set("accept", "application/json");
+                headers.set("authorization",task.getData().getAuth());
+                headers.set("cookie", "SL_G_WPT_TO=zh; SL_GWPT_Show_Hide_tmp=1; SL_wptGlobTipTmp=1");
+                headers.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
+                JSONObject param=new JSONObject();
+                param.put("docNo",taskDetailEntity.getOrderNumber());
+                param.put("payType",0);
+                HttpEntity entity = new HttpEntity<>(param,headers);
+                ResponseEntity<JSONObject> exchange = restTemplate.exchange(updateSearchByOrderNoUrl, HttpMethod.POST, entity, JSONObject.class);
+                JSONObject body = exchange.getBody();
+                if(!ObjectUtils.isEmpty(body)){
+                    if(body.getIntValue("code")==200){
+                        JSONObject data = body.getJSONObject("data");
+                        if(data.getIntValue("status")==2){
+                            taskDetailEntity.setPayment(true);
+                            Boolean res = ticketServiceImpl.updateTaskDetail(taskDetailEntity);
+                            log.info("更新支付结果：{}",res);
+                        }
+                    }
+                }
+            }
+        }
+    }
 
 
     public void updateAuth(){

@@ -50,10 +50,6 @@ public class TicketController {
         return ticketServiceImpl.delete(taskId);
     }
 
-    @PostMapping(value = "/update/taskInfo")
-    public ServiceResponse updateTask(@RequestBody UpdateTaskDetailRequest updateTaskDetailRequest) {
-        return ticketServiceImpl.updateTaskDetail(updateTaskDetailRequest);
-    }
 
     @GetMapping(value = "/phone/captcha")
     public ServiceResponse savePhoneCaptcha(HttpServletRequest request) {
