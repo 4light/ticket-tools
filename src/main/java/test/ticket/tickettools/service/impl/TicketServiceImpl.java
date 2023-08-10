@@ -390,7 +390,7 @@ public class TicketServiceImpl implements TicketService {
             //获取成人票和儿童票
             JSONArray getPriceByScheduleData = getPriceByScheduleJson == null ? null : getPriceByScheduleJson.getJSONArray("data");
             if (ObjectUtils.isEmpty(getPriceByScheduleData)) {
-                //log.info("获取到的场次失败");
+                log.info("获取到的场次失败");
                 return;
             }
             boolean flag = true;
@@ -573,7 +573,7 @@ public class TicketServiceImpl implements TicketService {
                 }
             }
         } catch (Exception e) {
-            //e.printStackTrace();
+            e.printStackTrace();
         }
     }
 
@@ -706,7 +706,7 @@ public class TicketServiceImpl implements TicketService {
         try {
             engine.eval(new java.io.InputStreamReader(TicketServiceImpl.class.getResourceAsStream("/META-INF/resources/webjars/crypto-js/3.1.9-1/crypto-js.js")));
             // 读取 JavaScript 文件并执行
-            engine.eval(new java.io.InputStreamReader(TicketServiceImpl.class.getResourceAsStream("/META-INF/resources/getPoint.js")));
+            engine.eval(new java.io.InputStreamReader(Thread.currentThread().getContextClassLoader().getResourceAsStream("getPoint.js")));
             JSONObject param = new JSONObject();
             param.put("x", x);
             param.put("y", 5);
