@@ -143,7 +143,7 @@ export default {
       this.userText = ""
     },
     ok() {
-      let regex = /(.+?)\t(\d{18}|\d{17}[xX])/g;
+      let regex = /(.+?)\s(\d{18}|\d{17}[xX])/g;
       let list = [];
 
       let match;
