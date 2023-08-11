@@ -408,6 +408,10 @@ export default {
       })
     },
     init(){
+      if(this.selectTicket.length<=0){
+        this.$alert("需勾选要重置的订单")
+        return;
+      }
       let req=[]
       for (let item of this.selectTicket) {
         let payParam = {}
