@@ -127,6 +127,21 @@
         </set>
         where id = #{id}
     </update>
+    <update id="initTaskDetail" parameterType="test.ticket.tickettools.domain.entity.TaskDetailEntity">
+        update task_detail
+        <set>
+            done = 0,
+            payment = 0,
+            update_date = null,
+            ticket_id = null,
+            children_ticket = 0,
+            order_number = null
+        </set>
+        where id IN
+        <foreach collection="list" item="entity"  open="(" separator="," close=")">
+            #{entity.id}
+        </foreach>
+    </update>
     <delete id="deleteByTaskId" parameterType="java.lang.Long">
         delete
         from task_detail

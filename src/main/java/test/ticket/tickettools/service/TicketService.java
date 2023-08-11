@@ -9,10 +9,10 @@ import java.util.List;
 import java.util.Map;
 
 public interface TicketService {
-    //获取场次信息
-    List<ScheduleInfo> getScheduleInfo();
     //添加任务
     ServiceResponse addTaskInfo(TaskInfo taskInfo);
+    //重置任务
+    ServiceResponse initTask(List<TaskDetailEntity> taskDetailEntityList);
     //添加任务详情
     ServiceResponse addTaskDetail(TaskDetailEntity taskDetailEntity);
     //更新任务

@@ -81,6 +81,9 @@
               type="danger" @click="deleteTask(scope.row.taskId)">删除
             </el-link>
             <el-link type="success" @click="pay" >支付</el-link>
+            <el-link
+              type="danger" @click="init">重置
+            </el-link>
           </template>
         </el-table-column>
       </el-table>
@@ -401,6 +404,28 @@ export default {
             this.payUrl = res.data.data
             this.qrcode(this.payUrl)
           }
+        }
+      })
+    },
+    init(){
+      let req=[]
+      for (let item of this.selectTicket) {
+        let payParam = {}
+        payParam.id=item.id
+        req.push(payParam)
+      }
+      axios.post("ticket/init/task",req).then(res=>{
+        if (res.data.status != 0) {
+          this.$notify.error({
+            title: '失败',
+            message: res.data.msg,
+            duration: 2000
+          });
+        } else {
+          this.$notify.success({
+            title: '重置成功',
+            duration: 1000
+          });
         }
       })
     },

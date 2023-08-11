@@ -90,10 +90,6 @@ public class TicketServiceImpl implements TicketService {
     @Resource
     PhoneInfoDao phoneInfoDao;
 
-    @Override
-    public List<ScheduleInfo> getScheduleInfo() {
-        return null;
-    }
 
     @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRED)
     @Override
@@ -162,6 +158,15 @@ public class TicketServiceImpl implements TicketService {
             }
             return ServiceResponse.createByErrorMessage("保存任务异常");
         }
+    }
+
+    @Override
+    public ServiceResponse initTask(List<TaskDetailEntity> taskDetailEntityList) {
+        Integer res = taskDetailDao.initTaskDetail(taskDetailEntityList);
+        if(res>0){
+            return ServiceResponse.createBySuccess();
+        }
+        return ServiceResponse.createByErrorMessage("重置失败");
     }
 
     @Override

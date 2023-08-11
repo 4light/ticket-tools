@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import test.ticket.tickettools.dao.TaskDetailDao;
 import test.ticket.tickettools.domain.bo.*;
 import test.ticket.tickettools.domain.entity.PhoneInfoEntity;
+import test.ticket.tickettools.domain.entity.TaskDetailEntity;
 import test.ticket.tickettools.service.LoginService;
 import test.ticket.tickettools.service.TicketService;
 import test.ticket.tickettools.service.WebSocketServer;
@@ -14,6 +15,7 @@ import test.ticket.tickettools.service.WebSocketServer;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -34,10 +36,14 @@ public class TicketController {
     }
 
 
-
     @PostMapping(value = "/add/taskInfo")
     public ServiceResponse addTask(@RequestBody TaskInfo taskInfo) {
         return ticketServiceImpl.addTaskInfo(taskInfo);
+    }
+
+    @PostMapping(value = "/init/task")
+    public ServiceResponse initTask(@RequestBody List<TaskDetailEntity> taskDetailEntityList) {
+        return ticketServiceImpl.initTask(taskDetailEntityList);
     }
 
     @GetMapping(value = "/get/detail")
