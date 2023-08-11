@@ -71,6 +71,7 @@ public class TicketServiceImpl implements TicketService {
     //提交订单
     private static String placeOrderUrl = "https://pcticket.cstm.org.cn/prod-api/config/orderRule/placeOrder";
     private static String wxPayForPcUrl = "https://pcticket.cstm.org.cn/prod-api/order/OrderInfo/wxPayForPc";
+    private static List<String> doneList=new ArrayList<>();
 
     private static CloseableHttpClient httpClient = HttpClientBuilder.create()
             .setMaxConnTotal(100) // 设置最大连接数
@@ -527,6 +528,7 @@ public class TicketServiceImpl implements TicketService {
                     JSONObject bodyJson = JSON.parseObject(body);
                     //WebSocketServer.sendInfo("余票不足","web");
                     if (!ObjectUtils.isEmpty(bodyJson) && bodyJson.getIntValue("code") == 200) {
+                        doneList.addAll(new ArrayList(nameIDMap.keySet()));
                         ResponseEntity<String> shoppingCartRes = restTemplate.exchange(getShoppingCart, HttpMethod.GET, entity, String.class);
                         String shoppingCartBody = shoppingCartRes.getBody();
                         JSONObject shoppingCartJson = JSON.parseObject(shoppingCartBody);
@@ -558,7 +560,11 @@ public class TicketServiceImpl implements TicketService {
                     }
                     if (!ObjectUtils.isEmpty(bodyJson) && bodyJson.getIntValue("code") == 550) {
                         if(bodyJson.getString("msg").contains("已有订单")){
-                            WebSocketServer.sendInfo(socketMsg("抢票失败", bodyJson.getString("msg"), 0), null);
+                            doneList.forEach(idCard->{
+                                if(!bodyJson.getString("msg").contains(idCard)){
+                                    WebSocketServer.sendInfo(socketMsg("抢票失败", bodyJson.getString("msg"), 0), null);
+                                }
+                            });
                         }
                     }
                     try {
