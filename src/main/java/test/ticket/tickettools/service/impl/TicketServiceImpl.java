@@ -534,14 +534,11 @@ public class TicketServiceImpl implements TicketService {
                         JSONObject shoppingCartJson = JSON.parseObject(shoppingCartBody);
                         JSONArray dataArr = shoppingCartJson == null ? null : shoppingCartJson.getJSONArray("data");
                         List<TaskDetailEntity> taskDetailEntities = new ArrayList<>();
-                        StringBuffer stringBuffer = new StringBuffer();
                         if (!ObjectUtils.isEmpty(dataArr)) {
                             for (int i = 0; i < dataArr.size(); i++) {
                                 JSONObject item = dataArr.getJSONObject(i);
                                 String certificateInfo = item.getString("certificateInfo");
                                 nameIDMap.forEach((key, val) -> {
-                                    stringBuffer.append("<p>用户:").append(key).append("</p>");
-                                    stringBuffer.append("<p>身份证号:").append(val).append("</p>");
                                     if (ObjectUtils.nullSafeEquals(val, certificateInfo)) {
                                         TaskDetailEntity taskDetailEntity = new TaskDetailEntity();
                                         taskDetailEntity.setTaskId(doSnatchInfo.getTaskId());
@@ -556,7 +553,7 @@ public class TicketServiceImpl implements TicketService {
                             }
                         }
                         taskDetailDao.updateTaskDetailBath(taskDetailEntities);
-                        WebSocketServer.sendInfo(socketMsg("抢票成功", stringBuffer.toString(), 0), null);
+                        WebSocketServer.sendInfo(socketMsg("抢票成功", JSON.toJSONString(nameIDMap), 0), null);
                     }
                     if (!ObjectUtils.isEmpty(bodyJson) && bodyJson.getIntValue("code") == 550) {
                         if(bodyJson.getString("msg").contains("已有订单")){
