@@ -430,6 +430,7 @@ export default {
             title: '重置成功',
             duration: 1000
           });
+          this.onSubmit()
         }
       })
     },
