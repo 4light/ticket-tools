@@ -523,12 +523,12 @@ public class TicketServiceImpl implements TicketService {
                     String point = doSecretKey(x, secretKey);
                     HttpEntity shoppingCartUrlEntity = new HttpEntity<>(buildParam(token, priceNameCountMap.get("childrenTicket"), point, doSnatchInfo.getSession(), useDate, priceId, childrenPriceId, discountPriceId, olderPriceId, phone, nameIDMap), headers);
                     ResponseEntity<String> exchange = restTemplate.exchange(shoppingCartUrl, HttpMethod.POST, shoppingCartUrlEntity, String.class);
-                    //log.info(exchange.getBody());
+                    log.info(exchange.getBody());
                     String body = exchange.getBody();
                     JSONObject bodyJson = JSON.parseObject(body);
                     //WebSocketServer.sendInfo("余票不足","web");
                     if (!ObjectUtils.isEmpty(bodyJson) && bodyJson.getIntValue("code") == 200) {
-                        doneList.addAll(new ArrayList(nameIDMap.keySet()));
+                        doneList.addAll(nameIDMap.values());
                         ResponseEntity<String> shoppingCartRes = restTemplate.exchange(getShoppingCart, HttpMethod.GET, entity, String.class);
                         String shoppingCartBody = shoppingCartRes.getBody();
                         JSONObject shoppingCartJson = JSON.parseObject(shoppingCartBody);
