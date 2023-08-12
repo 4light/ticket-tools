@@ -65,7 +65,7 @@
           prop="updateDate"
           label="过期时间">
           <template slot-scope="scope">
-            {{addDate(scope.row.updateDate)}}
+            {{ addDate(scope.row.updateDate) }}
           </template>
         </el-table-column>
         <el-table-column
@@ -80,7 +80,7 @@
             <el-link
               type="danger" @click="deleteTask(scope.row.taskId)">删除
             </el-link>
-            <el-link type="success" @click="pay" >支付</el-link>
+            <el-link type="success" @click="pay">支付</el-link>
             <el-link
               type="danger" @click="init">重置
             </el-link>
@@ -107,8 +107,9 @@
     <el-dialog
       :visible.sync="showPayDialog"
       style="height: 50em;overflow: unset"
+      width="20%"
     >
-      <div id="qrcodeImg"></div>
+      <div id="qrcodeImg" style="text-align: center"></div>
     </el-dialog>
   </div>
 </template>
@@ -125,7 +126,7 @@ export default {
     taskEditView
   },
   created() {
-    this.currentUser=Date.now()
+    this.currentUser = Date.now()
     this.initWebSocket()
   },
   mounted() {
@@ -157,24 +158,27 @@ export default {
       payUrl: "",
       showPayDialog: false,
       taskInfo: {},
-      number:0,
-      currentUser:''
+      number: 0,
+      currentUser: ''
     }
   },
   watch: {
     showPayDialog: function () {
-      //materielId为需要监听的data
-      this.$nextTick(function () {
-        if (this.showPayDialog) {
-          //这里写方法
-          this.qrcode(this.payUrl);
-        }
-      });
+      setTimeout(() => {
+        this.qrcode();
+      }, 1000)
+      /*      //materielId为需要监听的data
+            this.$nextTick(function () {
+              if (this.showPayDialog) {
+                //这里写方法
+                this.qrcode(this.payUrl);
+              }
+            });*/
     },
   },
   methods: {
     initWebSocket() {
-      let ws = 'ws://8.140.16.73/api/pushMessage/'+this.currentUser
+      let ws = 'ws://8.140.16.73/api/pushMessage/' + this.currentUser
       this.websock = new WebSocket(ws)
       this.websock.onmessage = this.websocketOnMessage
       this.websock.onopen = this.websocketOnOpen
@@ -255,7 +259,7 @@ export default {
               i = this.taskData.length; // 如果不相等，将索引值设置为table的数组长度，跳出循环
             }
           }
-          this.number=num
+          this.number = num
           return {
             rowspan: num, // 最终将合并的行数返回
             colspan: 1,
@@ -279,7 +283,7 @@ export default {
             i = this.taskData.length;
           }
         }
-        this.number=num
+        this.number = num
         return {
           rowspan: num,
           colspan: 1,
@@ -313,14 +317,14 @@ export default {
         }
       }).then(res => {
         this.taskInfo = res.data.data
-        this.showDialog=true
-        setTimeout(()=>{
+        this.showDialog = true
+        setTimeout(() => {
           this.$refs.taskEditView.edit();
-        },200)
+        }, 200)
       })
     },
     deleteTask(taskId) {
-      axios.get("/ticket/delete?taskId="+taskId).then(res => {
+      axios.get("/ticket/delete?taskId=" + taskId).then(res => {
         if (res.data.status != 0) {
           this.$notify.error({
             title: '删除失败',
@@ -374,18 +378,21 @@ export default {
     },
     qrcode() {  // 前端根据 URL 生成微信支付二维码
       return new QRCode('qrcodeImg', {
-        width: 100,
-        height: 100,
+        width: 250,
+        height: 250,
         text: this.payUrl,
         colorDark: '#000',
         colorLight: '#fff'
       })
     },
     pay() {
+      this.payUrl=""
       let payParam = {}
       let ticketList = []
+      let taskDetailIds = []
       let childrenCount = 0
       for (let item of this.selectTicket) {
+        taskDetailIds.push(item.id)
         payParam.taskId = item.taskId
         payParam.authorization = item.authorization
         payParam.date = item.useDate
@@ -399,9 +406,11 @@ export default {
         ticketItem.id = item.ticketId
         ticketList.push(ticketItem)
       }
+      payParam.taskDetailIds = taskDetailIds
       payParam.ticketInfoList = ticketList
       payParam.childTicketNum = childrenCount
       payParam.ticketNum = this.selectTicket.length
+      this.showPayDialog = true;
       axios.post("/ticket/pay", payParam).then(res => {
         if (res.data.status != 0) {
           this.$notify.error({
@@ -418,18 +427,18 @@ export default {
         }
       })
     },
-    init(){
-      if(this.selectTicket.length<=0){
+    init() {
+      if (this.selectTicket.length <= 0) {
         this.$alert("需勾选要重置的订单")
         return;
       }
-      let req=[]
+      let req = []
       for (let item of this.selectTicket) {
         let payParam = {}
-        payParam.id=item.id
+        payParam.id = item.id
         req.push(payParam)
       }
-      axios.post("ticket/init/task",req).then(res=>{
+      axios.post("ticket/init/task", req).then(res => {
         if (res.data.status != 0) {
           this.$notify.error({
             title: '失败',
@@ -445,26 +454,26 @@ export default {
         }
       })
     },
-    addDate(nowDate){
-      if(!nowDate){
+    addDate(nowDate) {
+      if (!nowDate) {
         return
       }
-      let current=new Date(nowDate)
-      let newDate=current.setMinutes(current.getMinutes()+15)
-      let rd=new Date(newDate);
+      let current = new Date(nowDate)
+      let newDate = current.setMinutes(current.getMinutes() + 15)
+      let rd = new Date(newDate);
       let y = rd.getFullYear();
       let M = rd.getMonth() + 1;
       let d = rd.getDate();
-      let H=rd.getHours();
-      let m=rd.getMinutes()
-      let s=rd.getSeconds()
+      let H = rd.getHours();
+      let m = rd.getMinutes()
+      let s = rd.getSeconds()
       if (M < 10) {
         M = "0" + M;
       }
       if (d < 10) {
         d = "0" + d;
       }
-      return (y+"-"+M+"-"+d+" "+H+":"+m+":"+s)
+      return (y + "-" + M + "-" + d + " " + H + ":" + m + ":" + s)
     }
   }
 }

@@ -367,7 +367,7 @@ public class TicketServiceImpl implements TicketService {
         getPriceByScheduleIdUrl = String.format(getPriceByScheduleIdUrl, DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"));
         try {
             RestTemplateBuilder restTemplateBuilder = new RestTemplateBuilder()
-                    .setConnectTimeout(Duration.ofSeconds(30)) //连接超时时间10秒
+                    .setConnectTimeout(Duration.ofSeconds(60)) //连接超时时间10秒
                     .setReadTimeout(Duration.ofSeconds(60)); //读取超时时间30秒
             RestTemplate restTemplate = restTemplateBuilder.build();
             HttpHeaders headers = new HttpHeaders();
@@ -520,11 +520,12 @@ public class TicketServiceImpl implements TicketService {
                     String point = doSecretKey(x, secretKey);
                     HttpEntity shoppingCartUrlEntity = new HttpEntity<>(buildParam(token, priceNameCountMap.get("childrenTicket"), point, doSnatchInfo.getSession(), useDate, priceId, childrenPriceId, discountPriceId, olderPriceId, phone, nameIDMap), headers);
                     ResponseEntity<String> exchange = restTemplate.exchange(shoppingCartUrl, HttpMethod.POST, shoppingCartUrlEntity, String.class);
-                    log.info(exchange.getBody());
+                    //log.info(exchange.getBody());
                     String body = exchange.getBody();
                     JSONObject bodyJson = JSON.parseObject(body);
                     //WebSocketServer.sendInfo("余票不足","web");
                     if (!ObjectUtils.isEmpty(bodyJson) && bodyJson.getIntValue("code") == 200) {
+                        log.info(exchange.getBody());
                         //doneList.addAll(nameIDMap.values());
                         ResponseEntity<String> shoppingCartRes = restTemplate.exchange(getShoppingCart, HttpMethod.GET, entity, String.class);
                         String shoppingCartBody = shoppingCartRes.getBody();
@@ -571,7 +572,7 @@ public class TicketServiceImpl implements TicketService {
                 }
             }
         } catch (Exception e) {
-           // e.printStackTrace();
+           //e.printStackTrace();
         }
     }
 
@@ -611,12 +612,16 @@ public class TicketServiceImpl implements TicketService {
             JSONObject orderData = placeOrderRes.getJSONObject("data");
             String orderNumber = orderData.getString("orderNumber");
             Integer needChargeCode = orderData.getInteger("needChargeCode");
-            TaskDetailEntity taskDetailEntity = new TaskDetailEntity();
-            taskDetailEntity.setId(placeOrderInfo.getId());
-            taskDetailEntity.setOrderNumber(orderNumber);
-            taskDetailEntity.setUpdateDate(new Date());
-            taskDetailEntity.setPayment(needChargeCode!=1);
-            taskDetailDao.updateTaskDetail(taskDetailEntity);
+            List<TaskDetailEntity> updates=new ArrayList<>();
+            placeOrderInfo.getTaskDetailIds().forEach(o->{
+                TaskDetailEntity taskDetailEntity = new TaskDetailEntity();
+                taskDetailEntity.setId(o);
+                taskDetailEntity.setOrderNumber(orderNumber);
+                taskDetailEntity.setUpdateDate(new Date());
+                taskDetailEntity.setPayment(needChargeCode!=1);
+                updates.add(taskDetailEntity);
+            });
+            taskDetailDao.updateTaskDetailBath(updates);
             if(needChargeCode!=1){
                 return null;
             }

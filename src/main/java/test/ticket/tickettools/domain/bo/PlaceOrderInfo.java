@@ -17,6 +17,7 @@ public class PlaceOrderInfo {
     private String loginPhone;
     private Integer childTicketNum;
     private List ticketInfoList;
+    private List<Long> taskDetailIds;
 
     public Long getTaskId() {
         return taskId;
@@ -96,5 +97,13 @@ public class PlaceOrderInfo {
 
     public void setTicketInfoList(List ticketInfoList) {
         this.ticketInfoList = ticketInfoList;
+    }
+
+    public List<Long> getTaskDetailIds() {
+        return taskDetailIds;
+    }
+
+    public void setTaskDetailIds(List<Long> taskDetailIds) {
+        this.taskDetailIds = taskDetailIds;
     }
 }
