@@ -16,6 +16,7 @@ import org.bytedeco.opencv.global.opencv_imgproc;
 import org.bytedeco.opencv.opencv_core.Mat;
 import org.bytedeco.opencv.opencv_core.Point;
 import org.bytedeco.opencv.opencv_core.Scalar;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
@@ -47,6 +48,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.List;
@@ -284,7 +286,7 @@ public class TicketServiceImpl implements TicketService {
         for (TaskEntity entity : taskEntities) {
             DoSnatchInfo doSnatchInfo = new DoSnatchInfo();
             Long id = entity.getId();
-            List<TaskDetailEntity> taskDetailEntities = taskDetailDao.selectByTaskId(id);
+            List<TaskDetailEntity> taskDetailEntities = taskDetailDao.selectByTaskIdLimit(id);
             if (ObjectUtils.isEmpty(taskDetailEntities)) {
                 entity.setDone(true);
                 taskDao.updateTask(entity);
@@ -364,13 +366,10 @@ public class TicketServiceImpl implements TicketService {
         getScheduleUrl = String.format(getScheduleUrl, DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"));
         getPriceByScheduleIdUrl = String.format(getPriceByScheduleIdUrl, DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"));
         try {
-            RestTemplate restTemplate = new RestTemplate();
-            restTemplate.setRequestFactory(new SimpleClientHttpRequestFactory() {
-                {
-                    setConnectTimeout(20000);
-                    setReadTimeout(20000);
-                }
-            });
+            RestTemplateBuilder restTemplateBuilder = new RestTemplateBuilder()
+                    .setConnectTimeout(Duration.ofSeconds(30)) //连接超时时间10秒
+                    .setReadTimeout(Duration.ofSeconds(60)); //读取超时时间30秒
+            RestTemplate restTemplate = restTemplateBuilder.build();
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.set("authority", "pcticket.cstm.org.cn");
@@ -518,8 +517,6 @@ public class TicketServiceImpl implements TicketService {
                     ImageUtils.imagCreate(originalImageBase64, backImageName, 155, 310);
                     //图片验证码处理
                     Double x = getPoint(sliderImageName, backImageName, imageUuid);
-                    //log.info("uuid的值为：{}", imageUuid);
-                    //log.info("x的值为：{}", x);
                     String point = doSecretKey(x, secretKey);
                     HttpEntity shoppingCartUrlEntity = new HttpEntity<>(buildParam(token, priceNameCountMap.get("childrenTicket"), point, doSnatchInfo.getSession(), useDate, priceId, childrenPriceId, discountPriceId, olderPriceId, phone, nameIDMap), headers);
                     ResponseEntity<String> exchange = restTemplate.exchange(shoppingCartUrl, HttpMethod.POST, shoppingCartUrlEntity, String.class);
@@ -528,9 +525,10 @@ public class TicketServiceImpl implements TicketService {
                     JSONObject bodyJson = JSON.parseObject(body);
                     //WebSocketServer.sendInfo("余票不足","web");
                     if (!ObjectUtils.isEmpty(bodyJson) && bodyJson.getIntValue("code") == 200) {
-                        doneList.addAll(nameIDMap.values());
+                        //doneList.addAll(nameIDMap.values());
                         ResponseEntity<String> shoppingCartRes = restTemplate.exchange(getShoppingCart, HttpMethod.GET, entity, String.class);
                         String shoppingCartBody = shoppingCartRes.getBody();
+                        log.info("购物车内订单：{}",shoppingCartBody);
                         JSONObject shoppingCartJson = JSON.parseObject(shoppingCartBody);
                         JSONArray dataArr = shoppingCartJson == null ? null : shoppingCartJson.getJSONArray("data");
                         List<TaskDetailEntity> taskDetailEntities = new ArrayList<>();
@@ -555,7 +553,7 @@ public class TicketServiceImpl implements TicketService {
                         taskDetailDao.updateTaskDetailBath(taskDetailEntities);
                         WebSocketServer.sendInfo(socketMsg("抢票成功", JSON.toJSONString(nameIDMap), 0), null);
                     }
-                    if (!ObjectUtils.isEmpty(bodyJson) && bodyJson.getIntValue("code") == 550) {
+                    /*if (!ObjectUtils.isEmpty(bodyJson) && bodyJson.getIntValue("code") == 550) {
                         if(bodyJson.getString("msg").contains("已有订单")){
                             doneList.forEach(idCard->{
                                 if(!bodyJson.getString("msg").contains(idCard)){
@@ -563,7 +561,7 @@ public class TicketServiceImpl implements TicketService {
                                 }
                             });
                         }
-                    }
+                    }*/
                     try {
                         Files.delete(Paths.get(sliderImageName));
                         Files.delete(Paths.get(backImageName));
@@ -573,7 +571,7 @@ public class TicketServiceImpl implements TicketService {
                 }
             }
         } catch (Exception e) {
-            //e.printStackTrace();
+           // e.printStackTrace();
         }
     }
 

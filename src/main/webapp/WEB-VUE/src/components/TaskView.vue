@@ -161,6 +161,17 @@ export default {
       currentUser:''
     }
   },
+  watch: {
+    showPayDialog: function () {
+      //materielId为需要监听的data
+      this.$nextTick(function () {
+        if (this.showPayDialog) {
+          //这里写方法
+          this.qrcode(this.payUrl);
+        }
+      });
+    },
+  },
   methods: {
     initWebSocket() {
       let ws = 'ws://8.140.16.73/api/pushMessage/'+this.currentUser
@@ -361,11 +372,11 @@ export default {
         }
       }
     },
-    qrcode(url) {  // 前端根据 URL 生成微信支付二维码
+    qrcode() {  // 前端根据 URL 生成微信支付二维码
       return new QRCode('qrcodeImg', {
         width: 100,
         height: 100,
-        text: url,
+        text: this.payUrl,
         colorDark: '#000',
         colorLight: '#fff'
       })
@@ -402,7 +413,7 @@ export default {
           if(res.data.data&&res.data.data!="") {
             this.showPayDialog = true;
             this.payUrl = res.data.data
-            this.qrcode(this.payUrl)
+            //this.qrcode(this.payUrl)
           }
         }
       })
