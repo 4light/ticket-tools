@@ -32,10 +32,12 @@ public class TaskDetailEntity {
 
     private String orderNumber;
 
+    private Boolean yn;
+
     public TaskDetailEntity() {
     }
 
-    public TaskDetailEntity(Long id, Long taskId, String userName, String IDCard, String userPhone, Integer age, Date createDate, Date updateDate, Boolean done, Boolean payment, Long ticketId, Boolean childrenTicket, String orderNumber) {
+    public TaskDetailEntity(Long id, Long taskId, String userName, String IDCard, String userPhone, Integer age, Date createDate, Date updateDate, Boolean done, Boolean payment, Long ticketId, Boolean childrenTicket, String orderNumber, Boolean yn) {
         this.id = id;
         this.taskId = taskId;
         this.userName = userName;
@@ -49,6 +51,7 @@ public class TaskDetailEntity {
         this.ticketId = ticketId;
         this.childrenTicket = childrenTicket;
         this.orderNumber = orderNumber;
+        this.yn = yn;
     }
 
     public Long getId() {
@@ -153,5 +156,13 @@ public class TaskDetailEntity {
 
     public void setOrderNumber(String orderNumber) {
         this.orderNumber = orderNumber;
+    }
+
+    public Boolean getYn() {
+        return yn;
+    }
+
+    public void setYn(Boolean yn) {
+        this.yn = yn;
     }
 }

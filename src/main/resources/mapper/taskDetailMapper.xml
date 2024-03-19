@@ -16,6 +16,7 @@
             <arg column="ticket_id" javaType="java.lang.Long" jdbcType="BIGINT"/>
             <arg column="children_ticket" javaType="java.lang.Boolean" jdbcType="BIT"/>
             <arg column="order_number" javaType="java.lang.String" jdbcType="VARCHAR"/>
+            <arg column="yn" javaType="java.lang.Boolean" jdbcType="BIT"/>
         </constructor>
     </resultMap>
     <insert id="insert" parameterType="test.ticket.tickettools.domain.entity.TaskDetailEntity">
@@ -79,22 +80,22 @@
             </where>
         </foreach>
     </update>
-    <delete id="deleteTaskDetailBath" parameterType="test.ticket.tickettools.domain.entity.TaskDetailEntity">
-        delete from task_detail where id IN
+    <update id="deleteTaskDetailBath" parameterType="test.ticket.tickettools.domain.entity.TaskDetailEntity">
+        update task_detail set yn =1 where id IN
         <foreach collection="list" item="entity"  open="(" separator="," close=")">
             #{entity.id}
         </foreach>
-    </delete>
+    </update>
     <select id="selectByTaskId" parameterType="java.lang.Long" resultMap="BaseResultMap">
         select *
         from task_detail
-        where task_id = ${id}
+        where task_id = ${id} and yn=0
     </select>
     <select id="selectUnpaid" resultMap="BaseResultMap">
         select *
         from task_detail
         where done = 1 and order_number IS NOT NULL
-          and payment = 0
+          and payment = 0 and yn=0
     </select>
     <select id="selectByEntity" parameterType="test.ticket.tickettools.domain.entity.TaskDetailEntity"
             resultMap="BaseResultMap">
@@ -102,12 +103,13 @@
         from task_detail
         where task_id = ${taskId}
           and done = ${done}
+          and yn=0
     </select>
     <select id="selectByTaskIdLimit" parameterType="java.lang.Long" resultMap="BaseResultMap">
         select *
         from task_detail
         where task_id = ${id}
-          and done = 0 limit 5
+          and done = 0 and yn=0 limit 5
     </select>
     <update id="updateTaskDetail" parameterType="test.ticket.tickettools.domain.entity.TaskDetailEntity">
         update task_detail
@@ -142,9 +144,8 @@
             #{entity.id}
         </foreach>
     </update>
-    <delete id="deleteByTaskId" parameterType="java.lang.Long">
-        delete
-        from task_detail
+    <update id="deleteByTaskId" parameterType="java.lang.Long">
+        update task_detail set yn=1
         where task_id = #{taskId,jdbcType=BIGINT}
-    </delete>
+    </update>
 </mapper>

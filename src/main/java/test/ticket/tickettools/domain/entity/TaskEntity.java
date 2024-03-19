@@ -29,10 +29,13 @@ public class TaskEntity {
     //场次
     private Integer session;
 
+    //删除标识
+    private Boolean yn;
+
     public TaskEntity() {
     }
 
-    public TaskEntity(Long id, String loginPhone, String ip, Date useDate, String auth, Boolean done, Date createDate, Date updateDate, Long userId, Integer channel, Integer venue, Integer session) {
+    public TaskEntity(Long id, String loginPhone, String ip, Date useDate, String auth, Boolean done, Date createDate, Date updateDate, Long userId, Integer channel, Integer venue, Integer session, Boolean yn) {
         this.id = id;
         this.loginPhone = loginPhone;
         this.ip = ip;
@@ -45,6 +48,7 @@ public class TaskEntity {
         this.channel = channel;
         this.venue = venue;
         this.session = session;
+        this.yn = yn;
     }
 
     public Long getId() {
@@ -141,5 +145,13 @@ public class TaskEntity {
 
     public void setSession(Integer session) {
         this.session = session;
+    }
+
+    public Boolean getYn() {
+        return yn;
+    }
+
+    public void setYn(Boolean yn) {
+        this.yn = yn;
     }
 }

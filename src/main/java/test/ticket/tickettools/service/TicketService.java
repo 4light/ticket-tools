@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface TicketService {
+    ServiceResponse getCurrentUser(QueryTaskInfo queryTaskInfo);
     //添加任务
     ServiceResponse addTaskInfo(TaskInfo taskInfo);
     //重置任务

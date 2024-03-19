@@ -15,6 +15,7 @@
             <arg column="channel" javaType="java.lang.Integer" jdbcType="INTEGER"/>
             <arg column="venue" javaType="java.lang.Integer" jdbcType="INTEGER"/>
             <arg column="session" javaType="java.lang.Integer" jdbcType="INTEGER"/>
+            <arg column="yn" javaType="java.lang.Boolean" jdbcType="BIT"/>
         </constructor>
     </resultMap>
     <insert id="insert" parameterType="test.ticket.tickettools.domain.entity.TaskEntity" useGeneratedKeys="true"
@@ -31,7 +32,7 @@
     <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
         select *
         from task
-        where id = #{id,jdbcType=BIGINT}
+        where id = #{id,jdbcType=BIGINT} and yn =0
     </select>
     <select id="getUnDoneTasks" parameterType="test.ticket.tickettools.domain.entity.TaskEntity" resultMap="BaseResultMap">
         select
@@ -42,6 +43,7 @@
             <if test='useDate!=null'>
                 AND use_date = #{useDate}
             </if>
+            and yn =0
         </where>
     </select>
     <select id="getAllUnDoneTasks" parameterType="test.ticket.tickettools.domain.entity.TaskEntity" resultMap="BaseResultMap">
@@ -53,6 +55,7 @@
             <if test='useDate!=null'>
                 AND use_date > #{useDate}
             </if>
+            and yn =0
         </where>
     </select>
     <select id="fuzzyQuery" parameterType="test.ticket.tickettools.domain.entity.TaskEntity" resultMap="BaseResultMap">
@@ -65,13 +68,13 @@
         <if test='useDate!=null'>
             AND use_date = #{useDate}
         </if>
+        and yn =0
         order by id DESC
     </select>
-    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
-        delete
-        from task
+    <update id="deleteByPrimaryKey" parameterType="java.lang.Long">
+        update task set yn=1
         where id = #{id,jdbcType=BIGINT}
-    </delete>
+    </update>
     <update id="updateTask" parameterType="test.ticket.tickettools.domain.entity.TaskEntity">
         update task
         <set>
@@ -95,5 +98,17 @@
             </if>
         </set>
         where id = #{id}
+    </update>
+    <update id="updateAuthByPhone" parameterType="test.ticket.tickettools.domain.entity.TaskEntity">
+        update task
+        <set>
+            <if test='auth!=null'>
+                auth = #{auth},
+            </if>
+            <if test='updateDate!=null'>
+                update_date = #{updateDate}
+            </if>
+        </set>
+        where login_phone = #{loginPhone}
     </update>
 </mapper>

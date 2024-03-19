@@ -1,6 +1,11 @@
 package test.ticket.tickettools.service.impl;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
+import org.bytedeco.opencv.global.opencv_core;
+import org.bytedeco.opencv.global.opencv_imgcodecs;
+import org.bytedeco.opencv.global.opencv_imgproc;
+import org.bytedeco.opencv.opencv_core.Mat;
+import org.bytedeco.opencv.opencv_core.Point;
+import org.bytedeco.opencv.opencv_core.Scalar;
 import org.springframework.beans.BeanUtils;
 import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSON;
@@ -10,12 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.bytedeco.javacpp.DoublePointer;
-import org.bytedeco.opencv.global.opencv_core;
-import org.bytedeco.opencv.global.opencv_imgcodecs;
-import org.bytedeco.opencv.global.opencv_imgproc;
-import org.bytedeco.opencv.opencv_core.Mat;
-import org.bytedeco.opencv.opencv_core.Point;
-import org.bytedeco.opencv.opencv_core.Scalar;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
@@ -24,7 +23,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
-import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 import test.ticket.tickettools.dao.PhoneInfoDao;
@@ -57,6 +55,8 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class TicketServiceImpl implements TicketService {
+    //查询个人信息
+    private static String queryUserInfoUrl ="https://pcticket.cstm.org.cn/prod-api/getUserInfoToIndividual";
     //获取场次url
     private static String getScheduleUrl = "https://pcticket.cstm.org.cn/prod-api/pool/getScheduleByHallId?hallId=1&openPerson=1&queryDate=%s&saleMode=1&single=true";
     //获取场次下余票url
@@ -94,6 +94,35 @@ public class TicketServiceImpl implements TicketService {
     PhoneInfoDao phoneInfoDao;
 
 
+    @Override
+    public ServiceResponse getCurrentUser(QueryTaskInfo queryTaskInfo) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("authority", "pcticket.cstm.org.cn");
+            headers.set("accept", "application/json");
+            headers.set("authorization", "Bearer "+queryTaskInfo.getApiToken());
+            headers.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
+            HttpEntity entity = new HttpEntity<>(headers);
+            //获取场次下余票
+            ResponseEntity getUserInfoRes = restTemplate.exchange(queryUserInfoUrl, HttpMethod.GET, entity, String.class);
+            JSONObject getUserInfoJson = JSON.parseObject(getUserInfoRes.getBody().toString());
+            if(getUserInfoJson==null&&getUserInfoJson.getIntValue("code")!=200){
+                log.info("获取用户信息失败：",getUserInfoRes);
+                return ServiceResponse.createByErrorMessage("获取用户信息失败");
+            }
+            TaskEntity taskEntity=new TaskEntity();
+            taskEntity.setAuth(queryTaskInfo.getApiToken());
+            taskEntity.setLoginPhone(getUserInfoJson.getJSONObject("user").getString("phoneNumber"));
+            taskEntity.setUpdateDate(new Date());
+            taskDao.updateAuthByPhone(taskEntity);
+            return ServiceResponse.createBySuccess(getUserInfoJson.get("user"));
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRED)
     @Override
     public ServiceResponse addTaskInfo(TaskInfo taskInfo) {
@@ -101,7 +130,9 @@ public class TicketServiceImpl implements TicketService {
         BeanUtils.copyProperties(taskInfo, taskEntity);
         if (ObjectUtils.isEmpty(taskInfo.getId())) {
             taskEntity.setCreateDate(new Date());
-            Long userId = getUserId(taskEntity.getAuth());
+            taskEntity.setLoginPhone(taskInfo.getLoginPhone());
+            taskEntity.setAuth(taskInfo.getAuth());
+            Long userId = taskInfo.getSource()==0?getUserId(taskEntity.getAuth()):taskInfo.getUserId();
             if(ObjectUtils.isEmpty(userId)){
                 return ServiceResponse.createByErrorMessage("获取用户Id失败");
             }
@@ -123,10 +154,9 @@ public class TicketServiceImpl implements TicketService {
                     return ServiceResponse.createByErrorMessage("保存任务详情异常");
                 }
             }
-            return ServiceResponse.createByErrorMessage("保存任务异常");
         } else {
             taskEntity.setUpdateDate(new Date());
-            Long userId = getUserId(taskEntity.getAuth());
+            Long userId = taskInfo.getSource()==0?getUserId(taskEntity.getAuth()):taskInfo.getUserId();
             if(ObjectUtils.isEmpty(userId)){
                 return ServiceResponse.createByErrorMessage("获取用户Id失败");
             }
@@ -159,8 +189,8 @@ public class TicketServiceImpl implements TicketService {
                 }
                 return ServiceResponse.createBySuccess();
             }
-            return ServiceResponse.createByErrorMessage("保存任务异常");
         }
+        return ServiceResponse.createByErrorMessage("保存任务异常");
     }
 
     @Override

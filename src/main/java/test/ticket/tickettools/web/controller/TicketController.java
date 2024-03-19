@@ -30,8 +30,19 @@ public class TicketController {
     @Resource
     LoginService loginService;
 
+    @PostMapping(value = "/user")
+    public ServiceResponse<PageableResponse<TaskInfoListResponse>> getUser(@RequestBody QueryTaskInfo queryTaskInfo) {
+
+        return ticketServiceImpl.getCurrentUser(queryTaskInfo);
+    }
+
     @PostMapping(value = "/task/list")
     public ServiceResponse<PageableResponse<TaskInfoListResponse>> getTaskList(@RequestBody QueryTaskInfo queryTaskInfo) {
+        return ticketServiceImpl.queryTask(queryTaskInfo);
+    }
+
+    @PostMapping(value = "/task/list2")
+    public ServiceResponse<PageableResponse<TaskInfoListResponse>> getTaskList2(@RequestBody QueryTaskInfo queryTaskInfo) {
         return ticketServiceImpl.queryTask(queryTaskInfo);
     }
 

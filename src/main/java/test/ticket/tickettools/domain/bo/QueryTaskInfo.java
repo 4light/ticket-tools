@@ -4,6 +4,8 @@ import java.util.Date;
 
 public class QueryTaskInfo {
     private String loginPhone;
+    private String apiToken;
+    private String url;
     //场馆
     private Integer channel;
     private Date useDate;
@@ -16,6 +18,23 @@ public class QueryTaskInfo {
 
     public void setLoginPhone(String loginPhone) {
         this.loginPhone = loginPhone;
+    }
+
+
+    public String getApiToken() {
+        return apiToken;
+    }
+
+    public void setApiToken(String apiToken) {
+        this.apiToken = apiToken;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
     }
 
     public Integer getChannel() {

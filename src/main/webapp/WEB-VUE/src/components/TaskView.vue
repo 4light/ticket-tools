@@ -178,7 +178,8 @@ export default {
   },
   methods: {
     initWebSocket() {
-      let ws = 'ws://8.140.16.73/api/pushMessage/' + this.currentUser
+      //let ws = 'ws://8.140.16.73/api/pushMessage/' + this.currentUser
+      let ws = 'ws://10.240.17.195:8082/api/pushMessage/' + this.currentUser
       this.websock = new WebSocket(ws)
       this.websock.onmessage = this.websocketOnMessage
       this.websock.onopen = this.websocketOnOpen

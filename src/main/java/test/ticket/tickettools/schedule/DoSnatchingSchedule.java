@@ -88,7 +88,7 @@ public class DoSnatchingSchedule {
             CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo), taskExecutorConfig.getAsyncExecutor());
         }
     }
-    @Scheduled(cron = "* 0/1 * * * ?")
+    //@Scheduled(cron = "* 0/1 * * * ?")
     public void updateOrderPayStatus(){
         List<TaskDetailEntity> taskDetailEntities = ticketServiceImpl.selectUnpaid();
         for (TaskDetailEntity taskDetailEntity : taskDetailEntities) {

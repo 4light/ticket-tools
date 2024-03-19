@@ -11,6 +11,7 @@ public interface TaskDao{
     Integer insert(TaskEntity taskEntity);
     TaskEntity selectByPrimaryKey(Long id);
     Integer updateTask(TaskEntity taskEntity);
+    Integer updateAuthByPhone(TaskEntity taskEntity);
     Integer deleteByPrimaryKey(Long id);
     List<TaskEntity> fuzzyQuery(TaskEntity taskEntity);
     //获取需要抢票的任务

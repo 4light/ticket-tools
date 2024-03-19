@@ -18,6 +18,9 @@ public class TaskInfo implements Serializable {
     //场次
     private Integer session;
     private Date useDate;
+    //来源 0:页面 1：插件
+    private Integer source;
+    private Long userId;
     private List<TaskDetailEntity> userList;
 
     public Long getId() {
@@ -74,6 +77,22 @@ public class TaskInfo implements Serializable {
 
     public void setUseDate(Date useDate) {
         this.useDate = useDate;
+    }
+
+    public Integer getSource() {
+        return source;
+    }
+
+    public void setSource(Integer source) {
+        this.source = source;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
     public List<TaskDetailEntity> getUserList() {
