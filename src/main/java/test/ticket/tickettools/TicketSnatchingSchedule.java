@@ -27,8 +27,11 @@ import javax.script.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -375,6 +378,26 @@ public class TicketSnatchingSchedule {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static void main(String[] args) {
+        String signKey="VDsdxfwljhy#@!94857access-token="+
+                "eyJhbGciOiJIUzUxMiJ9.eyJ1IjoiNjM3NjA0MzA0ODM2MjkyNjA4IiwidCI6IjAiLCJleHAiOjE3MTA5NDA1NjF9.TTjoUOC5pOtubOv23j3BvVSmVfXZ38QoUxLb6OYWZPqlEQbb5odFXgLI8AirvLfqXF0oLeguGKCg8-hxMSORNQ"
+                +"1711455730000".substring(0,11)
+                +"AAXY";
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            md.update(signKey.getBytes());
+            byte[] digest = md.digest();
+            StringBuilder sb = new StringBuilder();
+            for (byte b : digest) {
+                sb.append(String.format("%02x", b & 0xff));
+            }
+            String md5Hex = sb.toString();
+            System.out.println("MD5 hex: " + md5Hex);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
