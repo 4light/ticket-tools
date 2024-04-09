@@ -29,6 +29,7 @@ import test.ticket.tickettools.dao.PhoneInfoDao;
 import test.ticket.tickettools.dao.TaskDetailDao;
 import test.ticket.tickettools.dao.TaskDao;
 import test.ticket.tickettools.domain.bo.*;
+import test.ticket.tickettools.domain.constant.ChannelEnum;
 import test.ticket.tickettools.domain.entity.PhoneInfoEntity;
 import test.ticket.tickettools.domain.entity.TaskDetailEntity;
 import test.ticket.tickettools.domain.entity.TaskEntity;
@@ -55,8 +56,9 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class TicketServiceImpl implements TicketService {
+    //-----------------------------科技馆----------------------------------
     //查询个人信息
-    private static String queryUserInfoUrl ="https://pcticket.cstm.org.cn/prod-api/getUserInfoToIndividual";
+    private static String queryUserInfoUrl ="/prod-api/getUserInfoToIndividual";
     //获取场次url
     private static String getScheduleUrl = "https://pcticket.cstm.org.cn/prod-api/pool/getScheduleByHallId?hallId=1&openPerson=1&queryDate=%s&saleMode=1&single=true";
     //获取场次下余票url
@@ -73,6 +75,9 @@ public class TicketServiceImpl implements TicketService {
     //提交订单
     private static String placeOrderUrl = "https://pcticket.cstm.org.cn/prod-api/config/orderRule/placeOrder";
     private static String wxPayForPcUrl = "https://pcticket.cstm.org.cn/prod-api/order/OrderInfo/wxPayForPc";
+    //-------------------------------毛纪--------------------------
+    private static String mfuQueryUserInfoPath="/ajax?ugi=tg/account&action=logininfo&bundleid=com.maiget.tickets&moduleid=6f77be86038c47269f1e00f7ddee9af4";
+
     private static List<String> doneList=new ArrayList<>();
 
     private static CloseableHttpClient httpClient = HttpClientBuilder.create()
@@ -97,26 +102,31 @@ public class TicketServiceImpl implements TicketService {
     @Override
     public ServiceResponse getCurrentUser(QueryTaskInfo queryTaskInfo) {
         try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("authority", "pcticket.cstm.org.cn");
-            headers.set("accept", "application/json");
-            headers.set("authorization", "Bearer "+queryTaskInfo.getApiToken());
-            headers.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
-            HttpEntity entity = new HttpEntity<>(headers);
-            //获取场次下余票
-            ResponseEntity getUserInfoRes = restTemplate.exchange(queryUserInfoUrl, HttpMethod.GET, entity, String.class);
-            JSONObject getUserInfoJson = JSON.parseObject(getUserInfoRes.getBody().toString());
-            if(getUserInfoJson==null&&getUserInfoJson.getIntValue("code")!=200){
-                log.info("获取用户信息失败：",getUserInfoRes);
-                return ServiceResponse.createByErrorMessage("获取用户信息失败");
+            if(ChannelEnum.CSTM.getCode().equals(queryTaskInfo.getChannel())) {
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_JSON);
+                headers.set("authority", "pcticket.cstm.org.cn");
+                headers.set("accept", "application/json");
+                headers.set("authorization", "Bearer " + queryTaskInfo.getApiToken());
+                headers.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
+                HttpEntity entity = new HttpEntity<>(headers);
+                //获取场次下余票
+                ResponseEntity getUserInfoRes = restTemplate.exchange(ChannelEnum.CSTM.getBaseUrl()+queryUserInfoUrl, HttpMethod.GET, entity, String.class);
+                JSONObject getUserInfoJson = JSON.parseObject(getUserInfoRes.getBody().toString());
+                if (getUserInfoJson == null || getUserInfoJson.getIntValue("code") != 200) {
+                    log.info("获取用户信息失败：", getUserInfoJson);
+                    return ServiceResponse.createByErrorMessage("获取用户信息失败,请确认是否已登录");
+                }
+                TaskEntity taskEntity = new TaskEntity();
+                taskEntity.setAuth(queryTaskInfo.getApiToken());
+                taskEntity.setLoginPhone(getUserInfoJson.getJSONObject("user").getString("phoneNumber"));
+                taskEntity.setUpdateDate(new Date());
+                taskDao.updateAuthByPhone(taskEntity);
+                return ServiceResponse.createBySuccess(getUserInfoJson.get("user"));
             }
-            TaskEntity taskEntity=new TaskEntity();
-            taskEntity.setAuth(queryTaskInfo.getApiToken());
-            taskEntity.setLoginPhone(getUserInfoJson.getJSONObject("user").getString("phoneNumber"));
-            taskEntity.setUpdateDate(new Date());
-            taskDao.updateAuthByPhone(taskEntity);
-            return ServiceResponse.createBySuccess(getUserInfoJson.get("user"));
+            if(ChannelEnum.MFU.equals(queryTaskInfo.getChannel())){
+
+            }
         }catch (Exception e){
             e.printStackTrace();
         }
