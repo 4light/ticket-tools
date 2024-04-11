@@ -78,7 +78,7 @@ public class TicketSnatchingSchedule {
         getPriceByScheduleIdUrl=String.format(getPriceByScheduleIdUrl,DateUtil.format(DateUtil.parse(useDate),"yyyy/MM/dd"));
     }
 
-    @Scheduled(cron = "0/1 * * * * ?")
+    //@Scheduled(cron = "0/1 * * * * ?")
     public void run() {
         for (Map.Entry<String, String> entry : nameIDMap.entrySet()) {
             Map<String,String> newMap=new HashMap(){{
