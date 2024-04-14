@@ -37,6 +37,8 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static test.ticket.tickettools.ImageUtils.getPoint;
+
 @Slf4j
 @Configuration
 @EnableScheduling
@@ -317,38 +319,6 @@ public class TicketSnatchingSchedule {
         }
     }
 
-    /**
-     * 获取滑动距离
-     * @param backImagePath
-     * @param sliderImagePath
-     * @param uid
-     * @return
-     */
-    public Double getPoint(String backImagePath, String sliderImagePath, String uid) {
-        Mat backImageMat = opencv_imgcodecs.imread(backImagePath, opencv_imgcodecs.IMREAD_GRAYSCALE);
-        Mat sliderImageMat = opencv_imgcodecs.imread(sliderImagePath, opencv_imgcodecs.IMREAD_GRAYSCALE);
-        opencv_imgproc.threshold(backImageMat, backImageMat, 215, 255, opencv_imgproc.THRESH_BINARY);
-        opencv_imgproc.threshold(sliderImageMat, sliderImageMat, 215, 255, opencv_imgproc.THRESH_BINARY);
-        //保存为黑白图片
-        opencv_imgcodecs.imwrite("./" + uid + "_backBlack.png", backImageMat);
-        opencv_imgcodecs.imwrite("./" + uid + "_sliderBlack.png", sliderImageMat);
-        Mat result = new Mat();
-        opencv_imgproc.matchTemplate(sliderImageMat, backImageMat, result, opencv_imgproc.TM_CCORR_NORMED);
-        opencv_core.normalize(result, result, 1, 0, opencv_core.NORM_MINMAX, -1, new Mat());
-        DoublePointer doublePointer = new DoublePointer(new double[2]);
-        Point maxLoc = new Point();
-        opencv_core.minMaxLoc(result, null, doublePointer, null, maxLoc, null);
-        opencv_imgproc.rectangle(sliderImageMat, maxLoc, new Point(maxLoc.x() + backImageMat.cols(), maxLoc.y() + backImageMat.rows()), new Scalar(0, 255, 0, 1));
-        try {
-            Files.delete(Paths.get("./" + uid + "_backBlack.png"));
-            Files.delete(Paths.get("./" + uid + "_sliderBlack.png"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        int real =maxLoc.x()* 330 / 310;
-        //log.info("real:{}", real);
-        return real * 310 / 330.0;
-    }
 
     /**
      * js加密
@@ -381,23 +351,9 @@ public class TicketSnatchingSchedule {
     }
 
     public static void main(String[] args) {
-        String signKey="VDsdxfwljhy#@!94857access-token="+
-                "eyJhbGciOiJIUzUxMiJ9.eyJ1IjoiNjM3NjA0MzA0ODM2MjkyNjA4IiwidCI6IjAiLCJleHAiOjE3MTA5NDA1NjF9.TTjoUOC5pOtubOv23j3BvVSmVfXZ38QoUxLb6OYWZPqlEQbb5odFXgLI8AirvLfqXF0oLeguGKCg8-hxMSORNQ"
-                +"1711455730000".substring(0,11)
-                +"AAXY";
-        try {
-            MessageDigest md = MessageDigest.getInstance("MD5");
-            md.update(signKey.getBytes());
-            byte[] digest = md.digest();
-            StringBuilder sb = new StringBuilder();
-            for (byte b : digest) {
-                sb.append(String.format("%02x", b & 0xff));
-            }
-            String md5Hex = sb.toString();
-            System.out.println("MD5 hex: " + md5Hex);
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
+        imagCreate("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","./slider.png",50);
+        Double point = getPoint("/Users/devin.zhang/Downloads/back.png", "./slider.png", UUID.randomUUID().toString());
+        System.out.println(point);
     }
 
     /**
@@ -470,7 +426,7 @@ public class TicketSnatchingSchedule {
      * @param imagePath
      * @param width
      */
-    public void imagCreate(String base64String, String imagePath, Integer width) {
+    public static void imagCreate(String base64String, String imagePath, Integer width) {
         try {
             // 将 Base64 字符串解码为字节数组
             byte[] imageBytes = Base64.getDecoder().decode(base64String);
