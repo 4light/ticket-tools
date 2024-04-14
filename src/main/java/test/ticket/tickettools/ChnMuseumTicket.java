@@ -8,9 +8,11 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContexts;
+import org.brotli.dec.BrotliInputStream;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.*;
 import org.springframework.http.client.ClientHttpRequestFactory;
@@ -22,7 +24,7 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Resource;
 import javax.net.ssl.SSLContext;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -49,14 +51,14 @@ public class ChnMuseumTicket {
     //提交订单
     private static String createUrl = "https://lotswap.dpm.org.cn/dubboApi/trade-core/tradeCreateService/create?sign=%s&timestamp=%s";
 
-    private static String accessToken = "eyJhbGciOiJIUzUxMiJ9.eyJ1IjoiNjM3NjA0MzA0ODM2MjkyNjA4IiwidCI6IjAiLCJleHAiOjE3MTMwMTYzMTR9.INIikFKeJmZ_sqKcl6Vx-QaV_07atDwL8tBeRoLeKJsnDjFfLp_sEY2Qbku7gIjNF2sFxyz85b_CXqm1GaR6mQ";
+    private static String accessToken = "eyJhbGciOiJIUzUxMiJ9.eyJ1IjoiNjM3NjA0MzA0ODM2MjkyNjA4IiwidCI6IjAiLCJleHAiOjE3MTMwODgyMTh9.HnR1QYemq-8GCTH1QPS-ZOcAInwo1R1hdqBWT2F4bDOMisEAPUU2WzPGtmyGfzxbXAjY2FvK9jEg-aHdCPQhoA";
 
     private static String useDate = "2024-04-20";
     private static String credentialNo = "13082819891227801X";
     private static String nickName = "张阳";
     private static String mpOpenId = "oOya25BlL4u13ahkDCe7hv72lz3I";
 
-    private static String mpDeviceToken = "v2:wqkBQJniqpm4s6AT6CtYx+RD95eT8I4MYnKqMrJWUIW2bk5qxrExewC7k99NAkxjnaOK4PBvupP5MIGnEAnQmOHnsAJ093fAvE86P7vhXSWuI3y7699DL6S2N94ZYC2HCRefY/WosjDrEXJB7eGg4xGumjCrs7Ko+XjDeCxXukO+30A7QtI4OVA5XdmpS3g+jmGj7FJCkeIvQTYsL7/U5jpGXK19IbU=";
+    private static String mpDeviceToken = "v2:wqkBAunpY12EXboGLPhE5UGbgQEe2BEAyc5y8aldAKT7alnWDzuO7E7ucDaGWISNIb3eJCzNc6E9LK+9h6S7i9PkmIP8HXzjXJgkrXOXV0+C/ZiATdm5pWLIJcxIrqor0mPfIZefGsT6/kLszqd7YAQymX0HUTc8sTvuvHVJXYUeYq75xuPILgTw1GPa+ncbUcU94OoSLTtcvVeJAxBayxp+t8n0wQA=";
     private static Map<String, JSONObject> typeTicketMap = new HashMap();
     private static Map<String, JSONObject> modelCodeTicketInfoMap = new HashMap();
 
@@ -74,7 +76,7 @@ public class ChnMuseumTicket {
     private TaskExecutorConfig taskExecutorConfig;
 
 
-    //@Scheduled(cron = "0/1 * * * * ?")
+    @Scheduled(cron = "0/1 * * * * ?")
     public void doSnatchingChnMuseum() {
         //记录有票的具体日期
         JSONArray parkFsyyDetailDTOs = new JSONArray();
@@ -95,29 +97,27 @@ public class ChnMuseumTicket {
             String headerStr = FileUtil.readString("/Users/devin.zhang/Desktop/record", Charset.defaultCharset());
             JSONObject headerJson = JSON.parseObject(headerStr);
             HttpHeaders headers = new HttpHeaders();
-//            headers.setContentType(MediaType.APPLICATION_JSON);
-//            headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
-//            headers.set("accept", "*/*");
-//            headers.set("xweb_xhr", "1");
-//            headers.set("app", "app_qqmap_tickets");
-//            headers.set("Sec-Fetch-Site", "cross-site");
-//            headers.set("Sec-Fetch-Mode", "cors");
-//            headers.set("Sec-Fetch-Dest", "empty");
-//            headers.set("Accept-Language", "zh-CN,zh;q=0.9");
-//            headers.set("access-token", accessToken);
-//            headers.set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36 MicroMessenger/6.8.0(0x16080000) NetType/WIFI MiniProgramEnv/Mac MacWechat/WMPF MacWechat/3.8.7(0x13080712) XWEB/1191");
-            for (Map.Entry<String, Object> headerEntry : headerJson.entrySet()) {
+           headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
+            headers.set("accept", "*/*");
+            headers.set("xweb_xhr", "1");
+            headers.set("app", "app_qqmap_tickets");
+            headers.set("Sec-Fetch-Site", "cross-site");
+            headers.set("Sec-Fetch-Mode", "cors");
+            headers.set("Sec-Fetch-Dest", "empty");
+            headers.set("Accept-Language", "zh-CN,zh;q=0.9");
+            headers.set("access-token", accessToken);
+            headers.set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36 MicroMessenger/6.8.0(0x16080000) NetType/WIFI MiniProgramEnv/Mac MacWechat/WMPF MacWechat/3.8.7(0x13080712) XWEB/1191");
+            /*for (Map.Entry<String, Object> headerEntry : headerJson.entrySet()) {
                 headers.set(headerEntry.getKey(), headerEntry.getValue().toString());
-            }
-
+            }*/
+            headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
             HttpEntity getUserEntity = new HttpEntity<>(headers);
             JSONObject getUserJson = getResponse(restTemplate, queryUserInfoUrl, HttpMethod.GET, getUserEntity);
             if (ObjectUtils.isEmpty(getUserJson)) {
                 return;
             }
-            headers.set("Host", "lotswap.dpm.org.cn");
+            headers.set("Accept-Language", "zh-CN,zh;q=0.9");
             headers.set("mpOpenId", headerJson.getString("mpOpenId"));
-            headers.set("mpDeviceToken", mpDeviceToken);
             HttpEntity entity = new HttpEntity<>(headers);
             //查询当月余票
             String month = now.getMonthValue() > 10 ? String.valueOf(now.getMonthValue()) : "0" + now.getMonthValue();
