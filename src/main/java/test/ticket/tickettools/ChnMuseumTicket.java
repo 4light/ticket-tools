@@ -12,7 +12,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContexts;
-import org.brotli.dec.BrotliInputStream;
+
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.*;
 import org.springframework.http.client.ClientHttpRequestFactory;
@@ -30,6 +30,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
@@ -51,14 +52,16 @@ public class ChnMuseumTicket {
     //提交订单
     private static String createUrl = "https://lotswap.dpm.org.cn/dubboApi/trade-core/tradeCreateService/create?sign=%s&timestamp=%s";
 
-    private static String accessToken = "eyJhbGciOiJIUzUxMiJ9.eyJ1IjoiNjM3NjA0MzA0ODM2MjkyNjA4IiwidCI6IjAiLCJleHAiOjE3MTMwODgyMTh9.HnR1QYemq-8GCTH1QPS-ZOcAInwo1R1hdqBWT2F4bDOMisEAPUU2WzPGtmyGfzxbXAjY2FvK9jEg-aHdCPQhoA";
+    //private static String accessToken = "eyJhbGciOiJIUzUxMiJ9.eyJ1IjoiNjM3NjA0MzA0ODM2MjkyNjA4IiwidCI6IjAiLCJleHAiOjE3MTMwODgyMTh9.HnR1QYemq-8GCTH1QPS-ZOcAInwo1R1hdqBWT2F4bDOMisEAPUU2WzPGtmyGfzxbXAjY2FvK9jEg-aHdCPQhoA";
 
-    private static String useDate = "2024-04-20";
+    private static String useDate = "2024-04-22";
     private static String credentialNo = "13082819891227801X";
     private static String nickName = "张阳";
-    private static String mpOpenId = "oOya25BlL4u13ahkDCe7hv72lz3I";
+    private static String userId = "724352769960521728";
+    private static String phone = "17610773273";
+    //private static String mpOpenId = "oOya25BlL4u13ahkDCe7hv72lz3I";
 
-    private static String mpDeviceToken = "v2:wqkBAunpY12EXboGLPhE5UGbgQEe2BEAyc5y8aldAKT7alnWDzuO7E7ucDaGWISNIb3eJCzNc6E9LK+9h6S7i9PkmIP8HXzjXJgkrXOXV0+C/ZiATdm5pWLIJcxIrqor0mPfIZefGsT6/kLszqd7YAQymX0HUTc8sTvuvHVJXYUeYq75xuPILgTw1GPa+ncbUcU94OoSLTtcvVeJAxBayxp+t8n0wQA=";
+    //private static String mpDeviceToken = "v2:wqkBAunpY12EXboGLPhE5UGbgQEe2BEAyc5y8aldAKT7alnWDzuO7E7ucDaGWISNIb3eJCzNc6E9LK+9h6S7i9PkmIP8HXzjXJgkrXOXV0+C/ZiATdm5pWLIJcxIrqor0mPfIZefGsT6/kLszqd7YAQymX0HUTc8sTvuvHVJXYUeYq75xuPILgTw1GPa+ncbUcU94OoSLTtcvVeJAxBayxp+t8n0wQA=";
     private static Map<String, JSONObject> typeTicketMap = new HashMap();
     private static Map<String, JSONObject> modelCodeTicketInfoMap = new HashMap();
 
@@ -76,7 +79,7 @@ public class ChnMuseumTicket {
     private TaskExecutorConfig taskExecutorConfig;
 
 
-    @Scheduled(cron = "0/1 * * * * ?")
+    @Scheduled(cron = "0/1 0 20 * * ?")
     public void doSnatchingChnMuseum() {
         //记录有票的具体日期
         JSONArray parkFsyyDetailDTOs = new JSONArray();
@@ -97,27 +100,18 @@ public class ChnMuseumTicket {
             String headerStr = FileUtil.readString("/Users/devin.zhang/Desktop/record", Charset.defaultCharset());
             JSONObject headerJson = JSON.parseObject(headerStr);
             HttpHeaders headers = new HttpHeaders();
-           headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
-            headers.set("accept", "*/*");
-            headers.set("xweb_xhr", "1");
-            headers.set("app", "app_qqmap_tickets");
-            headers.set("Sec-Fetch-Site", "cross-site");
-            headers.set("Sec-Fetch-Mode", "cors");
-            headers.set("Sec-Fetch-Dest", "empty");
-            headers.set("Accept-Language", "zh-CN,zh;q=0.9");
-            headers.set("access-token", accessToken);
-            headers.set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36 MicroMessenger/6.8.0(0x16080000) NetType/WIFI MiniProgramEnv/Mac MacWechat/WMPF MacWechat/3.8.7(0x13080712) XWEB/1191");
-            /*for (Map.Entry<String, Object> headerEntry : headerJson.entrySet()) {
+            for (Map.Entry<String, Object> headerEntry : headerJson.entrySet()) {
                 headers.set(headerEntry.getKey(), headerEntry.getValue().toString());
-            }*/
+            }
+            headers.set("Accept-Encoding", "gzip,compress,deflate");
             headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
-            HttpEntity getUserEntity = new HttpEntity<>(headers);
+            /*HttpEntity getUserEntity = new HttpEntity<>(headers);
             JSONObject getUserJson = getResponse(restTemplate, queryUserInfoUrl, HttpMethod.GET, getUserEntity);
             if (ObjectUtils.isEmpty(getUserJson)) {
                 return;
-            }
-            headers.set("Accept-Language", "zh-CN,zh;q=0.9");
-            headers.set("mpOpenId", headerJson.getString("mpOpenId"));
+            }*/
+            String mpOpenId = headerJson.getString("mpOpenId");
+            //headers.set("mpOpenId", mpOpenId);
             HttpEntity entity = new HttpEntity<>(headers);
             //查询当月余票
             String month = now.getMonthValue() > 10 ? String.valueOf(now.getMonthValue()) : "0" + now.getMonthValue();
@@ -125,7 +119,7 @@ public class ChnMuseumTicket {
             JSONObject responseJson = getResponse(restTemplate, queryImperialPalaceTicketsUrl, HttpMethod.GET, entity);
             JSONArray data = responseJson.getJSONArray("data");
             if (ObjectUtils.isEmpty(data)) {
-                //log.info("获取到的场次失败");
+                log.info("获取到的场次失败");
                 return;
             }
             boolean haveTicket = false;
@@ -207,20 +201,23 @@ public class ChnMuseumTicket {
                 log.info("批量获取余票数据失败batchTimeReserveList", reserveListJson);
                 return;
             }
+            String accessToken = headerJson.getString("accessToken");
+            outloop:
             //创建订单
             while (true) {
-                //校验用户信息
-                headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
-                headers.setContentType(MediaType.APPLICATION_JSON);
-                JSONObject checkUserBody = buildCheckUserParam();
-                log.info("校验身份信息入参：{}", JSON.toJSONString(checkUserBody));
-                HttpEntity checkUserEntity = new HttpEntity<>(checkUserBody, headers);
-                JSONObject checkUserBodyJson = getResponse(restTemplate, checkUserUrl, HttpMethod.POST, checkUserEntity);
-                JSONObject checkUserData = checkUserBodyJson.getJSONObject("data");
-                if (ObjectUtils.isEmpty(checkUserData.getJSONArray("rejectCertAuthList"))) {
-                    log.info("身份验证失败:{}", checkUserBodyJson);
-                }
                 for (int j = 0; j < parkFsyyDetailDTOs.size(); j++) {
+                    //校验用户信息
+                    headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
+                    headers.setContentType(MediaType.APPLICATION_JSON);
+                    JSONObject checkUserBody = buildCheckUserParam();
+                    log.info("校验身份信息入参：{}", JSON.toJSONString(checkUserBody));
+                    HttpEntity checkUserEntity = new HttpEntity<>(checkUserBody, headers);
+                    JSONObject checkUserBodyJson = getResponse(restTemplate, checkUserUrl, HttpMethod.POST, checkUserEntity);
+                    JSONObject checkUserData = checkUserBodyJson.getJSONObject("data");
+                    if (ObjectUtils.isEmpty(checkUserData.getJSONArray("rejectCertAuthList"))) {
+                        log.info("身份验证失败:{}", checkUserBodyJson);
+                        continue;
+                    }
                     JSONObject parkFsyyDetailDTO = parkFsyyDetailDTOs.getJSONObject(j);
                     modelCodeTicketInfoMap.put("parkFsyyDetailDTO", parkFsyyDetailDTO);
                     headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
@@ -228,12 +225,15 @@ public class ChnMuseumTicket {
                     ts = ts.substring(0, 11);
                     String signStr = "VDsdxfwljhy#@!94857access-token=" + accessToken + ts + "AAXY";
                     String sign = DigestUtils.md5Hex(signStr);
-                    JSONObject jsonObject = buildCreateParam(getUserJson, buildCheckUserParam());
+                    JSONObject jsonObject = buildCreateParam(mpOpenId, buildCheckUserParam());
                     log.info("创建订单入参：{}", jsonObject);
-                    HttpEntity addTicketQueryEntity = new HttpEntity<>(buildCreateParam(getUserJson, buildCheckUserParam()), headers);
+                    HttpEntity addTicketQueryEntity = new HttpEntity<>(buildCreateParam(mpOpenId, buildCheckUserParam()), headers);
                     createUrl = String.format(createUrl, sign, ts);
                     JSONObject createRes = getResponse(restTemplate, createUrl, HttpMethod.POST, addTicketQueryEntity);
                     log.info("请求结果{}", createRes);
+                    if(createRes.getIntValue("code")==200){
+                        break outloop;
+                    }
                 }
             }
 
@@ -309,12 +309,12 @@ public class ChnMuseumTicket {
         return item;
     }
 
-    private JSONObject buildCreateParam(JSONObject userInfo, JSONObject checkParam) {
+    private JSONObject buildCreateParam(String openId, JSONObject checkParam) {
         JSONObject param = new JSONObject();
         param.put("buyer", new HashMap<String, Object>() {{
-            put("id", userInfo.getJSONObject("data").getString("userId"));
-            put("openId", userInfo.getJSONObject("data").getString("openId"));
-            put("mobile", userInfo.getJSONObject("data").getString("mobile"));
+            put("id", userId);
+            put("openId", openId);
+            put("mobile", phone);
             put("credentialNo", credentialNo);
             put("credentialType", "0");
             put("nickName", nickName);
@@ -366,8 +366,8 @@ public class ChnMuseumTicket {
 
     private JSONObject getResponse(RestTemplate restTemplate, String url, HttpMethod httpMethod, HttpEntity httpEntity) {
         try {
-            ResponseEntity<String> checkUserRes = restTemplate.exchange(url, httpMethod, httpEntity, String.class);
-            String checkUserResBody = checkUserRes.getBody();
+            ResponseEntity<byte[]> checkUserRes = restTemplate.exchange(url, httpMethod, httpEntity, byte[].class);
+            String checkUserResBody = new String(checkUserRes.getBody(), "utf-8");
             if (StrUtil.isEmpty(checkUserResBody)) {
                 log.info("获取数据失败", checkUserResBody);
                 return null;

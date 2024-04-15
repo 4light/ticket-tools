@@ -52,12 +52,12 @@ public class JntTicketService {
     private static String submitUrl = "https://jnt.mfu.com.cn/ajax?ugi=bookingorder&action=createGroupTicketOrder&bundleid=com.maiget.tickets&moduleid=6f77be86038c47269f1e00f7ddee9af4";
     //验证码校验
     private static String checkUrl="https://jnt.mfu.com.cn/mmodule/mpwork.captcha/ajax/captcha/check";
-    private static String useDate = "2024-04-20";
+    private static String useDate = "2024-04-21";
 
     private static String user = "410425199810226068";
     private static String pwd = "123456ywy!";
 
-    private static String cookie="i18n_redirected=zh; Hm_lvt_2a985e9d9884d17b5ed7589beac18720=1712464519,1713056446; JSESSIONID=E8051F8B42700E8842E63591C13FE7EA; UWAFCAC=4uofgr1aVfw4tSWHmXS4JDnCmxslWtavpFzctKe8xAmzGKxI0dX2G3TNAWPaxbNIXcVVPggGke5kBKHWSW4iKloIglk6Bf7PIsjGe4g6z48=; Hm_lpvt_2a985e9d9884d17b5ed7589beac18720=1713072750";
+    private static String cookie="i18n_redirected=zh; Hm_lvt_2a985e9d9884d17b5ed7589beac18720=1712464519,1713056446,1713143974; JSESSIONID=DBE42543BF096F772E3C689BB1EE8C53; Hm_lpvt_2a985e9d9884d17b5ed7589beac18720=1713154592";
 
 
     private static Map<String, String> iDNameMap = new HashMap() {{
@@ -72,11 +72,8 @@ public class JntTicketService {
 
     private static Map<String, JSONObject> sessionMap = new HashMap();
 
-    @Resource
-    private TaskExecutorConfig taskExecutorConfig;
 
-
-    //@Scheduled(cron = "0/1 * * * * ?")
+    @Scheduled(cron = "2 30 12 * * ?")
     public void doSnatchingJnt() {
         try {
             SSLContext sslContext = SSLContexts.custom()
@@ -141,32 +138,31 @@ public class JntTicketService {
                 JSONArray sessions = useDateTickInfo.getJSONArray("sessions");
                 for (int i = 0; i < sessions.size(); i++) {
                     String eventsSessionId = sessions.getJSONObject(i).getString("eventssessionid");
-                    sessionList.add(eventsSessionId);
+                    sessionList.add(0,eventsSessionId);
                     sessionMap.put(eventsSessionId, sessions.getJSONObject(i));
                 }
             }
             String referer = "https://jnt.mfu.com.cn/page/tg/editorder/%s?date=%s&begintime=%s&endtime=%s&booking_including_self=0&maxnums=60&minnums=10";
             headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-            String param = "[{\"invalid\":false,\"errmsg_realname\":\"\",\"errmsg_doctype\":\"\",\"errmsg_idnum\":\"\",\"jkbColor\":-2,\"id\":\"uj5AO2B9XuKHRot4cJfRbY8XzTNyVTkP\",\"realname\":\"王永梅\",\"doctype\":\"IDCARD\",\"idnum\":\"210821197404243364\"},{\"invalid\":false,\"errmsg_realname\":\"\",\"errmsg_doctype\":\"\",\"errmsg_idnum\":\"\",\"jkbColor\":-2,\"id\":\"uejSeX9a2P2GqXhKzQf19sKdivy01IV9\",\"realname\":\"韩美玉\",\"doctype\":\"IDCARD\",\"idnum\":\"210881199910235960\"},{\"invalid\":false,\"errmsg_realname\":\"\",\"errmsg_doctype\":\"\",\"errmsg_idnum\":\"\",\"jkbColor\":-2,\"id\":\"uyuhTT65uBKYUl8vviLFn0D2CLcAGfHI\",\"realname\":\"韩学武\",\"doctype\":\"IDCARD\",\"idnum\":\"21082419770510595X\"},{\"invalid\":false,\"errmsg_realname\":\"\",\"errmsg_doctype\":\"\",\"errmsg_idnum\":\"\",\"jkbColor\":-2,\"id\":\"u6D19qa8BgGkgLUdNZrNgZ8kf2AvaLez\",\"realname\":\"陈英梅\",\"doctype\":\"IDCARD\",\"idnum\":\"21088119790306616X\"},{\"invalid\":false,\"errmsg_realname\":\"\",\"errmsg_doctype\":\"\",\"errmsg_idnum\":\"\",\"jkbColor\":-2,\"id\":\"uqTfpi1asJpWlTe1FsDdgSVl5u3frn3Y\",\"realname\":\"张磊\",\"doctype\":\"IDCARD\",\"idnum\":\"210811197504240045\"},{\"invalid\":false,\"errmsg_realname\":\"\",\"errmsg_doctype\":\"\",\"errmsg_idnum\":\"\",\"jkbColor\":-2,\"id\":\"uFdw3L7MXtXglWcPv5GBH6WPrfguigjT\",\"realname\":\"马罡越\",\"doctype\":\"IDCARD\",\"idnum\":\"210803201512031533\"},{\"invalid\":false,\"errmsg_realname\":\"\",\"errmsg_doctype\":\"\",\"errmsg_idnum\":\"\",\"jkbColor\":-2,\"id\":\"ua8aIceUXtGckBSsI0x8s9P8UEWcAeGw\",\"realname\":\"张力\",\"doctype\":\"IDCARD\",\"idnum\":\"210811197103071025\"},{\"invalid\":false,\"errmsg_realname\":\"\",\"errmsg_doctype\":\"\",\"errmsg_idnum\":\"\",\"jkbColor\":-2,\"id\":\"umCuTRe4hbcQI7UdUUKwIUDBkuwiADg9\",\"realname\":\"李晓明\",\"doctype\":\"IDCARD\",\"idnum\":\"210881198512041445\"},{\"invalid\":false,\"errmsg_realname\":\"\",\"errmsg_doctype\":\"\",\"errmsg_idnum\":\"\",\"jkbColor\":-2,\"id\":\"utrZONkK59rvyNXX3ub0JGxQjoTRx9Q3\",\"realname\":\"李美静\",\"doctype\":\"IDCARD\",\"idnum\":\"210881200802251440\"},{\"invalid\":false,\"errmsg_realname\":\"\",\"errmsg_doctype\":\"\",\"errmsg_idnum\":\"\",\"jkbColor\":-2,\"id\":\"u5CHhm7tIaKqvINo0KM8NQYEQSHuHmmT\",\"realname\":\"林姣\",\"doctype\":\"IDCARD\",\"idnum\":\"210881198804146329\"}]";
-            AtomicBoolean go= new AtomicBoolean(true);
-            while(go.get()) {
+            outloop:
+            while(true) {
                 for (String session : sessionList) {
                         String format = String.format(referer, session, useDate, sessionMap.get(session).getString("begintime"), sessionMap.get(session).getString("endtime"));
-                        String submitBodyFormat = MessageFormat.format("usertype=tg&eventssessionid={0}&bookingdata={1}", session, param);
+                        String submitBodyFormat = MessageFormat.format("usertype=tg&eventssessionid={0}&bookingdata={1}", session, buildParam());
                         headers.set("Referer", format);
                         headers.set("Content-Length", String.valueOf(customURLEncode(submitBodyFormat, "utf-8").getBytes(StandardCharsets.UTF_8).length));
                         HttpEntity submitEntity = new HttpEntity<>(submitBodyFormat, headers);
                         JSONObject submitRes = getResponse(restTemplate, submitUrl, HttpMethod.POST, submitEntity);
                         log.info("请求结果:{}",submitRes);
                         if(StrUtil.equals(submitRes.getString("code"), "A00006")){
-                            go.set(false);
+                            break outloop;
                         }
                         if (StrUtil.equals(submitRes.getString("code"), "A00013")) {
                             check(submitRes.getString("captcha_type"),restTemplate,headers);
                             submitRes = getResponse(restTemplate, submitUrl, HttpMethod.POST, submitEntity);
                             log.info("请求结果:{}",submitRes);
                             if(StrUtil.equals(submitRes.getString("code"), "A00006")){
-                                go.set(false);
+                                break outloop;
                             }
                         }
                 }
@@ -362,8 +358,20 @@ public class JntTicketService {
         return null;
     }
 
+    public static String getId(){
+        String r="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+        char[] item=new char[32];
+        for (int i = 0; i < 32; i++){
+            int val = (int) (Math.random() * 62);
+            item[i] = r.charAt(0 | val);
+        }
+        item[0]='u';
+        return String.valueOf(item);
+    }
+
 
     private JSONArray buildParam() {
+        JSONArray param=new JSONArray();
         for (Map.Entry<String, String> idNameEntry : iDNameMap.entrySet()) {
             JSONObject item = new JSONObject();
             item.put("invalid", false);
@@ -371,12 +379,13 @@ public class JntTicketService {
             item.put("errmsg_doctype", "");
             item.put("errmsg_idnum", "");
             item.put("jkbColor", -2);
-            //item.put("id", );
+            item.put("id", getId());
             item.put("realname", idNameEntry.getValue());
             item.put("doctype", "IDCARD");
             item.put("idnum", idNameEntry.getKey());
+            param.add(item);
         }
-        return null;
+        return param;
     }
 
     public static void main(String[] args) {
@@ -395,10 +404,6 @@ public class JntTicketService {
         System.out.println(doClickSecret(posList, "owdNoYDuS651jtGd"));*/
         /*JntTicketService jntTicketService=new JntTicketService();
         jntTicketService.doSnatchingJnt();*/
-        String referer = "https://jnt.mfu.com.cn/page/tg/editorder/%s?date=%s&begintime=%s&endtime=%s&booking_including_self=0&maxnums=60&minnums=10";
-
-        String format = String.format(referer, "aaaa", useDate, "2023-03-22", "2024-03-22");
-        System.out.println(format);
-
+        System.out.println(getId());
     }
 }
