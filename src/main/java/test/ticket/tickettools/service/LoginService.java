@@ -8,8 +8,8 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.client.RestTemplate;
-import test.ticket.tickettools.dao.PhoneInfoDao;
-import test.ticket.tickettools.domain.entity.PhoneInfoEntity;
+import test.ticket.tickettools.dao.UserInfoDao;
+import test.ticket.tickettools.domain.entity.UserInfoEntity;
 import test.ticket.tickettools.utils.DateUtils;
 import test.ticket.tickettools.utils.ImageUtils;
 
@@ -19,9 +19,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -36,7 +33,7 @@ public class LoginService {
     private static String loginUrl="https://pcticket.cstm.org.cn/prod-api/login";
 
     @Resource
-    PhoneInfoDao phoneInfoDao;
+    UserInfoDao userInfoDao;
 
     public String longinCSTM(String loginPhone) {
         RestTemplate restTemplate = new RestTemplate();
@@ -82,15 +79,15 @@ public class LoginService {
                 return null;
             }
             //等待接收的验证码
-            PhoneInfoEntity phoneInfoEntity=new PhoneInfoEntity();
-            phoneInfoEntity.setPhoneNum(loginPhone);
+            UserInfoEntity userInfoEntity =new UserInfoEntity();
+            userInfoEntity.setPhoneNum(loginPhone);
             long startTimestamp = System.currentTimeMillis();
             LocalDateTime now=LocalDateTime.now();
             Pattern pattern = Pattern.compile("验证码(\\d{6})");
             String verificationCode="";
             //等待获取短信验证码
             while(true){
-                PhoneInfoEntity result = phoneInfoDao.select(phoneInfoEntity);
+                UserInfoEntity result = userInfoDao.select(userInfoEntity);
                 if(ObjectUtils.isEmpty(result)){
                     continue;
                 }

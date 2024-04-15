@@ -31,6 +31,12 @@ public class TaskEntity {
 
     //删除标识
     private Boolean yn;
+    //用户名
+    private String userName;
+    //请求头
+    private String headers;
+    //昵称
+    private String nickName;
 
     public TaskEntity() {
     }
@@ -153,5 +159,29 @@ public class TaskEntity {
 
     public void setYn(Boolean yn) {
         this.yn = yn;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public String getHeaders() {
+        return headers;
+    }
+
+    public void setHeaders(String headers) {
+        this.headers = headers;
+    }
+
+    public String getNickName() {
+        return nickName;
+    }
+
+    public void setNickName(String nickName) {
+        this.nickName = nickName;
     }
 }

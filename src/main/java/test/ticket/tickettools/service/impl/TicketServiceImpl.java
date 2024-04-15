@@ -25,12 +25,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
-import test.ticket.tickettools.dao.PhoneInfoDao;
+import test.ticket.tickettools.dao.UserInfoDao;
 import test.ticket.tickettools.dao.TaskDetailDao;
 import test.ticket.tickettools.dao.TaskDao;
 import test.ticket.tickettools.domain.bo.*;
 import test.ticket.tickettools.domain.constant.ChannelEnum;
-import test.ticket.tickettools.domain.entity.PhoneInfoEntity;
+import test.ticket.tickettools.domain.entity.UserInfoEntity;
 import test.ticket.tickettools.domain.entity.TaskDetailEntity;
 import test.ticket.tickettools.domain.entity.TaskEntity;
 import test.ticket.tickettools.service.TicketService;
@@ -96,7 +96,7 @@ public class TicketServiceImpl implements TicketService {
     TaskDetailDao taskDetailDao;
 
     @Resource
-    PhoneInfoDao phoneInfoDao;
+    UserInfoDao userInfoDao;
 
 
     @Override
@@ -296,9 +296,9 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
-    public ServiceResponse addPhoneInfo(PhoneInfoEntity phoneInfoEntity) {
-        log.info("手机信息:{}", phoneInfoEntity);
-        Integer res = phoneInfoDao.insertOrUpdate(phoneInfoEntity);
+    public ServiceResponse addPhoneInfo(UserInfoEntity userInfoEntity) {
+        log.info("手机信息:{}", userInfoEntity);
+        Integer res = userInfoDao.insertOrUpdate(userInfoEntity);
         if (res > 0) {
             ServiceResponse.createBySuccess();
         }
@@ -307,9 +307,9 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     public ServiceResponse getPhoneMsg(String phoneNum) {
-        PhoneInfoEntity phoneInfoEntity = new PhoneInfoEntity();
-        phoneInfoEntity.setPhoneNum(phoneNum);
-        return ServiceResponse.createBySuccess(phoneInfoDao.select(phoneInfoEntity).getContent());
+        UserInfoEntity userInfoEntity = new UserInfoEntity();
+        userInfoEntity.setPhoneNum(phoneNum);
+        return ServiceResponse.createBySuccess(userInfoDao.select(userInfoEntity).getContent());
     }
 
     @Override

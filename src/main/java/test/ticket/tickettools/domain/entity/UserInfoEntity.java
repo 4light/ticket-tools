@@ -3,7 +3,7 @@ package test.ticket.tickettools.domain.entity;
 
 import java.util.Date;
 
-public class PhoneInfoEntity {
+public class UserInfoEntity {
     private Long id;
 
     private String phoneNum;
@@ -15,10 +15,10 @@ public class PhoneInfoEntity {
     private Date createDate;
     private Date updateDate;
 
-    public PhoneInfoEntity() {
+    public UserInfoEntity() {
     }
 
-    public PhoneInfoEntity(Long id, String phoneNum, Integer channel, Long userId, String content, Date createDate, Date updateDate) {
+    public UserInfoEntity(Long id, String phoneNum, Integer channel, Long userId, String content, Date createDate, Date updateDate) {
         this.id = id;
         this.phoneNum = phoneNum;
         this.channel = channel;

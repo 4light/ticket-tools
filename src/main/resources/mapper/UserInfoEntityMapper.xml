@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="test.ticket.tickettools.dao.PhoneInfoDao">
-    <resultMap id="BaseResultMap" type="test.ticket.tickettools.domain.entity.PhoneInfoEntity">
+<mapper namespace="test.ticket.tickettools.dao.UserInfoDao">
+    <resultMap id="BaseResultMap" type="test.ticket.tickettools.domain.entity.UserInfoEntity">
         <constructor>
             <arg column="id" javaType="java.lang.Long" jdbcType="BIGINT"/>
             <arg column="phone_num" javaType="java.lang.String" jdbcType="VARCHAR"/>
@@ -12,7 +12,7 @@
             <arg column="update_date" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
         </constructor>
     </resultMap>
-    <insert id="insert" parameterType="test.ticket.tickettools.domain.entity.PhoneInfoEntity">
+    <insert id="insert" parameterType="test.ticket.tickettools.domain.entity.UserInfoEntity">
         insert into phone_info (id, phone_num, channel,
                                 user_id, content, create_date,
                                 update_date)
@@ -20,7 +20,7 @@
                 #{userId,jdbcType=BIGINT}, #{content,jdbcType=VARCHAR}, #{createDate,jdbcType=TIMESTAMP},
                 #{updateDate,jdbcType=TIMESTAMP})
     </insert>
-    <insert id="insertOrUpdate" parameterType="test.ticket.tickettools.domain.entity.PhoneInfoEntity">
+    <insert id="insertOrUpdate" parameterType="test.ticket.tickettools.domain.entity.UserInfoEntity">
         insert into phone_info (phone_num, channel,
                                 user_id, content, create_date,
                                 update_date)
@@ -41,7 +41,7 @@
             update_date=
         values (update_date)
     </insert>
-    <select id="select" parameterType="test.ticket.tickettools.domain.entity.PhoneInfoEntity" resultMap="BaseResultMap">
+    <select id="select" parameterType="test.ticket.tickettools.domain.entity.UserInfoEntity" resultMap="BaseResultMap">
         select * from phone_info
         <where>
             1=1
