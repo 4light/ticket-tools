@@ -10,6 +10,12 @@
             <arg column="content" javaType="java.lang.String" jdbcType="VARCHAR"/>
             <arg column="create_date" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
             <arg column="update_date" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
+            <arg column="user_name" javaType="java.lang.String" jdbcType="VARCHAR"/>
+            <arg column="pwd" javaType="java.lang.String" jdbcType="VARCHAR"/>
+            <arg column="nick_name" javaType="java.lang.String" jdbcType="VARCHAR"/>
+            <arg column="id_card" javaType="java.lang.String" jdbcType="VARCHAR"/>
+            <arg column="idType" javaType="java.lang.String" jdbcType="VARCHAR"/>
+            <arg column="headers" javaType="java.lang.String" jdbcType="VARCHAR"/>
         </constructor>
     </resultMap>
     <insert id="insert" parameterType="test.ticket.tickettools.domain.entity.UserInfoEntity">
