@@ -76,18 +76,7 @@ public class JntTicketService {
     @Scheduled(cron = "2 30 12 * * ?")
     public void doSnatchingJnt() {
         try {
-            SSLContext sslContext = SSLContexts.custom()
-                    .loadTrustMaterial(null, new TrustSelfSignedStrategy())
-                    .build();
-
-            ClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
-            ((HttpComponentsClientHttpRequestFactory) requestFactory).setHttpClient(HttpClients.custom()
-                    .setSSLContext(sslContext)
-                    .disableCookieManagement()
-                    .build());
-            ((HttpComponentsClientHttpRequestFactory) requestFactory).setConnectTimeout(20000);
-            ((HttpComponentsClientHttpRequestFactory) requestFactory).setReadTimeout(20000);
-            RestTemplate restTemplate = new RestTemplate(requestFactory);
+            RestTemplate restTemplate = TemplateUtil.initSSLTemplate();
             //获取Csrf
             HttpHeaders headers = new HttpHeaders();
             headers.set("Accept-Encoding", "gzip, deflate, br");

@@ -52,18 +52,23 @@ public class ChnMuseumTicket {
     //提交订单
     private static String createUrl = "https://lotswap.dpm.org.cn/dubboApi/trade-core/tradeCreateService/create?sign=%s&timestamp=%s";
 
-    //private static String accessToken = "eyJhbGciOiJIUzUxMiJ9.eyJ1IjoiNjM3NjA0MzA0ODM2MjkyNjA4IiwidCI6IjAiLCJleHAiOjE3MTMwODgyMTh9.HnR1QYemq-8GCTH1QPS-ZOcAInwo1R1hdqBWT2F4bDOMisEAPUU2WzPGtmyGfzxbXAjY2FvK9jEg-aHdCPQhoA";
 
-    private static String useDate = "2024-04-22";
+    private static String useDate = "2024-04-21";
     private static String credentialNo = "13082819891227801X";
     private static String nickName = "张阳";
     private static String userId = "724352769960521728";
     private static String phone = "17610773273";
-    //private static String mpOpenId = "oOya25BlL4u13ahkDCe7hv72lz3I";
+    private static String mpOpenId;
 
-    //private static String mpDeviceToken = "v2:wqkBAunpY12EXboGLPhE5UGbgQEe2BEAyc5y8aldAKT7alnWDzuO7E7ucDaGWISNIb3eJCzNc6E9LK+9h6S7i9PkmIP8HXzjXJgkrXOXV0+C/ZiATdm5pWLIJcxIrqor0mPfIZefGsT6/kLszqd7YAQymX0HUTc8sTvuvHVJXYUeYq75xuPILgTw1GPa+ncbUcU94OoSLTtcvVeJAxBayxp+t8n0wQA=";
     private static Map<String, JSONObject> typeTicketMap = new HashMap();
     private static Map<String, JSONObject> modelCodeTicketInfoMap = new HashMap();
+    //记录有票的具体日期
+    private static JSONArray parkFsyyDetailDTOs = new JSONArray();
+    //请求头JSON
+    private static JSONObject headerJson = new JSONObject();
+    //请求header
+    private static HttpHeaders headers = new HttpHeaders();
+
 
     private static Map<String, String> iDNameMap = new HashMap() {{
 //        put("220281199211070019", "刘东辉");
@@ -78,28 +83,13 @@ public class ChnMuseumTicket {
     @Resource
     private TaskExecutorConfig taskExecutorConfig;
 
-
-    @Scheduled(cron = "0/1 0 20 * * ?")
-    public void doSnatchingChnMuseum() {
-        //记录有票的具体日期
-        JSONArray parkFsyyDetailDTOs = new JSONArray();
+    @Scheduled(cron = "0 58 19 * * ?")
+    public void initData() {
         try {
-            SSLContext sslContext = SSLContexts.custom()
-                    .loadTrustMaterial(null, new TrustSelfSignedStrategy())
-                    .build();
-
-            ClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
-            ((HttpComponentsClientHttpRequestFactory) requestFactory).setHttpClient(HttpClients.custom()
-                    .setSSLContext(sslContext)
-                    .disableCookieManagement()
-                    .build());
-            ((HttpComponentsClientHttpRequestFactory) requestFactory).setConnectTimeout(20000);
-            ((HttpComponentsClientHttpRequestFactory) requestFactory).setReadTimeout(20000);
-            RestTemplate restTemplate = new RestTemplate(requestFactory);
-            LocalDate now = LocalDate.now();
             String headerStr = FileUtil.readString("/Users/devin.zhang/Desktop/record", Charset.defaultCharset());
-            JSONObject headerJson = JSON.parseObject(headerStr);
-            HttpHeaders headers = new HttpHeaders();
+            headerJson = JSON.parseObject(headerStr);
+            RestTemplate restTemplate = TemplateUtil.initSSLTemplate();
+            LocalDate now = LocalDate.now();
             for (Map.Entry<String, Object> headerEntry : headerJson.entrySet()) {
                 headers.set(headerEntry.getKey(), headerEntry.getValue().toString());
             }
@@ -110,19 +100,22 @@ public class ChnMuseumTicket {
             if (ObjectUtils.isEmpty(getUserJson)) {
                 return;
             }*/
-            String mpOpenId = headerJson.getString("mpOpenId");
+            mpOpenId = headerJson.getString("mpOpenId");
             //headers.set("mpOpenId", mpOpenId);
             HttpEntity entity = new HttpEntity<>(headers);
             //查询当月余票
             String month = now.getMonthValue() > 10 ? String.valueOf(now.getMonthValue()) : "0" + now.getMonthValue();
             queryImperialPalaceTicketsUrl = String.format(queryImperialPalaceTicketsUrl, now.getYear(), month);
-            JSONObject responseJson = getResponse(restTemplate, queryImperialPalaceTicketsUrl, HttpMethod.GET, entity);
+            JSONObject responseJson = TemplateUtil.getResponse(restTemplate, queryImperialPalaceTicketsUrl, HttpMethod.GET, entity);
+            if (ObjectUtils.isEmpty(responseJson)) {
+                return;
+            }
             JSONArray data = responseJson.getJSONArray("data");
             if (ObjectUtils.isEmpty(data)) {
                 log.info("获取到的场次失败");
                 return;
             }
-            boolean haveTicket = false;
+            //boolean haveTicket = false;
             for (int i = 0; i < data.size(); i++) {
                 JSONObject item = data.getJSONObject(i);
                 if (StrUtil.equals("T", item.getString("saleStatus")) && item.getIntValue("stockNum") == 1) {
@@ -132,7 +125,7 @@ public class ChnMuseumTicket {
                             for (int j = 0; j < parkFsyyDetailDTOS.size(); j++) {
                                 JSONObject parkFsyyDetailJson = parkFsyyDetailDTOS.getJSONObject(j);
                                 if (parkFsyyDetailJson.getIntValue("stockNum") == 1 && parkFsyyDetailJson.getIntValue("totalNum") == 1) {
-                                    haveTicket = true;
+                                    //haveTicket = true;
                                     parkFsyyDetailDTOs.add(parkFsyyDetailJson);
                                 }
                             }
@@ -142,14 +135,14 @@ public class ChnMuseumTicket {
                 }
             }
             //如果没有余票继续查询
-            if (!haveTicket) {
+            /*if (!haveTicket) {
                 log.info("没有余票");
                 return;
-            }
+            }*/
             headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
             HttpEntity getTicketEntity = new HttpEntity<>(headers);
             getTicketGridUrl = String.format(getTicketGridUrl, useDate, useDate);
-            JSONObject ticketGridJson = getResponse(restTemplate, getTicketGridUrl, HttpMethod.GET, getTicketEntity);
+            JSONObject ticketGridJson = TemplateUtil.getResponse(restTemplate, getTicketGridUrl, HttpMethod.GET, getTicketEntity);
             if (ObjectUtils.isEmpty(ticketGridJson)) {
                 return;
             }
@@ -192,7 +185,7 @@ public class ChnMuseumTicket {
             URLEncoder.encode(bodyFormat, "utf-8");
             headers.set("Content-Length", String.valueOf(customURLEncode(bodyFormat, "utf-8").getBytes(StandardCharsets.UTF_8).length));
             HttpEntity getReserveListEntity = new HttpEntity<>(bodyFormat, headers);
-            JSONObject reserveListJson = getResponse(restTemplate, getReserveListUrl, HttpMethod.POST, getReserveListEntity);
+            JSONObject reserveListJson = TemplateUtil.getResponse(restTemplate, getReserveListUrl, HttpMethod.POST, getReserveListEntity);
             if (ObjectUtils.isEmpty(reserveListJson)) {
                 return;
             }
@@ -201,23 +194,31 @@ public class ChnMuseumTicket {
                 log.info("批量获取余票数据失败batchTimeReserveList", reserveListJson);
                 return;
             }
+            //校验用户信息
+            headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            JSONObject checkUserBody = buildCheckUserParam();
+            log.info("校验身份信息入参：{}", JSON.toJSONString(checkUserBody));
+            HttpEntity checkUserEntity = new HttpEntity<>(checkUserBody, headers);
+            JSONObject checkUserBodyJson=TemplateUtil.getResponse(restTemplate,checkUserUrl, HttpMethod.POST, checkUserEntity);
+            JSONObject checkUserData = checkUserBodyJson.getJSONObject("data");
+            if (!ObjectUtils.isEmpty(checkUserData.getJSONArray("rejectCertAuthList"))) {
+                log.info("身份验证失败:{}", checkUserBodyJson);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Scheduled(cron = "0 0 20 * * ?")
+    public void doSnatchingChnMuseum() {
+        try {
             String accessToken = headerJson.getString("accessToken");
+            RestTemplate restTemplate = TemplateUtil.initSSLTemplate();
             outloop:
             //创建订单
             while (true) {
                 for (int j = 0; j < parkFsyyDetailDTOs.size(); j++) {
-                    //校验用户信息
-                    headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
-                    headers.setContentType(MediaType.APPLICATION_JSON);
-                    JSONObject checkUserBody = buildCheckUserParam();
-                    log.info("校验身份信息入参：{}", JSON.toJSONString(checkUserBody));
-                    HttpEntity checkUserEntity = new HttpEntity<>(checkUserBody, headers);
-                    JSONObject checkUserBodyJson = getResponse(restTemplate, checkUserUrl, HttpMethod.POST, checkUserEntity);
-                    JSONObject checkUserData = checkUserBodyJson.getJSONObject("data");
-                    if (ObjectUtils.isEmpty(checkUserData.getJSONArray("rejectCertAuthList"))) {
-                        log.info("身份验证失败:{}", checkUserBodyJson);
-                        continue;
-                    }
                     JSONObject parkFsyyDetailDTO = parkFsyyDetailDTOs.getJSONObject(j);
                     modelCodeTicketInfoMap.put("parkFsyyDetailDTO", parkFsyyDetailDTO);
                     headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
@@ -229,9 +230,9 @@ public class ChnMuseumTicket {
                     log.info("创建订单入参：{}", jsonObject);
                     HttpEntity addTicketQueryEntity = new HttpEntity<>(buildCreateParam(mpOpenId, buildCheckUserParam()), headers);
                     createUrl = String.format(createUrl, sign, ts);
-                    JSONObject createRes = getResponse(restTemplate, createUrl, HttpMethod.POST, addTicketQueryEntity);
+                    JSONObject createRes = TemplateUtil.getResponse(restTemplate, createUrl, HttpMethod.POST, addTicketQueryEntity);
                     log.info("请求结果{}", createRes);
-                    if(createRes.getIntValue("code")==200){
+                    if (createRes.getIntValue("code") == 200) {
                         break outloop;
                     }
                 }
@@ -362,21 +363,6 @@ public class ChnMuseumTicket {
         param.put("merchantInfoId", "2655");
 
         return param;
-    }
-
-    private JSONObject getResponse(RestTemplate restTemplate, String url, HttpMethod httpMethod, HttpEntity httpEntity) {
-        try {
-            ResponseEntity<byte[]> checkUserRes = restTemplate.exchange(url, httpMethod, httpEntity, byte[].class);
-            String checkUserResBody = new String(checkUserRes.getBody(), "utf-8");
-            if (StrUtil.isEmpty(checkUserResBody)) {
-                log.info("获取数据失败", checkUserResBody);
-                return null;
-            }
-            return JSON.parseObject(checkUserResBody);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
     }
 
     private static String customURLEncode(String s, String enc) {
