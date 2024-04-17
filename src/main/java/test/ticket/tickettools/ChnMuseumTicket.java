@@ -9,6 +9,7 @@ import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpHost;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContexts;
@@ -28,6 +29,9 @@ import java.io.*;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -53,7 +57,7 @@ public class ChnMuseumTicket {
     private static String createUrl = "https://lotswap.dpm.org.cn/dubboApi/trade-core/tradeCreateService/create?sign=%s&timestamp=%s";
 
 
-    private static String useDate = "2024-04-21";
+    private static String useDate = "2024-04-24";
     private static String credentialNo = "13082819891227801X";
     private static String nickName = "张阳";
     private static String userId = "724352769960521728";
@@ -68,6 +72,8 @@ public class ChnMuseumTicket {
     private static JSONObject headerJson = new JSONObject();
     //请求header
     private static HttpHeaders headers = new HttpHeaders();
+    private static RestTemplate restTemplate;
+    private static JSONObject proxy=new JSONObject();
 
 
     private static Map<String, String> iDNameMap = new HashMap() {{
@@ -82,13 +88,21 @@ public class ChnMuseumTicket {
 
     @Resource
     private TaskExecutorConfig taskExecutorConfig;
-
-    @Scheduled(cron = "0 58 19 * * ?")
+    //@Scheduled(cron = "0/1 03 20 * * ?")
+    @Scheduled(cron = "0/1 * * * * ?")
     public void initData() {
         try {
+            restTemplate = TemplateUtil.initSSLTemplate();
+            if(ObjectUtils.isEmpty(proxy)){
+                proxy = ProxyUtil.getProxy();
+            }
+            if(!ObjectUtils.isEmpty(proxy)){
+                restTemplate=TemplateUtil.initSSLTemplateWithProxy(proxy.getString("ip"), proxy.getIntValue("port"));
+            }
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
             String headerStr = FileUtil.readString("/Users/devin.zhang/Desktop/record", Charset.defaultCharset());
             headerJson = JSON.parseObject(headerStr);
-            RestTemplate restTemplate = TemplateUtil.initSSLTemplate();
             LocalDate now = LocalDate.now();
             for (Map.Entry<String, Object> headerEntry : headerJson.entrySet()) {
                 headers.set(headerEntry.getKey(), headerEntry.getValue().toString());
@@ -115,7 +129,7 @@ public class ChnMuseumTicket {
                 log.info("获取到的场次失败");
                 return;
             }
-            //boolean haveTicket = false;
+            boolean haveTicket = false;
             for (int i = 0; i < data.size(); i++) {
                 JSONObject item = data.getJSONObject(i);
                 if (StrUtil.equals("T", item.getString("saleStatus")) && item.getIntValue("stockNum") == 1) {
@@ -125,7 +139,7 @@ public class ChnMuseumTicket {
                             for (int j = 0; j < parkFsyyDetailDTOS.size(); j++) {
                                 JSONObject parkFsyyDetailJson = parkFsyyDetailDTOS.getJSONObject(j);
                                 if (parkFsyyDetailJson.getIntValue("stockNum") == 1 && parkFsyyDetailJson.getIntValue("totalNum") == 1) {
-                                    //haveTicket = true;
+                                    haveTicket = true;
                                     parkFsyyDetailDTOs.add(parkFsyyDetailJson);
                                 }
                             }
@@ -135,10 +149,10 @@ public class ChnMuseumTicket {
                 }
             }
             //如果没有余票继续查询
-            /*if (!haveTicket) {
+            if (!haveTicket) {
                 log.info("没有余票");
                 return;
-            }*/
+            }
             headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
             HttpEntity getTicketEntity = new HttpEntity<>(headers);
             getTicketGridUrl = String.format(getTicketGridUrl, useDate, useDate);
@@ -200,11 +214,13 @@ public class ChnMuseumTicket {
             JSONObject checkUserBody = buildCheckUserParam();
             log.info("校验身份信息入参：{}", JSON.toJSONString(checkUserBody));
             HttpEntity checkUserEntity = new HttpEntity<>(checkUserBody, headers);
-            JSONObject checkUserBodyJson=TemplateUtil.getResponse(restTemplate,checkUserUrl, HttpMethod.POST, checkUserEntity);
+            JSONObject checkUserBodyJson = TemplateUtil.getResponse(restTemplate, checkUserUrl, HttpMethod.POST, checkUserEntity);
             JSONObject checkUserData = checkUserBodyJson.getJSONObject("data");
+            log.info("身份验证信息:{}", checkUserData);
             if (!ObjectUtils.isEmpty(checkUserData.getJSONArray("rejectCertAuthList"))) {
                 log.info("身份验证失败:{}", checkUserBodyJson);
             }
+            doSnatchingChnMuseum();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -214,7 +230,6 @@ public class ChnMuseumTicket {
     public void doSnatchingChnMuseum() {
         try {
             String accessToken = headerJson.getString("accessToken");
-            RestTemplate restTemplate = TemplateUtil.initSSLTemplate();
             outloop:
             //创建订单
             while (true) {
@@ -388,9 +403,14 @@ public class ChnMuseumTicket {
         }
         return sb.toString();
     }
-
     public static void main(String[] args) throws UnsupportedEncodingException {
-        String s = FileUtil.readString("/Users/devin.zhang/Desktop/record", Charset.defaultCharset());
-        System.out.println(s);
+        RestTemplate restTemplate = TemplateUtil.initSSLTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        JSONObject response = TemplateUtil.getResponse(restTemplate, "http://http.tiqu.letecs.com/getip3?neek=d1fa042275328b9a&num=1&type=2&pro=0&city=0&yys=0&port=11&time=1&ts=1&ys=0&cs=1&lb=1&sb=0&pb=4&mr=1&regions=130000&gm=4", HttpMethod.GET, new HttpEntity<>(headers));
+        System.out.println(JSON.toJSONString(response));
+
     }
+
+
 }
