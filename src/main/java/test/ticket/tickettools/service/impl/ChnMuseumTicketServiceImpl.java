@@ -35,30 +35,30 @@ import java.util.*;
 public class ChnMuseumTicketServiceImpl implements ChnMuseumTicketService {
 
     //查询用户信息
-    private static String queryUserInfoUrl = "https://lotswap.dpm.org.cn/lotsapi/leaguer/api/userLeaguer/manage/leaguerInfo?cipherText=0&merchantId=2655&merchantInfoId=2655";
+    private static final String queryUserInfoUrl = "https://lotswap.dpm.org.cn/lotsapi/leaguer/api/userLeaguer/manage/leaguerInfo?cipherText=0&merchantId=2655&merchantInfoId=2655";
     //查询余票
     private static String queryImperialPalaceTicketsUrl = "https://lotswap.dpm.org.cn/lotsapi/merchant/api/fsyy/calendar?parkId=11324&year=%s&month=%s&merchantId=2655&merchantInfoId=2655";
     //获取门票种类
     private static String getTicketGridUrl = "https://lotswap.dpm.org.cn/lotsapi/merchant/api/merchantParkTicketGridNew?date=%s&merchantParkInfoId=11324&currPage=1&pageSize=200&merchantInfoId=2655&playDate=%s&businessType=park";
     //获取余票信息
-    private static String getReserveListUrl = "https://lotswap.dpm.org.cn/lotsapi/order/api/batchTimeReserveList";
+    private static final String getReserveListUrl = "https://lotswap.dpm.org.cn/lotsapi/order/api/batchTimeReserveList";
     //校验成员信息
-    private static String checkUserUrl = "https://lotswap.dpm.org.cn/dubboApi/trade-core/tradeCreateService/ticketVerificationCheck";
+    private static final String checkUserUrl = "https://lotswap.dpm.org.cn/dubboApi/trade-core/tradeCreateService/ticketVerificationCheck";
     //提交订单
     private static String createUrl = "https://lotswap.dpm.org.cn/dubboApi/trade-core/tradeCreateService/create?sign=%s&timestamp=%s";
 
 
-    private static String useDate = "2024-04-24";
-    private static String credentialNo = "13082819891227801X";
-    private static String nickName = "张阳";
-    private static String userId = "724352769960521728";
-    private static String phone = "17610773273";
+    private static final String useDate = "2024-04-27";
+    private static final String credentialNo = "13093019901216182X";
+    private static final String nickName = "王静";
+    private static final String userId = "733022166723260416";
+    private static final String phone = "13164040141";
     private static String mpOpenId;
 
-    private static Map<String, JSONObject> typeTicketMap = new HashMap();
-    private static Map<String, JSONObject> modelCodeTicketInfoMap = new HashMap();
+    private static final Map<String, JSONObject> typeTicketMap = new HashMap();
+    private static final Map<String, JSONObject> modelCodeTicketInfoMap = new HashMap();
     //记录有票的具体日期
-    private static JSONArray parkFsyyDetailDTOs = new JSONArray();
+    private static final JSONArray parkFsyyDetailDTOs = new JSONArray();
     //请求头JSON
     private static JSONObject headerJson = new JSONObject();
     //请求header
@@ -67,29 +67,25 @@ public class ChnMuseumTicketServiceImpl implements ChnMuseumTicketService {
     private static JSONObject proxy=new JSONObject();
 
 
-    private static Map<String, String> iDNameMap = new HashMap() {{
+    private static final Map<String, String> iDNameMap = new HashMap() {{
 //        put("220281199211070019", "刘东辉");
 //        put("220281197007200083", "刘坤");
-        put("340824198805196610", "葛腾");
-        put("342824196709277018", "葛爱国");
-        put("342824196409257023", "丁玉南");
-        put("340824199105016628", "葛菁菁");
-        put("34060320160421401X", "徐俊皓");
+        put("13093019901216182X", "王静");
+        put("130828201708027824", "张琳诺");
     }};
 
-    //@Scheduled(cron = "0/1 03 20 * * ?")
-    @Scheduled(cron = "0/1 * * * * ?")
+    @Scheduled(cron = "0/5 34 20 * * ?")
+    //@Scheduled(cron = "0/1 * * * * ?")
     @Override
     public void snatchingTicket()  {
         try {
             restTemplate = TemplateUtil.initSSLTemplate();
-            if(ObjectUtils.isEmpty(proxy)){
+            /*if(ObjectUtils.isEmpty(proxy)){
                 proxy = ProxyUtil.getProxy();
             }
             if(!ObjectUtils.isEmpty(proxy)){
                 restTemplate=TemplateUtil.initSSLTemplateWithProxy(proxy.getString("ip"), proxy.getIntValue("port"));
-            }
-            HttpHeaders headers = new HttpHeaders();
+            }*/
             headers.setContentType(MediaType.APPLICATION_JSON);
             String headerStr = FileUtil.readString("/Users/devin.zhang/Desktop/record", Charset.defaultCharset());
             headerJson = JSON.parseObject(headerStr);
@@ -120,6 +116,7 @@ public class ChnMuseumTicketServiceImpl implements ChnMuseumTicketService {
                 return;
             }
             boolean haveTicket = false;
+            outLoop:
             for (int i = 0; i < data.size(); i++) {
                 JSONObject item = data.getJSONObject(i);
                 if (StrUtil.equals("T", item.getString("saleStatus")) && item.getIntValue("stockNum") == 1) {
@@ -131,9 +128,9 @@ public class ChnMuseumTicketServiceImpl implements ChnMuseumTicketService {
                                 if (parkFsyyDetailJson.getIntValue("stockNum") == 1 && parkFsyyDetailJson.getIntValue("totalNum") == 1) {
                                     haveTicket = true;
                                     parkFsyyDetailDTOs.add(parkFsyyDetailJson);
+                                    break outLoop;
                                 }
                             }
-                            break;
                         }
                     }
                 }
@@ -157,10 +154,12 @@ public class ChnMuseumTicketServiceImpl implements ChnMuseumTicketService {
             if (ObjectUtils.isEmpty(ticketList)) {
                 return;
             }
+            List<String> modelCodes=new ArrayList();
             for (int i = 0; i < ticketList.size(); i++) {
                 JSONObject ticketInfo = ticketList.getJSONObject(i);
                 String nickName = ticketInfo.getString("nickName");
                 String modelCode = ticketInfo.getString("modelCode");
+                modelCodes.add(modelCode);
                 JSONObject tickCodeInfo = new JSONObject();
                 tickCodeInfo.put("modelCode", modelCode);
                 tickCodeInfo.put("externalCode", ticketInfo.getString("externalCode"));
@@ -182,6 +181,11 @@ public class ChnMuseumTicketServiceImpl implements ChnMuseumTicketService {
                 modelCodeTicketInfoMap.put(modelCode, ticketInfo);
                 ticketReserveList.add(tickCodeInfo);
             }
+            headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
+            String addTicketUrl=String.format("https://lotswap.dpm.org.cn/lotsapi/merchant/api/merchantParkInfo/add_ticket/query?modelCodes=%s&occDate=%s&merchantId=2655&merchantInfoId=2655",String.join(",",modelCodes),useDate);
+
+            JSONObject response = TemplateUtil.getResponse(restTemplate, addTicketUrl, HttpMethod.GET, new HttpEntity<>(headers));
+            log.info("add_ticket:{}",response);
             headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
             String bodyFormat = MessageFormat.format("queryParam={0}&merchantId=2655&merchantInfoId=2655", ticketReserveList);
             //需要设置content_type application/x-www-form-urlencoded
@@ -216,10 +220,11 @@ public class ChnMuseumTicketServiceImpl implements ChnMuseumTicketService {
         }
     }
 
-    @Scheduled(cron = "0 0 20 * * ?")
+    //@Scheduled(cron = "0 0 20 * * ?")
     public void doSnatchingChnMuseum() {
         try {
             String accessToken = headerJson.getString("accessToken");
+            headers.set("Accept-Encoding","gzip,compress,br,deflate");
             outloop:
             //创建订单
             while (true) {
@@ -233,7 +238,8 @@ public class ChnMuseumTicketServiceImpl implements ChnMuseumTicketService {
                     String sign = DigestUtils.md5Hex(signStr);
                     JSONObject jsonObject = buildCreateParam(mpOpenId, buildCheckUserParam());
                     log.info("创建订单入参：{}", jsonObject);
-                    HttpEntity addTicketQueryEntity = new HttpEntity<>(buildCreateParam(mpOpenId, buildCheckUserParam()), headers);
+                    log.info("headers：{}", headers);
+                    HttpEntity addTicketQueryEntity = new HttpEntity<>(jsonObject, headers);
                     createUrl = String.format(createUrl, sign, ts);
                     JSONObject createRes = TemplateUtil.getResponse(restTemplate, createUrl, HttpMethod.POST, addTicketQueryEntity);
                     log.info("请求结果{}", createRes);
@@ -341,7 +347,7 @@ public class ChnMuseumTicketServiceImpl implements ChnMuseumTicketService {
             orderInfo.put("price", ticketInfoJson.getDouble("price").intValue());
             orderInfo.put("amount", ticketVerificationDTO.getJSONArray("certAuthDTOS").size());
             orderInfo.put("modelCode", modelCodesDTO.getString("modelCode"));
-            orderInfo.put("itemId", ticketInfoJson.getIntValue("itemId"));
+            orderInfo.put("itemId", ticketInfoJson.getString("itemId"));
             orderInfo.put("wayType", "6");
             orderInfo.put("fsName", parkFsyyDetailDTO.getString("fsTimeName"));
             JSONArray certAuthDTOS = ticketVerificationDTO.getJSONArray("certAuthDTOS");

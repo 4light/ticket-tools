@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.client.RestTemplate;
 import test.ticket.tickettools.service.JntTicketService;
+import test.ticket.tickettools.utils.AESUtil;
 import test.ticket.tickettools.utils.ImageUtils;
 import test.ticket.tickettools.utils.ProxyUtil;
 import test.ticket.tickettools.utils.TemplateUtil;
@@ -49,8 +50,12 @@ public class JntTicketServiceImpl implements JntTicketService {
     private static String checkNameUrl="https://jnt.mfu.com.cn/ajax?ugi=account&action=checkSensitiveWord&bundleid=com.maiget.tickets&moduleid=6f77be86038c47269f1e00f7ddee9af4";
     //校验身份证号
     private static String checkIdUrl="https://jnt.mfu.com.cn/ajax?ugi=bookingorder&action=checkBookingUserV2&bundleid=com.maiget.tickets&moduleid=6f77be86038c47269f1e00f7ddee9af4";
-    private static String useDate = "2024-04-23";
+    private static String useDate = "2024-04-26";
+    private static String userName = "17610400550";
+    private static String pwd = "LGZlgz123!";
 
+    private static HttpHeaders headers=new HttpHeaders();
+    private static RestTemplate restTemplate=TemplateUtil.initSSLTemplate();
 
     private static Map<String, Map<String, String>> cookieUserMap = new HashMap<>();
 
@@ -73,85 +78,7 @@ public class JntTicketServiceImpl implements JntTicketService {
         put("370827198006112825", "张婧");
         put("370827200102272000", "田园乐");
     }};
-    private static Map<String, String> idNameMap2 = new HashMap() {{
-        put("340602200306282435", "张欣阳");
-        put("341226198301280326", "魏晓清");
-        put("342422198203166104", "吴芬");
-        put("342128197208017201", "万丽");
-        put("341226197003110121", "魏家平");
-        put("341226196911231936", "白良贵");
-        put("342422196905041227", "王世格");
-        put("342128196903182124", "范平芝");
-        put("340405196810121218", "刘维理");
-        put("342128196710254427", "程云");
-        put("341226196607140044", "魏家荣");
-        put("341226196401101971", "凌从林");
-        put("340121196309080401", "琚爱珍");
-        put("341226196211080268", "魏家芳");
-        put("342128196201100382", "吴德兰");
-        put("342128195912016238", "朱洪林");
-        put("342128195909290041", "周梦芳");
-        put("341226195902082612", "汪米书");
-        put("341226195806260327", "范维皊");
-        put("342128195707190333", "魏建");
-        put("34122619560501156X", "李芹");
-        put("341226195305050145", "徐顺然");
-        put("342128195311270070", "王佩新");
-        put("341226195203212625", "徐珍然");
-        put("341226194407180229", "童兰英");
-    }};
-    private static Map<String, String> idNameMap3 = new HashMap() {{
-        put("41232219620325452X", "邵素霞");
-        put("412322196503154520", "杨秀");
-        put("412322197010144548", "张艳霞");
-        put("41232419531120451X", "赵尚学");
-        put("412324195503154529", "冉令真");
-        put("412324195710244519", "茅一友");
-        put("411423195802038016", "梁家生");
-        put("412324195806094527", "王素梅");
-        put("412324196405204515", "陈国新");
-        put("412322195506122730", "宋会良");
-        put("41232219550726276X", "刘秀兰");
-        put("412322195210122731", "朱宜海");
-        put("412322197612302734", "朱慈书");
-        put("412301196310143014", "徐振保");
-        put("412322197212252731", "朱会金");
-        put("412322195203172722", "赵培娟");
-        put("412322194908152751", "朱慈贾");
-        put("41232219651016484X", "徐忠秀");
-        put("41232219651015481X", "谢立友");
-        put("412322195508013925", "张云真");
-        put("412322195408063925", "张秀云");
-        put("412322196205043961", "冯运丽");
-        put("412322196812273929", "曹林敏");
-        put("412322196404143922", "潘凤琴");
-        put("412322196608064521", "窦银阁");
-        put("412322196405223916", "宗勤科");
-        put("411402201510240163", "宗倩倩");
-        put("411402201304090096", "宗树亮");
-        put("41140220100325021X", "宗树洞");
-        put("412322195510123920", "张爱云");
-        put("412322196105173929", "陈永玲");
-        put("412322193409263946", "赵桂芝");
-        put("41232219560519393X", "魏振江");
-        put("41232219480925391X", "宗玉科");
-        put("412322195012263920", "刘爱真");
-        put("412322194111043910", "宋云林");
-        put("412322195608153941", "门三秀");
-        put("41232219560714391X", "李传增");
-        put("41232219600914452X", "楚德兰");
-        put("412327195402168445", "闫秀真");
-        put("412327195003155030", "陈召举");
-        put("411424198811094562", "白翠红");
-        put("412327196402264562", "梁月芳");
-        put("412327195809254521", "邓新玲");
-        put("412327195610134522", "李秀芝");
-        put("412326197302062435", "冯为谦");
-        put("412327198110199227", "宋洪花");
-        put("41232719541102921X", "宋清亮");
-        put("412327195608029264", "邹玉真");
-        put("412327195606118415", "张春宇");
-    }};
+
 
     private static Map<String, String> userPwdMap = new HashMap() {{
         //put("17610400550", "LGZlgz123!");
@@ -161,162 +88,137 @@ public class JntTicketServiceImpl implements JntTicketService {
 
     private static Map<String, JSONObject> sessionMap = new HashMap();
 
-    @Scheduled(cron = "0 29 12 * * ?")
+    //@Scheduled(cron = "0 29 12 * * ?")
     @Override
-    public void snatchingTicket(){
-        List<Map<String, String>> idNameMapList = new ArrayList();
+    public void snatchingTicket(){List<Map<String, String>> idNameMapList = new ArrayList();
         idNameMapList.add(idNameMap);
         //idNameMapList.add(idNameMap2);
         //idNameMapList.add(idNameMap3);
-        for (Map.Entry<String, String> userPwdEntry : userPwdMap.entrySet()) {
-            int i = 0;
-            RestTemplate restTemplate = TemplateUtil.initSSLTemplate();
-            //获取Csrf
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("Accept-Encoding", "gzip, deflate, br");
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("Origin", "https://jnt.mfu.com.cn");
-            headers.set("Referer", "https://jnt.mfu.com.cn/page/tg/login");
-            headers.set("Sec-Fetch-Mode", "cors");
-            headers.set("Sec-Fetch-Site", "same-origin");
-            headers.set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36");
-            headers.set("sec-ch-ua", "\"Google Chrome\";v=\"123\", \"Not:A-Brand\";v=\"8\", \"Chromium\";v=\"123\"");
-            headers.set("sec-ch-ua-platform", "macOS");
-            HttpEntity getCsrfEntity = new HttpEntity<>(headers);
-            JSONObject getCsrfJson = getResponse(restTemplate, getCsrfUrl, HttpMethod.GET, getCsrfEntity);
-            if (ObjectUtils.isEmpty(getCsrfJson)) {
-                log.info("获取CSRF失败");
+        JSONObject proxy = ProxyUtil.getProxy();
+        if (!ObjectUtils.isEmpty(proxy)) {
+            restTemplate = TemplateUtil.initSSLTemplateWithProxy(proxy.getString("ip"), proxy.getIntValue("port"));
+        }
+        //获取Csrf
+        headers.set("Accept-Encoding", "gzip, deflate, br");
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Origin", "https://jnt.mfu.com.cn");
+        headers.set("Referer", "https://jnt.mfu.com.cn/page/tg/login");
+        headers.set("Sec-Fetch-Mode", "cors");
+        headers.set("Sec-Fetch-Site", "same-origin");
+        headers.set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36");
+        headers.set("sec-ch-ua", "\"Google Chrome\";v=\"123\", \"Not:A-Brand\";v=\"8\", \"Chromium\";v=\"123\"");
+        headers.set("sec-ch-ua-platform", "macOS");
+        HttpEntity getCsrfEntity = new HttpEntity<>(headers);
+        JSONObject getCsrfJson = TemplateUtil.getResponse(restTemplate, getCsrfUrl, HttpMethod.GET, getCsrfEntity);
+        if (ObjectUtils.isEmpty(getCsrfJson)) {
+            log.info("获取CSRF失败");
+            return;
+        }
+        String csrf_req = getCsrfJson.getString("csrf_req");
+        String csrf_ts = getCsrfJson.getString("csrf_ts");
+        String csrf = DigestUtils.md5Hex(csrf_req + csrf_ts);
+        String bodyFormat = MessageFormat.format("loginid={0}&passwd={1}&csrf_req={2}&csrf_ts={3}&csrf={4}", userName, pwd, csrf_req, csrf_ts, csrf);
+        headers.set("Content-Length", String.valueOf(customURLEncode(bodyFormat, "utf-8").getBytes(StandardCharsets.UTF_8).length));
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        HttpEntity loginEntity = new HttpEntity<>(bodyFormat, headers);
+        ResponseEntity<String> doLogin = restTemplate.exchange(loginUrl, HttpMethod.POST, loginEntity, String.class);
+        HttpHeaders loginHeaders = doLogin.getHeaders();
+        List<String> cookies = loginHeaders.get("set-cookie");
+        log.info("获取到cookie:{}", cookies.get(0));
+        headers.set("Cookie", cookies.get(0));
+        try {
+            //查询余票
+            headers.set("Referer", "https://jnt.mfu.com.cn/page/tg");
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+            String queryFormat = MessageFormat.format("fromtype={0}&siteid={1}", "GROUP", "7e97d18d179c4791bab189f8de87ee9d");
+            headers.set("Content-Length", String.valueOf(customURLEncode(queryFormat, "utf-8").getBytes(StandardCharsets.UTF_8).length));
+            HttpEntity queryEntity = new HttpEntity<>(queryFormat, headers);
+            JSONObject queryRes = TemplateUtil.getResponse(restTemplate, bookingQueryUrl, HttpMethod.POST, queryEntity);
+            if (ObjectUtils.isEmpty(queryRes)) {
+                log.info("查询余票数据失败");
                 return;
             }
-            String csrf_req = getCsrfJson.getString("csrf_req");
-            String csrf_ts = getCsrfJson.getString("csrf_ts");
-            String csrf = DigestUtils.md5Hex(csrf_req + csrf_ts);
-            String bodyFormat = MessageFormat.format("loginid={0}&passwd={1}&csrf_req={2}&csrf_ts={3}&csrf={4}", userPwdEntry.getKey(), userPwdEntry.getValue(), csrf_req, csrf_ts, csrf);
-            headers.set("Content-Length", String.valueOf(customURLEncode(bodyFormat, "utf-8").getBytes(StandardCharsets.UTF_8).length));
-            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-            HttpEntity loginEntity = new HttpEntity<>(bodyFormat, headers);
-            ResponseEntity<String> doLogin = restTemplate.exchange(loginUrl, HttpMethod.POST, loginEntity, String.class);
-            HttpHeaders loginHeaders = doLogin.getHeaders();
-            List<String> cookies = loginHeaders.get("set-cookie");
-            log.info("获取到cookie:{}", cookies.get(0));
-            cookieUserMap.put(cookies.get(0), idNameMapList.get(i));
-            i++;
+            if (StrUtil.equals(queryRes.getString("code"), "A00013")) {
+                while (true) {
+                    check(queryRes.getString("captcha_type"), restTemplate, headers);
+                    //headers.set("cookie", String.format(currentCookie, System.currentTimeMillis() / 1000));
+                    queryRes = TemplateUtil.getResponse(restTemplate, bookingQueryUrl, HttpMethod.POST, queryEntity);
+                    if (StrUtil.equals(queryRes.getString("code"), "A00006")) {
+                        break;
+                    }
+                }
+            }
+
+            List<String> sessionList = new ArrayList();
+            if (StrUtil.equals(queryRes.getString("code"), "A00006")) {
+                JSONObject useDateTickInfo = queryRes.getJSONObject(useDate);
+                JSONArray sessions = useDateTickInfo.getJSONArray("sessions");
+                for (int i = 0; i < sessions.size(); i++) {
+                    String eventsSessionId = sessions.getJSONObject(i).getString("eventssessionid");
+                    sessionList.add(0, eventsSessionId);
+                    sessionMap.put(eventsSessionId, sessions.getJSONObject(i));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
-    @Scheduled(cron = "2 30 12 * * ?")
+    //@Scheduled(cron = "2 30 12 * * ?")
     public void doSnatchingJnt() {
-        try {
-            for (Map.Entry<String, Map<String, String>> cookieUser : cookieUserMap.entrySet()) {
-                RestTemplate restTemplate = TemplateUtil.initSSLTemplate();
-                JSONObject proxy = ProxyUtil.getProxy();
-                if (!ObjectUtils.isEmpty(proxy)) {
-                    restTemplate=TemplateUtil.initSSLTemplateWithProxy(proxy.getString("ip"), proxy.getIntValue("port"));
-                }
-                //获取Csrf
-                HttpHeaders headers = new HttpHeaders();
-                headers.set("Accept-Encoding", "gzip, deflate, br");
-                headers.setContentType(MediaType.APPLICATION_JSON);
-                headers.set("Origin", "https://jnt.mfu.com.cn");
-                headers.set("Referer", "https://jnt.mfu.com.cn/page/tg/login");
-                headers.set("Sec-Fetch-Mode", "cors");
-                headers.set("Sec-Fetch-Site", "same-origin");
-                headers.set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36");
-                headers.set("sec-ch-ua", "\"Google Chrome\";v=\"123\", \"Not:A-Brand\";v=\"8\", \"Chromium\";v=\"123\"");
-                headers.set("sec-ch-ua-platform", "macOS");
-                //查询余票
-                headers.set("Referer", "https://jnt.mfu.com.cn/page/tg");
-                //headers.set("cookie", cookie.get(0));
-                headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-                headers.set("cookie", cookieUser.getKey());
-                String queryFormat = MessageFormat.format("fromtype={0}&siteid={1}", "GROUP", "7e97d18d179c4791bab189f8de87ee9d");
-                headers.set("Content-Length", String.valueOf(customURLEncode(queryFormat, "utf-8").getBytes(StandardCharsets.UTF_8).length));
-                HttpEntity queryEntity = new HttpEntity<>(queryFormat, headers);
-                JSONObject queryRes = getResponse(restTemplate, bookingQueryUrl, HttpMethod.POST, queryEntity);
-                if (ObjectUtils.isEmpty(queryRes)) {
-                    log.info("查询余票数据失败");
-                    return;
-                }
-                if (StrUtil.equals(queryRes.getString("code"), "A00013")) {
-                    check(queryRes.getString("captcha_type"), restTemplate, headers);
-                    queryRes = getResponse(restTemplate, bookingQueryUrl, HttpMethod.POST, queryEntity);
-                }
-                List<String> sessionList = new ArrayList();
-                if (StrUtil.equals(queryRes.getString("code"), "A00006")) {
-                    JSONObject useDateTickInfo = queryRes.getJSONObject(useDate);
-                    JSONArray sessions = useDateTickInfo.getJSONArray("sessions");
-                    for (int i = 0; i < sessions.size(); i++) {
-                        String eventsSessionId = sessions.getJSONObject(i).getString("eventssessionid");
-                        sessionList.add(0, eventsSessionId);
-                        sessionMap.put(eventsSessionId, sessions.getJSONObject(i));
-                    }
-                }
-                String referer = "https://jnt.mfu.com.cn/page/tg/editorder/%s?date=%s&begintime=%s&endtime=%s&booking_including_self=0&maxnums=60&minnums=10";
-                headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-                outLoop:
-                while (true) {
-                    for (String session : sessionList) {
-                        String format = String.format(referer, session, useDate, sessionMap.get(session).getString("begintime"), sessionMap.get(session).getString("endtime"));
-                        headers.set("Referer", format);
-                        //校验姓名和身份证号
-                        Map<String, String> currentIdNameMap = cookieUser.getValue();
-                        for (String name : currentIdNameMap.values()) {
-                            String reqParam="str="+name;
-                            headers.set("Content-Length", String.valueOf(customURLEncode(reqParam, "utf-8").getBytes(StandardCharsets.UTF_8).length));
-                            HttpEntity checkNameEntity = new HttpEntity<>(reqParam, headers);
-                            JSONObject response = TemplateUtil.getResponse(restTemplate, checkNameUrl, HttpMethod.POST, checkNameEntity);
-                            if(!StrUtil.equals("A00006",response.getString("code"))){
-                                log.info("姓名-{}校验不通过:{}",name,response);
-                                break outLoop;
-                            }
-                        }
-                        String idNums = String.join(",", currentIdNameMap.values());
-                        String idParamForm=MessageFormat.format("eventssessionid={0}&usertype=tg&idnums={1}",session,idNums);
-                        headers.set("Content-Length", String.valueOf(customURLEncode(idParamForm, "utf-8").getBytes(StandardCharsets.UTF_8).length));
-                        HttpEntity checkIdEntity = new HttpEntity<>(idParamForm, headers);
-                        JSONObject checkIdRes = getResponse(restTemplate, checkIdUrl, HttpMethod.POST, checkIdEntity);
-                        if(!StrUtil.equals("A00006",checkIdRes.getString("code"))){
-                            log.info("身份证校验不通过:{}",checkIdRes);
+        String referer = "https://jnt.mfu.com.cn/page/tg/editorder/%s?date=%s&begintime=%s&endtime=%s&booking_including_self=0&maxnums=60&minnums=10";
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        outLoop:
+        while (true) {
+            for (Map.Entry<String, JSONObject> sessionEntity : sessionMap.entrySet()) {
+                try {
+                    log.info("当前session:{}", sessionEntity.getKey());
+                    String format = String.format(referer, sessionEntity.getKey(), useDate, sessionEntity.getValue().getString("begintime"), sessionEntity.getValue().getString("endtime"));
+                    headers.set("Referer", format);
+                    //校验姓名和身份证号
+                    Map<String, String> currentIdNameMap = idNameMap;
+                    for (String name : currentIdNameMap.values()) {
+                        String reqParam = "str=" + name;
+                        headers.set("Content-Length", String.valueOf(customURLEncode(reqParam, "utf-8").getBytes(StandardCharsets.UTF_8).length));
+                        HttpEntity checkNameEntity = new HttpEntity<>(reqParam, headers);
+                        JSONObject response = TemplateUtil.getResponse(restTemplate, checkNameUrl, HttpMethod.POST, checkNameEntity);
+                        if (!StrUtil.equals("A00006", response.getString("code"))) {
+                            log.info("姓名-{}校验不通过:{}", name, response);
                             break outLoop;
                         }
-                        //提交订单
-                        String submitBodyFormat = MessageFormat.format("usertype=tg&eventssessionid={0}&bookingdata={1}", session, buildParam(cookieUser.getValue()));
-                        headers.set("Content-Length", String.valueOf(customURLEncode(submitBodyFormat, "utf-8").getBytes(StandardCharsets.UTF_8).length));
-                        HttpEntity submitEntity = new HttpEntity<>(submitBodyFormat, headers);
-                        JSONObject submitRes = getResponse(restTemplate, submitUrl, HttpMethod.POST, submitEntity);
+                    }
+                    String idNums = String.join(",", currentIdNameMap.values());
+                    String idParamForm = MessageFormat.format("eventssessionid={0}&usertype=tg&idnums={1}", sessionEntity.getKey(), idNums);
+                    headers.set("Content-Length", String.valueOf(customURLEncode(idParamForm, "utf-8").getBytes(StandardCharsets.UTF_8).length));
+                    HttpEntity checkIdEntity = new HttpEntity<>(idParamForm, headers);
+                    JSONObject checkIdRes = TemplateUtil.getResponse(restTemplate, checkIdUrl, HttpMethod.POST, checkIdEntity);
+                    if (!StrUtil.equals("A00006", checkIdRes.getString("code"))) {
+                        log.info("身份证校验不通过:{}", checkIdRes);
+                        break outLoop;
+                    }
+                    //提交订单
+                    String submitBodyFormat = MessageFormat.format("usertype=tg&eventssessionid={0}&bookingdata={1}", sessionEntity.getKey(), buildParam(idNameMap));
+                    headers.set("Content-Length", String.valueOf(customURLEncode(submitBodyFormat, "utf-8").getBytes(StandardCharsets.UTF_8).length));
+                    HttpEntity submitEntity = new HttpEntity<>(submitBodyFormat, headers);
+                    JSONObject submitRes = TemplateUtil.getResponse(restTemplate, submitUrl, HttpMethod.POST, submitEntity);
+                    log.info("请求结果:{}", submitRes);
+                    if (StrUtil.equals(submitRes.getString("code"), "A00006")) {
+                        break outLoop;
+                    }
+                    if (StrUtil.equals(submitRes.getString("code"), "A00013")) {
+                        check(submitRes.getString("captcha_type"), restTemplate, headers);
+                        submitRes = TemplateUtil.getResponse(restTemplate, submitUrl, HttpMethod.POST, submitEntity);
                         log.info("请求结果:{}", submitRes);
                         if (StrUtil.equals(submitRes.getString("code"), "A00006")) {
                             break outLoop;
                         }
-                        if (StrUtil.equals(submitRes.getString("code"), "A00013")) {
-                            check(submitRes.getString("captcha_type"), restTemplate, headers);
-                            submitRes = getResponse(restTemplate, submitUrl, HttpMethod.POST, submitEntity);
-                            log.info("请求结果:{}", submitRes);
-                            if (StrUtil.equals(submitRes.getString("code"), "A00006")) {
-                                break outLoop;
-                            }
-                        }
                     }
+                    Thread.sleep(1000);
+                }catch (Exception e){
+                    e.printStackTrace();
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
-    }
-
-    private static JSONObject getResponse(RestTemplate restTemplate, String url, HttpMethod httpMethod, HttpEntity httpEntity) {
-        try {
-            ResponseEntity<String> checkUserRes = restTemplate.exchange(url, httpMethod, httpEntity, String.class);
-            String checkUserResBody = checkUserRes.getBody();
-            if (StrUtil.isEmpty(checkUserResBody)) {
-                log.info("获取数据失败", checkUserResBody);
-                return null;
-            }
-            return JSON.parseObject(checkUserResBody);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
     }
 
     private void check(String captchaType, RestTemplate restTemplate, HttpHeaders headers) {
@@ -329,7 +231,7 @@ public class JntTicketServiceImpl implements JntTicketService {
         param.put("clientUid", getQueryCaptchaPoint());
         param.put("ts", System.currentTimeMillis());
         HttpEntity getCaptchaEntity = new HttpEntity<>(param, headers);
-        JSONObject getCaptchaRes = getResponse(restTemplate, getCaptchaUrl, HttpMethod.POST, getCaptchaEntity);
+        JSONObject getCaptchaRes = TemplateUtil.getResponse(restTemplate, getCaptchaUrl, HttpMethod.POST, getCaptchaEntity);
         if (ObjectUtils.isEmpty(getCaptchaRes)) {
             log.info("请求验证码错误");
             return;
@@ -351,7 +253,7 @@ public class JntTicketServiceImpl implements JntTicketService {
                 getPointBody.put("token", "2J3UHYaDJTbELG55unhlt9JkNLKoLpcY9gsEOvbZ2Uc");
                 getPointBody.put("type", "30100");
                 HttpEntity entity = new HttpEntity<>(getPointBody, getPointHeaders);
-                JSONObject getPointRes = getResponse(restTemplate, getPointUrl, HttpMethod.POST, entity);
+                JSONObject getPointRes = TemplateUtil.getResponse(restTemplate, getPointUrl, HttpMethod.POST, entity);
                 if (ObjectUtils.isEmpty(getPointRes) || getPointRes.getIntValue("code") != 10000) {
                     log.info("获取图片坐标失败：{}", getPointRes);
                     return;
@@ -367,8 +269,8 @@ public class JntTicketServiceImpl implements JntTicketService {
                     item.put("y", Math.round((Double.valueOf(split[1]) * 155) / 155));
                     posList.add(item);
                 }
-                System.out.println(JSON.toJSONString(posList));
-                pointJson = doClickSecret(posList, secretKey);
+                log.info("文字点选验证码坐标:{}",posList);
+                pointJson = AESUtil.doAES(JSON.toJSONString(posList), secretKey);
             } else {
                 //请求滑块验证码
                 String uuid = UUID.randomUUID().toString();
@@ -378,7 +280,11 @@ public class JntTicketServiceImpl implements JntTicketService {
                 String jigsawImageBase64 = getCaptchaRes.getJSONObject("repData").getString("jigsawImageBase64");
                 ImageUtils.imagCreate(jigsawImageBase64, sliderImageName, 155, 50);
                 Double point = ImageUtils.getPoint(backImageName, sliderImageName, uuid);
-                pointJson = doSecretKey(point, secretKey);
+                JSONObject coordinate = new JSONObject();
+                coordinate.put("x", point);
+                coordinate.put("y", 5);
+                log.info("滑块验证码坐标:{}",coordinate);
+                pointJson = AESUtil.doAES(JSON.toJSONString(coordinate), secretKey);
             }
             headers.set("Referer", "https://jnt.mfu.com.cn/page/tg");
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -387,9 +293,9 @@ public class JntTicketServiceImpl implements JntTicketService {
             checkBody.put("pointJson", pointJson);
             checkBody.put("token", token);
             HttpEntity checkEntity = new HttpEntity<>(checkBody, headers);
-            JSONObject checkRes = getResponse(restTemplate, checkUrl, HttpMethod.POST, checkEntity);
+            JSONObject checkRes = TemplateUtil.getResponse(restTemplate, checkUrl, HttpMethod.POST, checkEntity);
             log.info("验证码校验结果:{}",checkRes);
-            if(!StrUtil.equals("A00006",checkRes.getString("code"))){
+            if(ObjectUtils.isEmpty(checkRes)||!StrUtil.equals("A00006",checkRes.getString("code"))){
                 check(captchaType,restTemplate,headers);
             }
         } else {
@@ -448,52 +354,6 @@ public class JntTicketServiceImpl implements JntTicketService {
         return "point-" + charStr;
     }
 
-
-    public static String doSecretKey(Double x, String secretKey) {
-        ScriptEngineManager manager = new ScriptEngineManager();
-        ScriptEngine engine = manager.getEngineByName("javascript");
-        try {
-            engine.eval(new java.io.InputStreamReader(JntTicketServiceImpl.class.getResourceAsStream("/META-INF/resources/webjars/crypto-js/3.1.9-1/crypto-js.js")));
-
-            // 读取 JavaScript 文件并执行
-            String scriptFile = "./getPoint.js";
-            engine.eval(new java.io.FileReader(scriptFile));
-            JSONObject param = new JSONObject();
-            param.put("x", x);
-            param.put("y", 5);
-            // 获取 JavaScript 函数的执行结果
-            Invocable invocable = (Invocable) engine;
-            Object result = invocable.invokeFunction("getPoint", param.toString(), secretKey);
-            if (result != null) {
-                return result.toString();
-            }
-        } catch (ScriptException | java.io.FileNotFoundException | NoSuchMethodException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    public static String doClickSecret(List<JSONObject> checkPosJson, String secretKey) {
-        ScriptEngineManager manager = new ScriptEngineManager();
-        ScriptEngine engine = manager.getEngineByName("javascript");
-        try {
-            engine.eval(new java.io.InputStreamReader(JntTicketServiceImpl.class.getResourceAsStream("/META-INF/resources/webjars/crypto-js/3.1.9-1/crypto-js.js")));
-
-            // 读取 JavaScript 文件并执行
-            String scriptFile = "./getPoint.js";
-            engine.eval(new java.io.FileReader(scriptFile));
-            // 获取 JavaScript 函数的执行结果
-            Invocable invocable = (Invocable) engine;
-            Object result = invocable.invokeFunction("getPoint", JSON.toJSONString(checkPosJson), secretKey);
-            if (result != null) {
-                return result.toString();
-            }
-        } catch (ScriptException | java.io.FileNotFoundException | NoSuchMethodException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
     public static String getId() {
         String r = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
         char[] item = new char[32];
@@ -504,7 +364,6 @@ public class JntTicketServiceImpl implements JntTicketService {
         item[0] = 'u';
         return String.valueOf(item);
     }
-
 
     private JSONArray buildParam(Map<String, String> idNameM) {
         JSONArray param = new JSONArray();

@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import taskView from '../components/TaskView'
+import indexView from '../components/IndexView'
 
 Vue.use(Router)
 
@@ -8,8 +8,8 @@ export default new Router({
   routes: [
     {
       path: '/',
-      name: 'taskView',
-      component: taskView
+      name: 'indexView',
+      component: indexView
     }
   ]
 })

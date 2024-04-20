@@ -10,8 +10,8 @@ public class UserInfoEntity {
 
     private Integer channel;
 
-    private Long userId;
-    private String content;
+    private String channelUserId;
+    private String account;
     private Date createDate;
     private Date updateDate;
     private String userName;
@@ -20,16 +20,19 @@ public class UserInfoEntity {
     private String idCard;
     private String idType;
     private String headers;
+    private Boolean yn;
+    private String ext;
+    private Boolean status;
 
     public UserInfoEntity() {
     }
 
-    public UserInfoEntity(Long id, String phoneNum, Integer channel, Long userId, String content, Date createDate, Date updateDate, String userName, String pwd, String nickName, String idCard, String idType, String headers) {
+    public UserInfoEntity(Long id, String phoneNum, Integer channel, String channelUserId, String account, Date createDate, Date updateDate, String userName, String pwd, String nickName, String idCard, String idType, String headers, Boolean yn, String ext, Boolean status) {
         this.id = id;
         this.phoneNum = phoneNum;
         this.channel = channel;
-        this.userId = userId;
-        this.content = content;
+        this.channelUserId = channelUserId;
+        this.account = account;
         this.createDate = createDate;
         this.updateDate = updateDate;
         this.userName = userName;
@@ -38,6 +41,9 @@ public class UserInfoEntity {
         this.idCard = idCard;
         this.idType = idType;
         this.headers = headers;
+        this.yn = yn;
+        this.ext = ext;
+        this.status = status;
     }
 
     public Long getId() {
@@ -64,20 +70,20 @@ public class UserInfoEntity {
         this.channel = channel;
     }
 
-    public Long getUserId() {
-        return userId;
+    public String getChannelUserId() {
+        return channelUserId;
     }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setChannelUserId(String channelUserId) {
+        this.channelUserId = channelUserId;
     }
 
-    public String getContent() {
-        return content;
+    public String getAccount() {
+        return account;
     }
 
-    public void setContent(String content) {
-        this.content = content;
+    public void setAccount(String account) {
+        this.account = account;
     }
 
     public Date getCreateDate() {
@@ -142,5 +148,29 @@ public class UserInfoEntity {
 
     public void setHeaders(String headers) {
         this.headers = headers;
+    }
+
+    public Boolean getYn() {
+        return yn;
+    }
+
+    public void setYn(Boolean yn) {
+        this.yn = yn;
+    }
+
+    public String getExt() {
+        return ext;
+    }
+
+    public void setExt(String ext) {
+        this.ext = ext;
+    }
+
+    public Boolean getStatus() {
+        return status;
+    }
+
+    public void setStatus(Boolean status) {
+        this.status = status;
     }
 }

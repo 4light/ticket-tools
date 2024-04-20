@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -87,12 +88,12 @@ public class LoginService {
             String verificationCode="";
             //等待获取短信验证码
             while(true){
-                UserInfoEntity result = userInfoDao.select(userInfoEntity);
+                List<UserInfoEntity> result = userInfoDao.select(userInfoEntity);
                 if(ObjectUtils.isEmpty(result)){
                     continue;
                 }
-                if(result.getCreateDate().after(DateUtils.localDateToDate(now))){
-                    String content = result.getContent();
+                if(result.get(0).getCreateDate().after(DateUtils.localDateToDate(now))){
+                    String content = result.get(0).getAccount();
                     Matcher matcher = pattern.matcher(content);
                     if (matcher.find()) {
                         verificationCode = matcher.group(1);

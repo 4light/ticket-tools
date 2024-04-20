@@ -6,8 +6,8 @@
             <arg column="id" javaType="java.lang.Long" jdbcType="BIGINT"/>
             <arg column="phone_num" javaType="java.lang.String" jdbcType="VARCHAR"/>
             <arg column="channel" javaType="java.lang.Integer" jdbcType="INTEGER"/>
-            <arg column="user_id" javaType="java.lang.Long" jdbcType="BIGINT"/>
-            <arg column="content" javaType="java.lang.String" jdbcType="VARCHAR"/>
+            <arg column="user_id" javaType="java.lang.String" jdbcType="VARCHAR"/>
+            <arg column="account" javaType="java.lang.String" jdbcType="VARCHAR"/>
             <arg column="create_date" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
             <arg column="update_date" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
             <arg column="user_name" javaType="java.lang.String" jdbcType="VARCHAR"/>
@@ -16,44 +16,51 @@
             <arg column="id_card" javaType="java.lang.String" jdbcType="VARCHAR"/>
             <arg column="idType" javaType="java.lang.String" jdbcType="VARCHAR"/>
             <arg column="headers" javaType="java.lang.String" jdbcType="VARCHAR"/>
+            <arg column="yn" javaType="java.lang.Boolean" jdbcType="BIT"/>
+            <arg column="ext" javaType="java.lang.String" jdbcType="VARCHAR"/>
+            <arg column="status" javaType="java.lang.Boolean" jdbcType="BIT"/>
+
         </constructor>
     </resultMap>
     <insert id="insert" parameterType="test.ticket.tickettools.domain.entity.UserInfoEntity">
-        insert into phone_info (id, phone_num, channel,
-                                user_id, content, create_date,
+        insert into user_info (id, phone_num, channel,
+                                channel_user_id, account, create_date,
                                 update_date)
         values (#{id,jdbcType=BIGINT}, #{phoneNum,jdbcType=VARCHAR}, #{channel,jdbcType=INTEGER},
-                #{userId,jdbcType=BIGINT}, #{content,jdbcType=VARCHAR}, #{createDate,jdbcType=TIMESTAMP},
+                #{channelUserId,jdbcType=VARCHAR}, #{account,jdbcType=VARCHAR}, #{createDate,jdbcType=TIMESTAMP},
                 #{updateDate,jdbcType=TIMESTAMP})
     </insert>
     <insert id="insertOrUpdate" parameterType="test.ticket.tickettools.domain.entity.UserInfoEntity">
-        insert into phone_info (phone_num, channel,
-                                user_id, content, create_date,
+        insert into user_info (phone_num, channel,
+                                channel_user_id, account, create_date,
                                 update_date)
         values (#{phoneNum,jdbcType=VARCHAR}, #{channel,jdbcType=INTEGER},
-                #{userId,jdbcType=BIGINT}, #{content,jdbcType=VARCHAR}, #{createDate,jdbcType=TIMESTAMP},
+                #{channelUserId,jdbcType=VARCHAR}, #{account,jdbcType=VARCHAR}, #{createDate,jdbcType=TIMESTAMP},
                 #{updateDate,jdbcType=TIMESTAMP}) on duplicate key
         update
             phone_num=
         values (phone_num),
             channel=
         values (channel),
-            user_id=
-        values (user_id),
-            content=
-        values (content),
+            channel_user_id=
+        values (channel_user_id),
+            account=
+        values (account),
             create_date=
         values (create_date),
             update_date=
         values (update_date)
     </insert>
     <select id="select" parameterType="test.ticket.tickettools.domain.entity.UserInfoEntity" resultMap="BaseResultMap">
-        select * from phone_info
+        select * from user_info
         <where>
             1=1
             <if test='phoneNum!=null and phoneNum!=""'>
                 AND phone_num = #{phoneNum}
             </if>
         </where>
+    </select>
+    <select id="selectById" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        select * from user_info where id=${id}
     </select>
 </mapper>

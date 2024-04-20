@@ -49,7 +49,7 @@ public class DoSnatchingSchedule {
     /**
      * 执行放票当天的任务
      */
-    @Scheduled(cron = "0/1 0-30 18 * * ?")
+    //@Scheduled(cron = "0/1 0-30 18 * * ?")
     public void doSnatching(){
         Map<String, DoSnatchInfo> taskForRun = ticketServiceImpl.getTaskForRun();
         if(ObjectUtils.isEmpty(taskForRun)){
@@ -63,7 +63,7 @@ public class DoSnatchingSchedule {
     /**
      * 去除放票当天的任务需要单个执行的任务
      */
-    @Scheduled(cron = "0/1 0-30 18 * * ?")
+    //@Scheduled(cron = "0/1 0-30 18 * * ?")
     public void doSnatchingExcludeTarget(){
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
         LocalDate localDate=LocalDate.now().plusDays(7L);
@@ -73,7 +73,7 @@ public class DoSnatchingSchedule {
             CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo), taskExecutorConfig.getAsyncExecutor());
         }
     }
-    @Scheduled(cron = "0/1 31-59 18 * * ?")
+    //@Scheduled(cron = "0/1 31-59 18 * * ?")
     public void doSingleSnatch(){
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
         for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
@@ -81,7 +81,7 @@ public class DoSnatchingSchedule {
         }
     }
 
-    @Scheduled(cron = "0/1 * 8-17,19-23 * * ?")
+    //@Scheduled(cron = "0/1 * 8-17,19-23 * * ?")
     public void doSingleSnatchOtherTime(){
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
         for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
@@ -119,6 +119,11 @@ public class DoSnatchingSchedule {
                 }
             }
         }
+    }
+
+
+    public void doJntTicketSnatch(){
+
     }
 
 

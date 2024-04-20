@@ -309,7 +309,7 @@ public class TicketServiceImpl implements TicketService {
     public ServiceResponse getPhoneMsg(String phoneNum) {
         UserInfoEntity userInfoEntity = new UserInfoEntity();
         userInfoEntity.setPhoneNum(phoneNum);
-        return ServiceResponse.createBySuccess(userInfoDao.select(userInfoEntity).getContent());
+        return ServiceResponse.createBySuccess(userInfoDao.select(userInfoEntity).get(0).getAccount());
     }
 
     @Override

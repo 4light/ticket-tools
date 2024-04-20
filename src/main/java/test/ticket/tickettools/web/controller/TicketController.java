@@ -87,7 +87,7 @@ public class TicketController {
                 if(entity.contains("content")){
                     String[] contentArr = entity.split("=");
                     if(contentArr.length>=2){
-                        param.setContent(contentArr[1]);
+                        param.setAccount(contentArr[1]);
                     }
                 }
                 if(entity.contains("date")){

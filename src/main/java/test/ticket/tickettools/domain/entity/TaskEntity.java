@@ -37,11 +37,13 @@ public class TaskEntity {
     private String headers;
     //昵称
     private String nickName;
+    //端口
+    private Integer port;
 
     public TaskEntity() {
     }
 
-    public TaskEntity(Long id, String loginPhone, String ip, Date useDate, String auth, Boolean done, Date createDate, Date updateDate, Long userId, Integer channel, Integer venue, Integer session, Boolean yn) {
+    public TaskEntity(Long id, String loginPhone, String ip, Date useDate, String auth, Boolean done, Date createDate, Date updateDate, Long userId, Integer channel, Integer venue, Integer session, Boolean yn, String userName, String headers, String nickName, Integer port) {
         this.id = id;
         this.loginPhone = loginPhone;
         this.ip = ip;
@@ -55,6 +57,10 @@ public class TaskEntity {
         this.venue = venue;
         this.session = session;
         this.yn = yn;
+        this.userName = userName;
+        this.headers = headers;
+        this.nickName = nickName;
+        this.port = port;
     }
 
     public Long getId() {
@@ -183,5 +189,13 @@ public class TaskEntity {
 
     public void setNickName(String nickName) {
         this.nickName = nickName;
+    }
+
+    public Integer getPort() {
+        return port;
+    }
+
+    public void setPort(Integer port) {
+        this.port = port;
     }
 }
