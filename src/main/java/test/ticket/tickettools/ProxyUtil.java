@@ -29,9 +29,9 @@ public class ProxyUtil {
                 RestTemplate restTemplate = TemplateUtil.initSSLTemplate();
                 HttpHeaders proxyHeaders = new HttpHeaders();
                 proxyHeaders.setContentType(MediaType.APPLICATION_JSON);
-                JSONObject response = TemplateUtil.getResponse(restTemplate, "http://http.tiqu.letecs.com/getip3?neek=d1fa042275328b9a&num=1&type=2&pro=0&city=0&yys=0&port=11&time=1&ts=1&ys=0&cs=1&lb=1&sb=0&pb=4&mr=1&regions=130000&gm=4", HttpMethod.GET, new HttpEntity<>(proxyHeaders));
+                JSONObject response = TemplateUtil.getResponse(restTemplate, "http://http.tiqu.letecs.com/getip3?neek=d1fa042275328b9a&num=1&type=2&pro=0&city=0&yys=0&port=11&time=1&ts=1&ys=0&cs=1&lb=1&sb=0&pb=4&mr=1&regions=130000&gm=4&username=chukou01&spec=1", HttpMethod.GET, new HttpEntity<>(proxyHeaders));
                 if (response.getIntValue("code") != 0) {
-                    System.out.println("获取代理异常:{}" + JSON.toJSONString(response));
+                    System.out.println("获取代理异常:" + JSON.toJSONString(response));
                     //添加白名单
                     if (response.getIntValue("code") == 113) {
                         String msg = response.getString("msg");

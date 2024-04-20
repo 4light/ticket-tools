@@ -57,7 +57,7 @@ public class ChnMuseumTicket {
     private static String createUrl = "https://lotswap.dpm.org.cn/dubboApi/trade-core/tradeCreateService/create?sign=%s&timestamp=%s";
 
 
-    private static String useDate = "2024-04-24";
+    private static String useDate = "2024-04-26";
     private static String credentialNo = "13082819891227801X";
     private static String nickName = "张阳";
     private static String userId = "724352769960521728";
@@ -73,7 +73,7 @@ public class ChnMuseumTicket {
     //请求header
     private static HttpHeaders headers = new HttpHeaders();
     private static RestTemplate restTemplate;
-    private static JSONObject proxy=new JSONObject();
+    private static JSONObject proxy = new JSONObject();
 
 
     private static Map<String, String> iDNameMap = new HashMap() {{
@@ -88,16 +88,16 @@ public class ChnMuseumTicket {
 
     @Resource
     private TaskExecutorConfig taskExecutorConfig;
-    //@Scheduled(cron = "0/1 03 20 * * ?")
-    @Scheduled(cron = "0/1 * * * * ?")
+
+    //@Scheduled(cron = "0/3 * * * * ?")
     public void initData() {
         try {
             restTemplate = TemplateUtil.initSSLTemplate();
-            if(ObjectUtils.isEmpty(proxy)){
+            if (ObjectUtils.isEmpty(proxy)) {
                 proxy = ProxyUtil.getProxy();
             }
-            if(!ObjectUtils.isEmpty(proxy)){
-                restTemplate=TemplateUtil.initSSLTemplateWithProxy(proxy.getString("ip"), proxy.getIntValue("port"));
+            if (!ObjectUtils.isEmpty(proxy)) {
+                restTemplate = TemplateUtil.initSSLTemplateWithProxy(proxy.getString("ip"), proxy.getIntValue("port"));
             }
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -109,12 +109,8 @@ public class ChnMuseumTicket {
             }
             headers.set("Accept-Encoding", "gzip,compress,deflate");
             headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
-            /*HttpEntity getUserEntity = new HttpEntity<>(headers);
-            JSONObject getUserJson = getResponse(restTemplate, queryUserInfoUrl, HttpMethod.GET, getUserEntity);
-            if (ObjectUtils.isEmpty(getUserJson)) {
-                return;
-            }*/
             mpOpenId = headerJson.getString("mpOpenId");
+            headers.remove("Content-Length");
             //headers.set("mpOpenId", mpOpenId);
             HttpEntity entity = new HttpEntity<>(headers);
             //查询当月余票
@@ -220,39 +216,30 @@ public class ChnMuseumTicket {
             if (!ObjectUtils.isEmpty(checkUserData.getJSONArray("rejectCertAuthList"))) {
                 log.info("身份验证失败:{}", checkUserBodyJson);
             }
-            doSnatchingChnMuseum();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Scheduled(cron = "0 0 20 * * ?")
-    public void doSnatchingChnMuseum() {
-        try {
-            String accessToken = headerJson.getString("accessToken");
-            outloop:
-            //创建订单
-            while (true) {
-                for (int j = 0; j < parkFsyyDetailDTOs.size(); j++) {
-                    JSONObject parkFsyyDetailDTO = parkFsyyDetailDTOs.getJSONObject(j);
-                    modelCodeTicketInfoMap.put("parkFsyyDetailDTO", parkFsyyDetailDTO);
-                    headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
-                    String ts = String.valueOf(System.currentTimeMillis());
-                    ts = ts.substring(0, 11);
-                    String signStr = "VDsdxfwljhy#@!94857access-token=" + accessToken + ts + "AAXY";
-                    String sign = DigestUtils.md5Hex(signStr);
-                    JSONObject jsonObject = buildCreateParam(mpOpenId, buildCheckUserParam());
-                    log.info("创建订单入参：{}", jsonObject);
-                    HttpEntity addTicketQueryEntity = new HttpEntity<>(buildCreateParam(mpOpenId, buildCheckUserParam()), headers);
-                    createUrl = String.format(createUrl, sign, ts);
-                    JSONObject createRes = TemplateUtil.getResponse(restTemplate, createUrl, HttpMethod.POST, addTicketQueryEntity);
-                    log.info("请求结果{}", createRes);
-                    if (createRes.getIntValue("code") == 200) {
-                        break outloop;
+            String accessToken = headerJson.getString("access-token");
+            for (int j = 0; j < parkFsyyDetailDTOs.size(); j++) {
+                int finalJ = j;
+                //
+                    try {
+                        JSONObject parkFsyyDetailDTO = parkFsyyDetailDTOs.getJSONObject(finalJ);
+                        modelCodeTicketInfoMap.put("parkFsyyDetailDTO", parkFsyyDetailDTO);
+                        String ts = String.valueOf(System.currentTimeMillis());
+                        ts = ts.substring(0, 11);
+                        headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
+                        String signStr = "VDsdxfwljhy#@!94857access-token=" + accessToken + ts + "AAXY";
+                        String sign = DigestUtils.md5Hex(signStr);
+                        JSONObject createOrderParam = buildCreateParam(mpOpenId, buildCheckUserParam());
+                        headers.set("Content-Length", String.valueOf(JSON.toJSONString(createOrderParam).getBytes(StandardCharsets.UTF_8).length));
+                        log.info("创建订单入参：{}", createOrderParam);
+                        HttpEntity addTicketQueryEntity = new HttpEntity<>(createOrderParam, headers);
+                        createUrl = String.format(createUrl, sign, ts);
+                        JSONObject createRes = TemplateUtil.getResponse(restTemplate, createUrl, HttpMethod.POST, addTicketQueryEntity);
+                        log.info("请求结果{}", createRes);
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-                }
-            }
 
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -403,13 +390,11 @@ public class ChnMuseumTicket {
         }
         return sb.toString();
     }
-    public static void main(String[] args) throws UnsupportedEncodingException {
-        RestTemplate restTemplate = TemplateUtil.initSSLTemplate();
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        JSONObject response = TemplateUtil.getResponse(restTemplate, "http://http.tiqu.letecs.com/getip3?neek=d1fa042275328b9a&num=1&type=2&pro=0&city=0&yys=0&port=11&time=1&ts=1&ys=0&cs=1&lb=1&sb=0&pb=4&mr=1&regions=130000&gm=4", HttpMethod.GET, new HttpEntity<>(headers));
-        System.out.println(JSON.toJSONString(response));
 
+    public static void main(String[] args) throws UnsupportedEncodingException {
+        JSONObject s=JSON.parseObject("{\"buyer\":{\"id\":\"637604304802738176\",\"openId\":\"oOya25BlL4u13ahkDCe7hv72lz3I\",\"mobile\":\"18310327323\",\"credentialNo\":\"13082819891227801X\",\"credentialType\":\"0\",\"nickName\":\"张阳\"},\"couponCode\":\"\",\"startDate\":\"2024-04-25\",\"endDate\":\"2024-04-25\",\"addTickets\":[],\"saveOrders\":[{\"ticketName\":\"门票全价票\",\"price\":60,\"amount\":1,\"modelCode\":\"MP2022070117025856157\",\"itemId\":\"75821\",\"wayType\":\"6\",\"fsName\":\"下午\",\"orderCertAuthList\":[{\"realName\":\"张阳\",\"certType\":0,\"certNo\":\"13082819891227801X\"}],\"needConfirm\":\"F\",\"spiltStartTime\":\"11:00\",\"spiltEndTime\":\"17:00\"}],\"wayType\":\"6\",\"orderType\":\"park\",\"merchantInfoId\":\"2655\"}");
+
+        System.out.println(JSON.toJSONString(s).getBytes(StandardCharsets.UTF_8).length);
     }
 
 

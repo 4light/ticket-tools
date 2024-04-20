@@ -4,8 +4,10 @@ import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.http.HttpHost;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContexts;
 import org.springframework.http.HttpEntity;
@@ -64,7 +66,12 @@ public class TemplateUtil {
                 .setExpectContinueEnabled(false)
                 .setProxy(new HttpHost(proxyHost, proxyPort))
                 .build();
-        ClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
+        HttpHost proxy = new HttpHost(proxyHost, proxyPort);
+
+        HttpClient httpClient = HttpClientBuilder.create()
+                .setProxy(proxy)
+                .build();
+        ClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory(httpClient);
         ((HttpComponentsClientHttpRequestFactory) requestFactory).setHttpClient(HttpClients.custom()
                 .setDefaultRequestConfig(requestConfig)
                 .setSSLContext(sslContext)

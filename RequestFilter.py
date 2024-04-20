@@ -1,7 +1,4 @@
-import json
-
 import mitmproxy
-from mitmproxy import http
 
 httpRecord = {}
 

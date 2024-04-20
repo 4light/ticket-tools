@@ -1,0 +1,60 @@
+12:23:16.207 [restartedMain] INFO  t.t.t.TicketToolsApplication - [logStarting,55] - Starting TicketToolsApplication on devinzhangdeMacBook-Pro.local with PID 82829 (/Users/devin.zhang/IdeaProjects/ticket-tools/target/classes started by devin.zhang in /Users/devin.zhang/IdeaProjects/ticket-tools)
+12:23:16.212 [restartedMain] INFO  t.t.t.TicketToolsApplication - [logStartupProfileInfo,651] - No active profile set, falling back to default profiles: default
+12:23:18.164 [restartedMain] INFO  o.a.c.h.Http11NioProtocol - [log,173] - Initializing ProtocolHandler ["http-nio-8080"]
+12:23:18.165 [restartedMain] INFO  o.a.c.c.StandardService - [log,173] - Starting service [Tomcat]
+12:23:18.166 [restartedMain] INFO  o.a.c.c.StandardEngine - [log,173] - Starting Servlet engine: [Apache Tomcat/9.0.36]
+12:23:18.266 [restartedMain] INFO  o.a.c.c.C.[.[.[/] - [log,173] - Initializing Spring embedded WebApplicationContext
+12:23:18.617 [restartedMain] INFO  o.a.c.h.Http11NioProtocol - [log,173] - Starting ProtocolHandler ["http-nio-8080"]
+12:23:18.653 [restartedMain] INFO  t.t.t.TicketToolsApplication - [logStarted,61] - Started TicketToolsApplication in 3.105 seconds (JVM running for 4.26)
+12:29:31.409 [scheduling-1] INFO  t.t.t.JntTicketService - [initLogin,197] - 获取到cookie:JSESSIONID=34A1921D98402764E88F565046B1CF91; Path=/; HttpOnly
+12:29:54.493 [scheduling-1] INFO  t.t.t.JntTicketService - [check,460] - 验证码校验结果:null
+12:31:06.782 [restartedMain] INFO  t.t.t.TicketToolsApplication - [logStarting,55] - Starting TicketToolsApplication on devinzhangdeMacBook-Pro.local with PID 83482 (/Users/devin.zhang/IdeaProjects/ticket-tools/target/classes started by devin.zhang in /Users/devin.zhang/IdeaProjects/ticket-tools)
+12:31:06.788 [restartedMain] INFO  t.t.t.TicketToolsApplication - [logStartupProfileInfo,651] - No active profile set, falling back to default profiles: default
+12:31:08.231 [restartedMain] INFO  o.a.c.h.Http11NioProtocol - [log,173] - Initializing ProtocolHandler ["http-nio-8080"]
+12:31:08.232 [restartedMain] INFO  o.a.c.c.StandardService - [log,173] - Starting service [Tomcat]
+12:31:08.233 [restartedMain] INFO  o.a.c.c.StandardEngine - [log,173] - Starting Servlet engine: [Apache Tomcat/9.0.36]
+12:31:08.324 [restartedMain] INFO  o.a.c.c.C.[.[.[/] - [log,173] - Initializing Spring embedded WebApplicationContext
+12:31:08.693 [restartedMain] INFO  o.a.c.h.Http11NioProtocol - [log,173] - Starting ProtocolHandler ["http-nio-8080"]
+12:31:08.730 [restartedMain] INFO  t.t.t.TicketToolsApplication - [logStarted,61] - Started TicketToolsApplication in 2.479 seconds (JVM running for 4.04)
+12:31:10.438 [scheduling-1] INFO  t.t.t.JntTicketService - [initLogin,197] - 获取到cookie:JSESSIONID=30BF766A33451C475CD14CDDBA50E35A; Path=/; HttpOnly
+12:31:11.317 [scheduling-1] INFO  t.t.t.JntTicketService - [doSnatchingJnt,338] - 当前session:c6419a59f08145cc97875e52e1e5f4bf
+12:31:13.454 [scheduling-1] INFO  t.t.t.JntTicketService - [doSnatchingJnt,367] - 请求结果:{"code":"A00013","errmsg":"请完成验证","captcha_type":"blockPuzzle"}
+12:31:38.484 [scheduling-1] INFO  t.t.t.JntTicketService - [check,460] - 验证码校验结果:{"repCode":"0000","code":"A00006","errmsg":"ok","repData":{"result":true,"pointJson":"C4mI2PZKe0Er2OVzXmN2e2h1oFW2mBxQn/y+xoq5cDk=","captchaType":"blockPuzzle","token":"c131ca13ba0d4e9ca5e3548a38da4a62"}}
+12:31:38.644 [scheduling-1] INFO  t.t.t.JntTicketService - [doSnatchingJnt,374] - 请求结果:{"code":"A00005","errmsg":"渠道余票不足"}
+12:31:39.650 [scheduling-1] INFO  t.t.t.JntTicketService - [doSnatchingJnt,338] - 当前session:9145683a57954e329a01de1a7e88f4c2
+12:31:42.141 [scheduling-1] INFO  t.t.t.JntTicketService - [doSnatchingJnt,359] - 身份证校验不通过:{"code":"A00004","errmsg":"个人帐号未登录！"}
+12:31:52.368 [scheduling-1] INFO  o.a.h.i.e.RetryExec - [execute,97] - I/O exception (org.apache.http.NoHttpResponseException) caught when processing request to {tls}->http://122.225.30.139:20152->https://jnt.mfu.com.cn:443: The target server failed to respond
+12:31:52.369 [scheduling-1] INFO  o.a.h.i.e.RetryExec - [execute,113] - Retrying request to {tls}->http://122.225.30.139:20152->https://jnt.mfu.com.cn:443
+12:31:52.873 [scheduling-1] INFO  t.t.t.JntTicketService - [initLogin,197] - 获取到cookie:JSESSIONID=724F060CECF33BF39D45CE0DB1B6A2BC; Path=/; HttpOnly
+12:32:02.169 [scheduling-1] INFO  t.t.t.JntTicketService - [check,460] - 验证码校验结果:{"repCode":"0000","code":"A00006","errmsg":"ok","repData":{"result":true,"pointJson":"fFY7Fx0vHUNGPGXWY4BGLT0mNTuEu+FrEbc+uZI1IQRlik+qUIzlr6ORiQHBKAlP+2xbrjVhDjZn0SdC97p/+Q==","captchaType":"clickWord","token":"ae38c655ac6d49119ccc362170cabfb1"}}
+12:32:02.282 [scheduling-1] INFO  t.t.t.JntTicketService - [doSnatchingJnt,338] - 当前session:c6419a59f08145cc97875e52e1e5f4bf
+12:32:06.565 [scheduling-1] INFO  t.t.t.JntTicketService - [doSnatchingJnt,367] - 请求结果:{"code":"A00005","errmsg":"渠道余票不足"}
+12:32:07.572 [scheduling-1] INFO  t.t.t.JntTicketService - [doSnatchingJnt,338] - 当前session:9145683a57954e329a01de1a7e88f4c2
+12:32:09.160 [scheduling-1] INFO  t.t.t.JntTicketService - [doSnatchingJnt,367] - 请求结果:{"code":"A00005","errmsg":"余票不足"}
+12:32:10.162 [scheduling-1] INFO  t.t.t.JntTicketService - [doSnatchingJnt,338] - 当前session:942dbbec98e64518b183ea2d13368943
+12:32:12.673 [scheduling-1] INFO  t.t.t.JntTicketService - [doSnatchingJnt,367] - 请求结果:{"code":"A00005","errmsg":"余票不足"}
+12:32:13.678 [scheduling-1] INFO  t.t.t.JntTicketService - [doSnatchingJnt,338] - 当前session:2fbd4d6fdca64233adddc4f3184bf2ba
+12:32:15.192 [scheduling-1] INFO  t.t.t.JntTicketService - [doSnatchingJnt,367] - 请求结果:{"code":"A00005","errmsg":"余票不足"}
+12:32:16.196 [scheduling-1] INFO  t.t.t.JntTicketService - [doSnatchingJnt,338] - 当前session:c6419a59f08145cc97875e52e1e5f4bf
+12:32:17.772 [scheduling-1] INFO  t.t.t.JntTicketService - [doSnatchingJnt,367] - 请求结果:{"code":"A00005","errmsg":"渠道余票不足"}
+12:32:18.777 [scheduling-1] INFO  t.t.t.JntTicketService - [doSnatchingJnt,338] - 当前session:9145683a57954e329a01de1a7e88f4c2
+12:32:20.277 [scheduling-1] INFO  t.t.t.JntTicketService - [doSnatchingJnt,367] - 请求结果:{"code":"A00005","errmsg":"余票不足"}
+12:32:21.282 [scheduling-1] INFO  t.t.t.JntTicketService - [doSnatchingJnt,338] - 当前session:942dbbec98e64518b183ea2d13368943
+12:32:22.971 [scheduling-1] INFO  t.t.t.JntTicketService - [doSnatchingJnt,367] - 请求结果:{"code":"A00005","errmsg":"余票不足"}
+12:32:23.977 [scheduling-1] INFO  t.t.t.JntTicketService - [doSnatchingJnt,338] - 当前session:2fbd4d6fdca64233adddc4f3184bf2ba
+12:32:26.537 [scheduling-1] INFO  t.t.t.JntTicketService - [doSnatchingJnt,367] - 请求结果:{"code":"A00005","errmsg":"余票不足"}
+12:32:27.542 [scheduling-1] INFO  t.t.t.JntTicketService - [doSnatchingJnt,338] - 当前session:c6419a59f08145cc97875e52e1e5f4bf
+12:32:29.306 [scheduling-1] INFO  t.t.t.JntTicketService - [doSnatchingJnt,367] - 请求结果:{"code":"A00005","errmsg":"渠道余票不足"}
+12:32:30.311 [scheduling-1] INFO  t.t.t.JntTicketService - [doSnatchingJnt,338] - 当前session:9145683a57954e329a01de1a7e88f4c2
+12:32:32.136 [scheduling-1] INFO  t.t.t.JntTicketService - [doSnatchingJnt,367] - 请求结果:{"code":"A00005","errmsg":"余票不足"}
+12:32:33.141 [scheduling-1] INFO  t.t.t.JntTicketService - [doSnatchingJnt,338] - 当前session:942dbbec98e64518b183ea2d13368943
+12:49:02.134 [restartedMain] INFO  t.t.t.TicketToolsApplication - [logStarting,55] - Starting TicketToolsApplication on devinzhangdeMacBook-Pro.local with PID 85028 (/Users/devin.zhang/IdeaProjects/ticket-tools/target/classes started by devin.zhang in /Users/devin.zhang/IdeaProjects/ticket-tools)
+12:49:02.138 [restartedMain] INFO  t.t.t.TicketToolsApplication - [logStartupProfileInfo,651] - No active profile set, falling back to default profiles: default
+12:49:04.052 [restartedMain] INFO  o.a.c.h.Http11NioProtocol - [log,173] - Initializing ProtocolHandler ["http-nio-8080"]
+12:49:04.053 [restartedMain] INFO  o.a.c.c.StandardService - [log,173] - Starting service [Tomcat]
+12:49:04.053 [restartedMain] INFO  o.a.c.c.StandardEngine - [log,173] - Starting Servlet engine: [Apache Tomcat/9.0.36]
+12:49:04.220 [restartedMain] INFO  o.a.c.c.C.[.[.[/] - [log,173] - Initializing Spring embedded WebApplicationContext
+12:49:04.709 [restartedMain] INFO  o.a.c.h.Http11NioProtocol - [log,173] - Starting ProtocolHandler ["http-nio-8080"]
+12:49:04.754 [restartedMain] INFO  t.t.t.TicketToolsApplication - [logStarted,61] - Started TicketToolsApplication in 3.312 seconds (JVM running for 5.29)
+12:49:14.758 [scheduling-1] INFO  t.t.t.JntTicketService - [initLogin,197] - 获取到cookie:JSESSIONID=FB91C91A834B69C1537C6B3C1BB868C5; Path=/; HttpOnly
+12:49:37.467 [scheduling-1] INFO  t.t.t.JntTicketService - [doSnatchingJnt,338] - 当前session:c6419a59f08145cc97875e52e1e5f4bf
