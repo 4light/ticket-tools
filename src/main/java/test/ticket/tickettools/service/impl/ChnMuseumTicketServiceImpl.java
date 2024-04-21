@@ -74,7 +74,7 @@ public class ChnMuseumTicketServiceImpl implements ChnMuseumTicketService {
         put("130828201708027824", "张琳诺");
     }};
 
-    @Scheduled(cron = "0/5 34 20 * * ?")
+    //@Scheduled(cron = "0/5 34 20 * * ?")
     //@Scheduled(cron = "0/1 * * * * ?")
     @Override
     public void snatchingTicket()  {
@@ -327,9 +327,9 @@ public class ChnMuseumTicketServiceImpl implements ChnMuseumTicketService {
             put("id", userId);
             put("openId", openId);
             put("mobile", phone);
-            put("credentialNo", credentialNo);
+            put("credentialNo", getBuyerMap().get("idCard"));
             put("credentialType", "0");
-            put("nickName", nickName);
+            put("nickName", getBuyerMap().get("name"));
         }});
         param.put("couponCode", "");
         param.put("startDate", useDate);
@@ -376,7 +376,30 @@ public class ChnMuseumTicketServiceImpl implements ChnMuseumTicketService {
         return param;
     }
 
-    private static String customURLEncode(String s, String enc) {
+    private Map<String,String> getBuyerMap(){
+        Map<String,String> normalMap=new HashMap();
+        Map<String,String> oldMap=new HashMap();
+        for (Map.Entry<String, String> nameIDMapEntry : iDNameMap.entrySet()) {
+            String idCard = nameIDMapEntry.getKey();
+            String name = nameIDMapEntry.getValue();
+            Integer age = GetAgeForIdCardUtil.getAge(idCard);
+            if(!ObjectUtils.isEmpty(age)){
+                if(age>18&&age<60){
+                    normalMap.put("name",name);
+                    normalMap.put("idCard",idCard);
+                    break;
+                }
+                if(age>=60){
+                    oldMap.put("name",name);
+                    oldMap.put("idCard",idCard);
+                }
+            }
+        }
+        return ObjectUtils.isEmpty(normalMap)?oldMap:normalMap;
+    }
+
+
+    private String customURLEncode(String s, String enc) {
         StringBuilder sb = new StringBuilder();
         String[] split = s.split("&");
         for (int i = 0; i < split.length; i++) {

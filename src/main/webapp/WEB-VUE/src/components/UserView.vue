@@ -2,10 +2,10 @@
   <div>
     <el-form :inline="true" :model="queryParam" style="margin-top: 2em">
       <el-form-item label="用户名">
-        <el-input v-model="queryParam.userName" placeholder="用户名"></el-input>
+        <el-input v-model="queryParam.userName" placeholder="用户名" clearable></el-input>
       </el-form-item>
-      <el-form-item label="电话号">
-        <el-input v-model="queryParam.phoneNum" placeholder="电话号" clearable></el-input>
+      <el-form-item label="账号">
+        <el-input v-model="queryParam.account" placeholder="账号" clearable></el-input>
       </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="queryUser" size="small" round>查询</el-button>
@@ -24,10 +24,6 @@
           label="姓名">
         </el-table-column>
         <el-table-column
-          prop="phoneNum"
-          label="手机号">
-        </el-table-column>
-        <el-table-column
           prop="channel"
           label="渠道">
         </el-table-column>
@@ -36,10 +32,10 @@
           label="账号">
         </el-table-column>
         <el-table-column
-          label="是否禁用">
+          label="是否有效">
           <template slot-scope="scope">
-            <el-link class="el-icon-success" type="success" v-if="scope.row.yn" :underline="false"></el-link>
-            <el-link icon="el-icon-error" type="danger" v-if="!scope.row.yn" :underline="false"></el-link>
+            <el-link class="el-icon-success" type="success" v-if="!scope.row.yn" :underline="false"></el-link>
+            <el-link icon="el-icon-error" type="danger" v-if="scope.row.yn" :underline="false"></el-link>
           </template>
         </el-table-column>
         <el-table-column label="操作" prop="option">
@@ -48,7 +44,10 @@
               type="primary" @click="editUser(scope.row.id)">编辑
             </el-link>
             <el-link
-              type="danger" @click="frozenUser(scope.row)">禁用
+              type="danger" @click="frozenUser(scope.row)" v-if="!scope.row.yn">禁用
+            </el-link>
+            <el-link
+              type="danger" @click="frozenUser(scope.row)" v-if="scope.row.yn">启用
             </el-link>
             <el-link
               type="danger" @click="deleteUser(scope.row.id)">删除
@@ -72,6 +71,9 @@
       style="height: 50em;overflow: unset;"
     >
       <el-form :label-position="labelPosition" label-width="80px" :model="formData" style="margin-left: 5vw">
+        <el-form-item label="名称">
+          <el-input v-model="formData.userName" class="inputStyle"></el-input>
+        </el-form-item>
         <el-form-item label="渠道">
           <el-select v-model="formData.channel">
             <el-option
@@ -82,20 +84,11 @@
             </el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="名称">
-          <el-input v-model="formData.userName" class="inputStyle"></el-input>
-        </el-form-item>
         <el-form-item label="账号">
           <el-input v-model="formData.account" class="inputStyle"></el-input>
         </el-form-item>
         <el-form-item label="密码">
           <el-input v-model="formData.pwd" class="inputStyle"></el-input>
-        </el-form-item>
-        <el-form-item label="昵称">
-          <el-input v-model="formData.nickName" class="inputStyle"></el-input>
-        </el-form-item>
-        <el-form-item label="身份证号" v-if="formData.channel==2">
-          <el-input v-model="formData.idCard" class="inputStyle"></el-input>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="onSubmit" round style="margin-left: 20vw">创建</el-button>
@@ -115,7 +108,7 @@ export default {
     return {
       queryParam: {
         userName: '',
-        phoneNum: ''
+        account: ''
       },
       channelList:[
         {
@@ -157,7 +150,7 @@ export default {
             duration: 2000
           });
         } else {
-          this.taskData = res.data.data.list
+          this.userData = res.data.data.list
           this.page.total = res.data.data.total
           this.page.pageSize = res.data.data.pageSize
         }
@@ -184,7 +177,18 @@ export default {
 
     },
     onSubmit(){
-
+      axios.post("/ticket/user/add", this.formData).then(res => {
+        if (res.data.status != 0) {
+          this.$notify.error({
+            title: '失败',
+            message: res.data.msg,
+            duration: 2000
+          });
+        } else {
+          this.showDialog=false
+          this.queryUser()
+        }
+      })
     },
     closeForm(){
       this.showDialog=false

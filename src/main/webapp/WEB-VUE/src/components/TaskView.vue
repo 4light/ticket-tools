@@ -237,6 +237,9 @@ export default {
     },
     addTask() {
       this.showDialog = true
+      setTimeout(() => {
+        this.$refs.taskEditView.getUserIdList()
+      }, 1000)
     },
     mergeCol(id, rowIndex) {
       // 合并单元格

@@ -8,6 +8,7 @@ import java.util.List;
 @Repository
 public interface UserInfoDao {
     Integer insertOrUpdate(UserInfoEntity userInfoEntity);
+    Integer insert(UserInfoEntity userInfoEntity);
     List<UserInfoEntity> select(UserInfoEntity userInfoEntity);
     UserInfoEntity selectById(Long id);
 }

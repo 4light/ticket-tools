@@ -21,7 +21,13 @@ public class UserController {
 
 
     @PostMapping(value = "/user/list")
-    public ServiceResponse<PageableResponse<UserInfoEntity>> getUser(@RequestBody QueryUserInfoRequest queryUserInfoRequest) {
-        return userServiceImpl.queryUser(queryUserInfoRequest);
+    public ServiceResponse<PageableResponse<UserInfoEntity>> getUser(@RequestBody UserInfoRequest userInfoRequest) {
+        return userServiceImpl.queryUser(userInfoRequest);
+    }
+
+
+    @PostMapping(value = "/user/add")
+    public ServiceResponse addUser(@RequestBody UserInfoRequest userInfoRequest) {
+        return userServiceImpl.addUser(userInfoRequest);
     }
 }

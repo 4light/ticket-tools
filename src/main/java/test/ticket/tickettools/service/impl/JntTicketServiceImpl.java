@@ -50,12 +50,13 @@ public class JntTicketServiceImpl implements JntTicketService {
     private static String checkNameUrl="https://jnt.mfu.com.cn/ajax?ugi=account&action=checkSensitiveWord&bundleid=com.maiget.tickets&moduleid=6f77be86038c47269f1e00f7ddee9af4";
     //校验身份证号
     private static String checkIdUrl="https://jnt.mfu.com.cn/ajax?ugi=bookingorder&action=checkBookingUserV2&bundleid=com.maiget.tickets&moduleid=6f77be86038c47269f1e00f7ddee9af4";
-    private static String useDate = "2024-04-26";
+    private static String useDate = "2024-04-27";
     private static String userName = "17610400550";
     private static String pwd = "LGZlgz123!";
 
     private static HttpHeaders headers=new HttpHeaders();
     private static RestTemplate restTemplate=TemplateUtil.initSSLTemplate();
+    private static JSONObject proxy=new JSONObject();
 
     private static Map<String, Map<String, String>> cookieUserMap = new HashMap<>();
 
@@ -88,13 +89,13 @@ public class JntTicketServiceImpl implements JntTicketService {
 
     private static Map<String, JSONObject> sessionMap = new HashMap();
 
-    //@Scheduled(cron = "0 29 12 * * ?")
+    //@Scheduled(cron = "0/1 * * * * ?")
     @Override
     public void snatchingTicket(){List<Map<String, String>> idNameMapList = new ArrayList();
         idNameMapList.add(idNameMap);
         //idNameMapList.add(idNameMap2);
         //idNameMapList.add(idNameMap3);
-        JSONObject proxy = ProxyUtil.getProxy();
+        proxy = ProxyUtil.getProxy();
         if (!ObjectUtils.isEmpty(proxy)) {
             restTemplate = TemplateUtil.initSSLTemplateWithProxy(proxy.getString("ip"), proxy.getIntValue("port"));
         }
@@ -159,6 +160,8 @@ public class JntTicketServiceImpl implements JntTicketService {
                     sessionMap.put(eventsSessionId, sessions.getJSONObject(i));
                 }
             }
+            log.info("场馆信息:{}",sessionMap);
+            doSnatchingJnt();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -233,8 +236,8 @@ public class JntTicketServiceImpl implements JntTicketService {
         HttpEntity getCaptchaEntity = new HttpEntity<>(param, headers);
         JSONObject getCaptchaRes = TemplateUtil.getResponse(restTemplate, getCaptchaUrl, HttpMethod.POST, getCaptchaEntity);
         if (ObjectUtils.isEmpty(getCaptchaRes)) {
-            log.info("请求验证码错误");
-            return;
+            log.info("请求验证码错误重试中");
+            check(captchaType,restTemplate,headers);
         }
         //如果是文字点选需要调第三方
         if (StrUtil.equals(getCaptchaRes.getString("code"), "A00006")) {

@@ -1,14 +1,14 @@
 <template>
   <div style="height:85vh">
     <el-form ref="form" :model="form" label-width="80px">
-      <el-form-item label="手机号">
+<!--      <el-form-item label="手机号">
         <el-input v-model="form.loginPhone" style="width: 30%"></el-input>
       </el-form-item>
       <el-form-item label="请求头">
         <el-input v-model="form.auth" type="textarea" style="width: 30%"></el-input>
-      </el-form-item>
+      </el-form-item>-->
       <el-form-item label="渠道">
-        <el-select v-model="form.channel">
+        <el-select v-model="form.channel" @change="changeChannel">
           <el-option
             v-for="item in channelList"
             :key="item.id"
@@ -17,7 +17,17 @@
           </el-option>
         </el-select>
       </el-form-item>
-      <el-form-item label="场馆">
+      <el-form-item label="账号">
+        <el-select v-model="form.userId">
+          <el-option
+            v-for="item in currentUserIdList"
+            :key="item.id"
+            :label="item.userName"
+            :value="item.id">
+          </el-option>
+        </el-select>
+      </el-form-item>
+<!--      <el-form-item label="场馆">
         <el-select v-model="form.venue">
           <el-option
             v-for="item in venueList"
@@ -36,12 +46,12 @@
             :value="item.id">
           </el-option>
         </el-select>
-      </el-form-item>
+      </el-form-item>-->
       <el-form-item label="使用时间">
         <el-date-picker type="date" placeholder="选择日期" v-model="form.useDate"
                         format="yyyy-MM-dd"></el-date-picker>
       </el-form-item>
-      <el-form-item label="添加用户" style="height: 35vh">
+      <el-form-item label="添加用户" style="height: 55vh">
         <el-button type="primary" @click="addUser" round v-if="!isAddUser">添加</el-button>
         <el-input
           type="textarea"
@@ -55,7 +65,7 @@
         </el-input>
         <!--      <el-button type="primary" @click="ok" v-if="isAddUser" round>确定</el-button>-->
         <div v-if="showUserList">
-          <el-table :data="userList" style="overflow:auto;height: 30vh">
+          <el-table :data="userList" style="overflow:auto;height: 52vh">
             <el-table-column
               lable="序号"
               type="index"
@@ -83,7 +93,7 @@
         </div>
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" @click="onSubmit" round style="margin-left: 20vw">创建</el-button>
+        <el-button type="primary" @click="onSubmit" round style="margin-left: 31vw">创建</el-button>
         <el-button type="warning" @click="close" round>取消</el-button>
       </el-form-item>
     </el-form>
@@ -101,16 +111,27 @@ export default {
   data() {
     return {
       form: {
-        "channel": 0,
+        "userId":null,
+        "channel": null,
         "venue": 1,
         "session": 23
       },
       channelList: [
         {
           "id": 0,
-          "channelName": "中国科技馆"
+          "channelName": "科技馆"
+        },
+        {
+          "id": 1,
+          "channelName": "毛纪"
+        },
+        {
+          "id": 2,
+          "channelName": "故宫"
         }
       ],
+      userIdList:[],
+      currentUserIdList:[],
       venueList: [
         {
           "id": 1,
@@ -188,6 +209,32 @@ export default {
     },
     close() {
       this.$emit("close")
+    },
+    getUserIdList(){
+      let queryParam={
+        userName: '',
+          account: ''
+      }
+      axios.post("/ticket/user/list", queryParam).then(res => {
+        if (res.data.status != 0) {
+          this.$notify.error({
+            title: '查询失败',
+            message: res.data.msg,
+            duration: 2000
+          });
+        } else {
+          this.userIdList = res.data.data
+        }
+      })
+    },
+    changeChannel(){
+      let newUserIdList=[]
+      for(let o of this.userIdList){
+        if(o.channel==this.form.channel){
+          newUserIdList.push(o)
+        }
+      }
+      this.currentUserIdList=newUserIdList
     }
   }
 }
