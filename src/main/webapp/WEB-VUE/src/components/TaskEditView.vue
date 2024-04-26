@@ -18,7 +18,7 @@
         </el-select>
       </el-form-item>
       <el-form-item label="账号">
-        <el-select v-model="form.userId">
+        <el-select v-model="form.userInfoId">
           <el-option
             v-for="item in currentUserIdList"
             :key="item.id"
@@ -114,7 +114,9 @@ export default {
         "userId":null,
         "channel": null,
         "venue": 1,
-        "session": 23
+        "session": 23,
+        "userInfoId":null,
+        "source":0
       },
       channelList: [
         {
@@ -147,7 +149,8 @@ export default {
       isAddUser: false,
       userText: "",
       userList: [],
-      showUserList: false
+      showUserList: false,
+
     }
   },
   /* watch: {
@@ -183,7 +186,7 @@ export default {
       this.showUserList = true
     },
     onSubmit() {
-      if (this.userList.length > 15) {
+      if (this.form.channel==0&&this.userList.length > 15) {
         this.$alert("最多只能添加15条，请检查","添加失败")
         return
       }

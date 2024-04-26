@@ -1,6 +1,7 @@
 package test.ticket.tickettools.service.impl;
 
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
@@ -48,11 +49,11 @@ public class ChnMuseumTicketServiceImpl implements ChnMuseumTicketService {
     private static String createUrl = "https://lotswap.dpm.org.cn/dubboApi/trade-core/tradeCreateService/create?sign=%s&timestamp=%s";
 
 
-    private static final String useDate = "2024-04-27";
+    private static final String useDate = "2024-05-02";
     private static final String credentialNo = "13093019901216182X";
     private static final String nickName = "王静";
-    private static final String userId = "733022166723260416";
-    private static final String phone = "13164040141";
+    private static final String userId = "724352769960521728";
+    private static final String phone = "17610773273";
     private static String mpOpenId;
 
     private static final Map<String, JSONObject> typeTicketMap = new HashMap();
@@ -68,24 +69,19 @@ public class ChnMuseumTicketServiceImpl implements ChnMuseumTicketService {
 
 
     private static final Map<String, String> iDNameMap = new HashMap() {{
-//        put("220281199211070019", "刘东辉");
-//        put("220281197007200083", "刘坤");
-        put("13093019901216182X", "王静");
-        put("130828201708027824", "张琳诺");
+        put("220281199211070019", "刘东辉");
+        put("220281197007200083", "刘坤");
+        put("370827198710060125", "王琨");
+        put("370921199101150928", "王雪");
     }};
 
     //@Scheduled(cron = "0/5 34 20 * * ?")
-    //@Scheduled(cron = "0/1 * * * * ?")
+    //@Scheduled(cron = "0/3 01-30 20 * * ?")
     @Override
     public void snatchingTicket()  {
         try {
+            JSONObject currentParkFsyyDetail=new JSONObject();
             restTemplate = TemplateUtil.initSSLTemplate();
-            /*if(ObjectUtils.isEmpty(proxy)){
-                proxy = ProxyUtil.getProxy();
-            }
-            if(!ObjectUtils.isEmpty(proxy)){
-                restTemplate=TemplateUtil.initSSLTemplateWithProxy(proxy.getString("ip"), proxy.getIntValue("port"));
-            }*/
             headers.setContentType(MediaType.APPLICATION_JSON);
             String headerStr = FileUtil.readString("/Users/devin.zhang/Desktop/record", Charset.defaultCharset());
             headerJson = JSON.parseObject(headerStr);
@@ -104,7 +100,12 @@ public class ChnMuseumTicketServiceImpl implements ChnMuseumTicketService {
             //headers.set("mpOpenId", mpOpenId);
             HttpEntity entity = new HttpEntity<>(headers);
             //查询当月余票
-            String month = now.getMonthValue() > 10 ? String.valueOf(now.getMonthValue()) : "0" + now.getMonthValue();
+            LocalDate localDate = now.plusDays(7L);
+            int monthValue = now.getMonthValue();
+            if(localDate.getMonthValue()>now.getMonthValue()){
+                monthValue+=1;
+            }
+            String month = now.getMonthValue() > 10 ? String.valueOf(monthValue) : "0" + monthValue;
             queryImperialPalaceTicketsUrl = String.format(queryImperialPalaceTicketsUrl, now.getYear(), month);
             JSONObject responseJson = TemplateUtil.getResponse(restTemplate, queryImperialPalaceTicketsUrl, HttpMethod.GET, entity);
             if (ObjectUtils.isEmpty(responseJson)) {
@@ -128,6 +129,7 @@ public class ChnMuseumTicketServiceImpl implements ChnMuseumTicketService {
                                 if (parkFsyyDetailJson.getIntValue("stockNum") == 1 && parkFsyyDetailJson.getIntValue("totalNum") == 1) {
                                     haveTicket = true;
                                     parkFsyyDetailDTOs.add(parkFsyyDetailJson);
+                                    currentParkFsyyDetail=parkFsyyDetailJson;
                                     break outLoop;
                                 }
                             }
@@ -203,6 +205,7 @@ public class ChnMuseumTicketServiceImpl implements ChnMuseumTicketService {
                 return;
             }
             //校验用户信息
+            Thread.sleep(2000);
             headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
             headers.setContentType(MediaType.APPLICATION_JSON);
             JSONObject checkUserBody = buildCheckUserParam();
@@ -213,14 +216,31 @@ public class ChnMuseumTicketServiceImpl implements ChnMuseumTicketService {
             log.info("身份验证信息:{}", checkUserData);
             if (!ObjectUtils.isEmpty(checkUserData.getJSONArray("rejectCertAuthList"))) {
                 log.info("身份验证失败:{}", checkUserBodyJson);
+                return;
             }
-            doSnatchingChnMuseum();
+            Thread.sleep(2000);
+            String accessToken = headerJson.getString("access-token");
+            headers.set("Accept-Encoding","gzip,compress,br,deflate");
+            modelCodeTicketInfoMap.put("parkFsyyDetailDTO", currentParkFsyyDetail);
+            long timestamp = System.currentTimeMillis();
+            String ts = String.valueOf(timestamp).substring(0, 11);
+            headers.set("ts", String.valueOf(timestamp/1000));
+            String signStr = "VDsdxfwljhy#@!94857access-token=" + accessToken + ts + "AAXY";
+            String sign = DigestUtils.md5Hex(signStr);
+            JSONObject jsonObject = buildCreateParam(mpOpenId, buildCheckUserParam());
+            log.info("创建订单入参：{}", jsonObject);
+            headers.setContentLength(JSON.toJSONString(jsonObject).getBytes(StandardCharsets.UTF_8).length);
+            log.info("headers：{}", headers);
+            HttpEntity addTicketQueryEntity = new HttpEntity<>(jsonObject, headers);
+            createUrl = String.format(createUrl, sign, timestamp);
+            JSONObject createRes = TemplateUtil.getResponse(restTemplate, createUrl, HttpMethod.POST, addTicketQueryEntity);
+            log.info("请求结果{}", createRes);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    //@Scheduled(cron = "0 0 20 * * ?")
+    /*//@Scheduled(cron = "0 0 20 * * ?")
     public void doSnatchingChnMuseum() {
         try {
             String accessToken = headerJson.getString("accessToken");
@@ -252,7 +272,7 @@ public class ChnMuseumTicketServiceImpl implements ChnMuseumTicketService {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
+    }*/
 
     private JSONObject buildCheckUserParam() {
         JSONObject param = new JSONObject();
@@ -376,7 +396,7 @@ public class ChnMuseumTicketServiceImpl implements ChnMuseumTicketService {
         return param;
     }
 
-    private Map<String,String> getBuyerMap(){
+    private  static Map<String,String> getBuyerMap(){
         Map<String,String> normalMap=new HashMap();
         Map<String,String> oldMap=new HashMap();
         for (Map.Entry<String, String> nameIDMapEntry : iDNameMap.entrySet()) {
@@ -421,5 +441,11 @@ public class ChnMuseumTicketServiceImpl implements ChnMuseumTicketService {
             }
         }
         return sb.toString();
+    }
+
+    public static void main(String[] args) {
+        LocalDate date=LocalDate.now();
+        date.plusDays(1L);
+        System.out.println(date);
     }
 }

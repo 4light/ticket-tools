@@ -11,4 +11,5 @@ public interface UserInfoDao {
     Integer insert(UserInfoEntity userInfoEntity);
     List<UserInfoEntity> select(UserInfoEntity userInfoEntity);
     UserInfoEntity selectById(Long id);
+    Integer del(Long id);
 }

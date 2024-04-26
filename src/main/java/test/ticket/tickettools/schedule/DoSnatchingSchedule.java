@@ -7,6 +7,7 @@ import org.springframework.http.*;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
@@ -121,17 +122,31 @@ public class DoSnatchingSchedule {
         }
     }
 
-
+    //@Scheduled(cron = "* 0/1 * * * ?")
     public void doJntTicketSnatch(){
-
+        for (int i = 0; i < 5; i++) {
+            int finalI = i;
+            ThreadPoolTaskExecutor asyncExecutor = taskExecutorConfig.getAsyncExecutor();
+            asyncExecutor.setCorePoolSize(5);
+            asyncExecutor.setMaxPoolSize(5);
+            CompletableFuture.runAsync(() -> test(finalI), asyncExecutor);
+        }
     }
 
+    public void test(Integer i) {
+        System.out.println(Thread.currentThread().getName()+"==="+i);
+        try {
+            Thread.sleep(10000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
 
     public void updateAuth(){
         List<TaskEntity> allUnDoneTask = ticketServiceImpl.getAllUnDoneTask();
         for (TaskEntity taskEntity : allUnDoneTask) {
             if(ObjectUtils.isEmpty(taskEntity.getAuth())){
-                String auth = loginService.longinCSTM(taskEntity.getLoginPhone());
+                String auth = loginService.longinCSTM(taskEntity.getAccount());
                 if(checkAuth(auth)){
                     taskEntity.setAuth(auth);
                     taskEntity.setUpdateDate(new Date());
@@ -140,7 +155,7 @@ public class DoSnatchingSchedule {
             }else {
                 if(!checkAuth(taskEntity.getAuth())){
                     while(true){
-                        String auth = loginService.longinCSTM(taskEntity.getLoginPhone());
+                        String auth = loginService.longinCSTM(taskEntity.getAccount());
                         if(checkAuth(auth)){
                             taskEntity.setAuth(auth);
                             taskEntity.setUpdateDate(new Date());

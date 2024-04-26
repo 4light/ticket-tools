@@ -24,11 +24,6 @@ public class TicketController {
 
     @Resource
     TicketService ticketServiceImpl;
-    @Resource
-    TaskDetailDao taskDetailDao;
-
-    @Resource
-    LoginService loginService;
 
     @PostMapping(value = "/user")
     public ServiceResponse<PageableResponse<TaskInfoListResponse>> getUser(@RequestBody QueryTaskInfo queryTaskInfo) {

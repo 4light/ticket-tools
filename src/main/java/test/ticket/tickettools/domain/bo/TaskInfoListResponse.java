@@ -23,6 +23,8 @@ public class TaskInfoListResponse implements Serializable {
     private Date updateDate;
     private Boolean childrenTicket;
     private Long ticketId;
+    private String account;
+    private Integer channel;
 
 
     public Long getTaskId() {
@@ -119,5 +121,21 @@ public class TaskInfoListResponse implements Serializable {
 
     public void setTicketId(Long ticketId) {
         this.ticketId = ticketId;
+    }
+
+    public String getAccount() {
+        return account;
+    }
+
+    public void setAccount(String account) {
+        this.account = account;
+    }
+
+    public Integer getChannel() {
+        return channel;
+    }
+
+    public void setChannel(Integer channel) {
+        this.channel = channel;
     }
 }

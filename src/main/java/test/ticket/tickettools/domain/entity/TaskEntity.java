@@ -33,17 +33,20 @@ public class TaskEntity {
     private Boolean yn;
     //用户名
     private String userName;
-    //请求头
-    private String headers;
+    //账号
+    private String account;
     //昵称
     private String nickName;
     //端口
     private Integer port;
+    private Long userInfoId;
+    private String pwd;
+
 
     public TaskEntity() {
     }
 
-    public TaskEntity(Long id, String loginPhone, String ip, Date useDate, String auth, Boolean done, Date createDate, Date updateDate, Long userId, Integer channel, Integer venue, Integer session, Boolean yn, String userName, String headers, String nickName, Integer port) {
+    public TaskEntity(Long id, String loginPhone, String ip, Date useDate, String auth, Boolean done, Date createDate, Date updateDate, Long userId, Integer channel, Integer venue, Integer session, Boolean yn, String userName, String account, String nickName, Integer port, Long userInfoId, String pwd) {
         this.id = id;
         this.loginPhone = loginPhone;
         this.ip = ip;
@@ -58,9 +61,11 @@ public class TaskEntity {
         this.session = session;
         this.yn = yn;
         this.userName = userName;
-        this.headers = headers;
+        this.account = account;
         this.nickName = nickName;
         this.port = port;
+        this.userInfoId = userInfoId;
+        this.pwd = pwd;
     }
 
     public Long getId() {
@@ -175,12 +180,20 @@ public class TaskEntity {
         this.userName = userName;
     }
 
-    public String getHeaders() {
-        return headers;
+    public String getAccount() {
+        return account;
     }
 
-    public void setHeaders(String headers) {
-        this.headers = headers;
+    public void setAccount(String account) {
+        this.account = account;
+    }
+
+    public String getPwd() {
+        return pwd;
+    }
+
+    public void setPwd(String pwd) {
+        this.pwd = pwd;
     }
 
     public String getNickName() {
@@ -197,5 +210,13 @@ public class TaskEntity {
 
     public void setPort(Integer port) {
         this.port = port;
+    }
+
+    public Long getUserInfoId() {
+        return userInfoId;
+    }
+
+    public void setUserInfoId(Long userInfoId) {
+        this.userInfoId = userInfoId;
     }
 }

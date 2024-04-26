@@ -119,7 +119,7 @@ public class TicketServiceImpl implements TicketService {
                 }
                 TaskEntity taskEntity = new TaskEntity();
                 taskEntity.setAuth(queryTaskInfo.getApiToken());
-                taskEntity.setLoginPhone(getUserInfoJson.getJSONObject("user").getString("phoneNumber"));
+                taskEntity.setAccount(getUserInfoJson.getJSONObject("user").getString("phoneNumber"));
                 taskEntity.setUpdateDate(new Date());
                 taskDao.updateAuthByPhone(taskEntity);
                 return ServiceResponse.createBySuccess(getUserInfoJson.get("user"));
@@ -138,12 +138,19 @@ public class TicketServiceImpl implements TicketService {
     public ServiceResponse addTaskInfo(TaskInfo taskInfo) {
         TaskEntity taskEntity = JSON.parseObject(JSON.toJSONString(taskInfo),TaskEntity.class);
         BeanUtils.copyProperties(taskInfo, taskEntity);
+        Long userInfoId = taskInfo.getUserInfoId();
+        UserInfoEntity userInfoEntity = userInfoDao.selectById(userInfoId);
+        if(userInfoEntity!=null){
+            taskEntity.setAccount(userInfoEntity.getAccount());
+            taskEntity.setPwd(userInfoEntity.getPwd());
+        }
         if (ObjectUtils.isEmpty(taskInfo.getId())) {
             taskEntity.setCreateDate(new Date());
-            taskEntity.setLoginPhone(taskInfo.getLoginPhone());
+            taskEntity.setAccount(taskInfo.getAccount());
             taskEntity.setAuth(taskInfo.getAuth());
-            Long userId = taskInfo.getSource()==0?getUserId(taskEntity.getAuth()):taskInfo.getUserId();
-            if(ObjectUtils.isEmpty(userId)){
+            taskEntity.setUserInfoId(taskInfo.getUserInfoId());
+            Long userId = taskInfo.getSource()==0&&taskInfo.getChannel()==0?getUserId(taskEntity.getAuth()):taskInfo.getUserId();
+            if(ObjectUtils.isEmpty(userId)&&taskInfo.getChannel()==0){
                 return ServiceResponse.createByErrorMessage("获取用户Id失败");
             }
             taskEntity.setUserId(userId);
@@ -170,6 +177,8 @@ public class TicketServiceImpl implements TicketService {
             if(ObjectUtils.isEmpty(userId)){
                 return ServiceResponse.createByErrorMessage("获取用户Id失败");
             }
+            taskEntity.setAccount(userInfoEntity.getAccount());
+            taskEntity.setPwd(userInfoEntity.getPwd());
             taskEntity.setUserId(userId);
             Integer insert = taskDao.updateTask(taskEntity);
             if (insert > 0) {
@@ -233,19 +242,23 @@ public class TicketServiceImpl implements TicketService {
     @Override
     public ServiceResponse<PageableResponse<TaskInfoListResponse>> queryTask(QueryTaskInfo queryTaskInfo) {
         TaskEntity query = new TaskEntity();
-        query.setLoginPhone(queryTaskInfo.getLoginPhone());
+        query.setChannel(queryTaskInfo.getChannel());
+        query.setAccount(queryTaskInfo.getAccount());
         query.setUseDate(queryTaskInfo.getUseDate());
         List<TaskEntity> taskEntities = taskDao.fuzzyQuery(query);
         List<TaskInfoListResponse> list = new ArrayList<>();
         for (TaskEntity taskEntity : taskEntities) {
             Long id = taskEntity.getId();
+            Long userInfoId = taskEntity.getUserInfoId();
+            UserInfoEntity userInfoEntity = userInfoDao.selectById(userInfoId);
             List<TaskDetailEntity> taskDetailEntities = taskDetailDao.selectByTaskId(id);
             for (TaskDetailEntity taskDetailEntity : taskDetailEntities) {
                 TaskInfoListResponse taskInfoListResponse = new TaskInfoListResponse();
                 taskInfoListResponse.setTaskId(id);
+                taskInfoListResponse.setAccount(ObjectUtils.isEmpty(userInfoEntity)?null:userInfoEntity.getUserName());
                 taskInfoListResponse.setId(taskDetailEntity.getId());
                 taskInfoListResponse.setAuthorization(taskEntity.getAuth());
-                taskInfoListResponse.setLoginPhone(taskEntity.getLoginPhone());
+                taskInfoListResponse.setAccount(taskEntity.getAccount());
                 taskInfoListResponse.setUseDate(taskEntity.getUseDate());
                 taskInfoListResponse.setUserName(taskDetailEntity.getUserName());
                 taskInfoListResponse.setIDCard(taskDetailEntity.getIDCard());
@@ -254,6 +267,7 @@ public class TicketServiceImpl implements TicketService {
                 taskInfoListResponse.setUpdateDate(taskDetailEntity.getUpdateDate());
                 taskInfoListResponse.setTicketId(taskDetailEntity.getTicketId());
                 taskInfoListResponse.setChildrenTicket(taskDetailEntity.getChildrenTicket());
+                taskInfoListResponse.setChannel(taskEntity.getChannel());
                 list.add(taskInfoListResponse);
             }
         }
@@ -267,7 +281,7 @@ public class TicketServiceImpl implements TicketService {
         taskInfo.setId(taskEntity.getId());
         taskInfo.setAuth(taskEntity.getAuth());
         taskInfo.setChannel(taskEntity.getChannel());
-        taskInfo.setLoginPhone(taskEntity.getLoginPhone());
+        taskInfo.setAccount(taskEntity.getAccount());
         taskInfo.setUseDate(taskEntity.getUseDate());
         taskInfo.setSession(taskEntity.getSession());
         taskInfo.setVenue(taskEntity.getVenue());
@@ -338,13 +352,13 @@ public class TicketServiceImpl implements TicketService {
                     .collect(Collectors.toMap(TaskDetailEntity::getUserName, TaskDetailEntity::getIDCard));
             doSnatchInfo.setTaskId(id);
             doSnatchInfo.setUserId(entity.getUserId());
-            doSnatchInfo.setLoginPhone(entity.getLoginPhone());
+            doSnatchInfo.setAccount(entity.getAccount());
             doSnatchInfo.setAuthorization(entity.getAuth());
             doSnatchInfo.setSession(entity.getSession());
             doSnatchInfo.setUseDate(entity.getUseDate());
             doSnatchInfo.setTaskDetailIds(taskDetailIds);
-            doSnatchInfo.setNameIDMap(nameIdMap);
-            result.put(entity.getLoginPhone(), doSnatchInfo);
+            doSnatchInfo.setIdNameMap(nameIdMap);
+            result.put(entity.getAccount(), doSnatchInfo);
         }
         return result;
     }
@@ -372,12 +386,12 @@ public class TicketServiceImpl implements TicketService {
                 DoSnatchInfo doSnatchInfo = new DoSnatchInfo();
                 doSnatchInfo.setTaskId(entity.getId());
                 doSnatchInfo.setUserId(entity.getUserId());
-                doSnatchInfo.setLoginPhone(entity.getLoginPhone());
+                doSnatchInfo.setAccount(entity.getAccount());
                 doSnatchInfo.setAuthorization(entity.getAuth());
                 doSnatchInfo.setUseDate(entity.getUseDate());
                 doSnatchInfo.setSession(entity.getSession());
                 doSnatchInfo.setTaskDetailIds(Arrays.asList(taskDetailEntity.getId()));
-                doSnatchInfo.setNameIDMap(new HashMap<String, String>() {{
+                doSnatchInfo.setIdNameMap(new HashMap<String, String>() {{
                     put(taskDetailEntity.getUserName(), taskDetailEntity.getIDCard());
                 }});
                 result.add(doSnatchInfo);
@@ -401,7 +415,7 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     public void snatchingTicket(DoSnatchInfo doSnatchInfo) {
-        Map<String, String> nameIDMap = doSnatchInfo.getNameIDMap();
+        Map<String, String> nameIDMap = doSnatchInfo.getIdNameMap();
         String useDate = DateUtil.format(doSnatchInfo.getUseDate(), "yyyy-MM-dd hh:mm:ss");
         getScheduleUrl = String.format(getScheduleUrl, DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"));
         getPriceByScheduleIdUrl = String.format(getPriceByScheduleIdUrl, DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"));
@@ -419,7 +433,7 @@ public class TicketServiceImpl implements TicketService {
             headers.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
             HttpEntity entity = new HttpEntity<>(headers);
             long userId = doSnatchInfo.getUserId();
-            String phone = doSnatchInfo.getLoginPhone();
+            String phone = doSnatchInfo.getAccount();
             //获取场次下余票
             ResponseEntity getPriceByScheduleRes = restTemplate.exchange(getPriceByScheduleIdUrl + doSnatchInfo.getSession(), HttpMethod.GET, entity, String.class);
             JSONObject getPriceByScheduleJson = JSON.parseObject(getPriceByScheduleRes.getBody().toString());

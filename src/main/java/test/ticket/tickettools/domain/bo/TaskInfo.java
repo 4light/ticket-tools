@@ -9,7 +9,7 @@ import java.util.List;
 public class TaskInfo implements Serializable {
     private static final long serialVersionUID = 2517797866070411812L;
     private Long id;
-    private String loginPhone;
+    private String account;
     private String auth;
     //渠道
     private Integer channel;
@@ -21,6 +21,7 @@ public class TaskInfo implements Serializable {
     //来源 0:页面 1：插件
     private Integer source;
     private Long userId;
+    private Long userInfoId;
     private List<TaskDetailEntity> userList;
 
     public Long getId() {
@@ -31,12 +32,12 @@ public class TaskInfo implements Serializable {
         this.id = id;
     }
 
-    public String getLoginPhone() {
-        return loginPhone;
+    public String getAccount() {
+        return account;
     }
 
-    public void setLoginPhone(String loginPhone) {
-        this.loginPhone = loginPhone;
+    public void setAccount(String account) {
+        this.account = account;
     }
 
     public String getAuth() {
@@ -93,6 +94,14 @@ public class TaskInfo implements Serializable {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public Long getUserInfoId() {
+        return userInfoId;
+    }
+
+    public void setUserInfoId(Long userInfoId) {
+        this.userInfoId = userInfoId;
     }
 
     public List<TaskDetailEntity> getUserList() {

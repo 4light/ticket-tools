@@ -23,21 +23,26 @@
         </constructor>
     </resultMap>
     <insert id="insert" parameterType="test.ticket.tickettools.domain.entity.UserInfoEntity">
-        insert into user_info (id, user_name,phone_num, channel,
-                                channel_user_id, account, create_date,
-                                update_date)
-        values (#{id,jdbcType=BIGINT}, #{userName,jdbcType=VARCHAR}, #{phoneNum,jdbcType=VARCHAR}, #{channel,jdbcType=INTEGER},
+        insert into user_info (id, user_name, phone_num, channel,
+                               channel_user_id, account, create_date,
+                               update_date)
+        values (#{id,jdbcType=BIGINT}, #{userName,jdbcType=VARCHAR}, #{phoneNum,jdbcType=VARCHAR},
+                #{channel,jdbcType=INTEGER},
                 #{channelUserId,jdbcType=VARCHAR}, #{account,jdbcType=VARCHAR}, #{createDate,jdbcType=TIMESTAMP},
                 #{updateDate,jdbcType=TIMESTAMP})
     </insert>
     <insert id="insertOrUpdate" parameterType="test.ticket.tickettools.domain.entity.UserInfoEntity">
-        insert into user_info (phone_num, channel,
-                                channel_user_id, account, create_date,
-                                update_date)
-        values (#{phoneNum,jdbcType=VARCHAR}, #{channel,jdbcType=INTEGER},
-                #{channelUserId,jdbcType=VARCHAR}, #{account,jdbcType=VARCHAR}, #{createDate,jdbcType=TIMESTAMP},
-                #{updateDate,jdbcType=TIMESTAMP}) on duplicate key
+        insert into user_info (id, user_name, phone_num, channel,
+                               channel_user_id, account, pwd, create_date,
+                               update_date, status,headers)
+        values (#{id,jdbcType=BIGINT}, #{userName,jdbcType=VARCHAR}, #{phoneNum,jdbcType=VARCHAR},
+                #{channel,jdbcType=INTEGER},
+                #{channelUserId,jdbcType=VARCHAR}, #{account,jdbcType=VARCHAR}, #{pwd,jdbcType=VARCHAR},
+                #{createDate,jdbcType=TIMESTAMP},
+                #{updateDate,jdbcType=TIMESTAMP}, #{status,jdbcType=BIT},#{headers,jdbcType=VARCHAR}) on duplicate key
         update
+            user_name=
+        values (user_name),
             phone_num=
         values (phone_num),
             channel=
@@ -46,24 +51,47 @@
         values (channel_user_id),
             account=
         values (account),
+            pwd=
+        values (pwd),
             create_date=
         values (create_date),
             update_date=
-        values (update_date)
+        values (update_date),
+            status=
+        values (status),
+            headers=
+        values (headers)
     </insert>
     <select id="select" parameterType="test.ticket.tickettools.domain.entity.UserInfoEntity" resultMap="BaseResultMap">
         select * from user_info
         <where>
-            1=1
+            yn=0
             <if test='account!=null and account!=""'>
                 AND account = #{account}
             </if>
             <if test='userName!=null and userName!=""'>
                 AND user_name = #{userName}
             </if>
+            <if test='channel!=null and channel!=""'>
+                AND channel = #{channel}
+            </if>
+            <if test='status!=null and status!=""'>
+                AND status = #{status}
+            </if>
+            <if test='channelUserId!=null and channelUserId!=""'>
+                AND channel_user_id = #{channelUserId}
+            </if>
         </where>
     </select>
     <select id="selectById" parameterType="java.lang.Long" resultMap="BaseResultMap">
-        select * from user_info where id=${id}
+        select *
+        from user_info
+        where id = #{id}
     </select>
+    <update id="del" parameterType="java.lang.Long">
+        update user_info
+        set yn=1,
+            update_date=NOW()
+        where id = ${id}
+    </update>
 </mapper>

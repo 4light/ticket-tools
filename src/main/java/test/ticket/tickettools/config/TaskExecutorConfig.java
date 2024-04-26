@@ -5,6 +5,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadPoolExecutor;
 
 @Configuration
@@ -16,6 +19,7 @@ public class TaskExecutorConfig {
         pool.setCorePoolSize(10);//核心线程数
         pool.setMaxPoolSize(10);//最大线程
         pool.setQueueCapacity(10);//线程队列
+        pool.setThreadNamePrefix("DataProcessor-");
         pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());//拒绝策略
         pool.initialize();//线程初始化
         return pool;

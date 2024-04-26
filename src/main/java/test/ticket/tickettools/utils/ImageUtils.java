@@ -82,8 +82,8 @@ public class ImageUtils {
         opencv_imgproc.threshold(backImageMat, backImageMat, 215, 255, opencv_imgproc.THRESH_BINARY);
         opencv_imgproc.threshold(sliderImageMat, sliderImageMat, 215, 255, opencv_imgproc.THRESH_BINARY);
         //保存为黑白图片
-        opencv_imgcodecs.imwrite("./" + uid + "_backBlack.png", backImageMat);
-        opencv_imgcodecs.imwrite("./" + uid + "_sliderBlack.png", sliderImageMat);
+        opencv_imgcodecs.imwrite("."+File.separator + uid + "_backBlack.png", backImageMat);
+        opencv_imgcodecs.imwrite("."+File.separator + uid + "_sliderBlack.png", sliderImageMat);
         Mat result = new Mat();
         opencv_imgproc.matchTemplate(sliderImageMat, backImageMat, result, opencv_imgproc.TM_CCORR_NORMED);
         opencv_core.normalize(result, result, 1, 0, opencv_core.NORM_MINMAX, -1, new Mat());

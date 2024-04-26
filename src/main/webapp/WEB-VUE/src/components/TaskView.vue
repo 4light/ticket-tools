@@ -2,10 +2,17 @@
   <div>
     <el-form :inline="true" :model="queryParam" style="margin-top: 2em">
       <el-form-item label="渠道">
-        <el-input v-model="queryParam.channel" placeholder="渠道"></el-input>
+        <el-select v-model="queryParam.channel">
+          <el-option
+            v-for="item in channelList"
+            :key="item.id"
+            :label="item.channelName"
+            :value="item.id">
+          </el-option>
+        </el-select>
       </el-form-item>
-      <el-form-item label="电话号">
-        <el-input v-model="queryParam.loginPhone" placeholder="电话号" clearable></el-input>
+      <el-form-item label="账号">
+        <el-input v-model="queryParam.account" placeholder="账号" clearable></el-input>
       </el-form-item>
       <el-form-item label="使用时间">
         <el-date-picker
@@ -32,8 +39,15 @@
         @selection-change="handleSelectionChange"
       >
         <el-table-column
-          prop="loginPhone"
-          label="登陆手机号">
+          prop="account"
+          label="账号">
+        </el-table-column>
+        <el-table-column
+          prop="channel"
+          label="渠道">
+          <template slot-scope="{ row }">
+            <div>{{ channelObj[row.channel]}}</div>
+          </template>
         </el-table-column>
         <el-table-column
           prop="userName"
@@ -57,8 +71,9 @@
         <el-table-column
           label="支付结果">
           <template slot-scope="scope">
-            <el-link class="el-icon-success" type="success" v-if="scope.row.payment" :underline="false"></el-link>
-            <el-link icon="el-icon-error" type="danger" v-if="!scope.row.payment" :underline="false"></el-link>
+            <el-link class="el-icon-success" type="success" v-if="scope.row.payment&&scope.row.channel==0" :underline="false"></el-link>
+            <el-link icon="el-icon-error" type="danger" v-if="!scope.row.payment&&scope.row.channel==0" :underline="false"></el-link>
+            <p v-if="scope.row.channel!=0">--</p>
           </template>
         </el-table-column>
         <el-table-column
@@ -80,7 +95,7 @@
             <el-link
               type="danger" @click="deleteTask(scope.row.taskId)">删除
             </el-link>
-            <el-link type="success" @click="pay">支付</el-link>
+            <el-link type="success" @click="pay" v-if="scope.row.channel!=1">支付</el-link>
             <el-link
               type="danger" @click="init">重置
             </el-link>
@@ -127,7 +142,7 @@ export default {
   },
   created() {
     this.currentUser = Date.now()
-    this.initWebSocket()
+    //this.initWebSocket()
   },
   mounted() {
     this.onSubmit()
@@ -159,7 +174,26 @@ export default {
       showPayDialog: false,
       taskInfo: {},
       number: 0,
-      currentUser: ''
+      currentUser: '',
+      channelObj: {
+        "0": "科技馆",
+        "1": "毛纪",
+        "2": "故宫"
+      },
+      channelList: [
+        {
+          "id": 0,
+          "channelName": "科技馆"
+        },
+        {
+          "id": 1,
+          "channelName": "毛纪"
+        },
+        {
+          "id": 2,
+          "channelName": "故宫"
+        }
+      ],
     }
   },
   watch: {
@@ -177,7 +211,7 @@ export default {
     },
   },
   methods: {
-    initWebSocket() {
+    /*initWebSocket() {
       //let ws = 'ws://8.140.16.73/api/pushMessage/' + this.currentUser
       let ws = 'ws://10.240.17.195:8082/api/pushMessage/' + this.currentUser
       this.websock = new WebSocket(ws)
@@ -196,9 +230,9 @@ export default {
     },
     // 数据接收
     websocketOnMessage(e) {
-      /*console.log(this.websock.readyState)
+      /!*console.log(this.websock.readyState)
       this.$message.error(e.data)
-      console.log(e.data)*/
+      console.log(e.data)*!/
       let res = JSON.parse(e.data)
       this.$notify({
         title: res.title,
@@ -218,7 +252,7 @@ export default {
     websocketClose(e) {
       this.initWebSocket()
       console.log('断开连接', e)
-    },
+    },*/
     onSubmit() {
       this.queryParam.page = this.page
       axios.post("/ticket/task/list", this.queryParam).then(res => {
@@ -301,9 +335,11 @@ export default {
         ) {
         // 通过传递不同的列索引和需要合并的属性名，可以实现不同列的合并（索引0,1 指的是页面上的0,1）
         case 0:
-          return this.mergeCol("loginPhone", rowIndex);
-        case 8:
-          return this.mergeCol("loginPhone", rowIndex)
+          return this.mergeCol("account", rowIndex);
+        case 1:
+          return this.mergeCol("account", rowIndex);
+        case 9:
+          return this.mergeCol("account", rowIndex)
       }
     },
     handleSizeChange(val) {

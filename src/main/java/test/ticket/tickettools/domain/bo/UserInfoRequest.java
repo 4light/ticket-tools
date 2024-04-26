@@ -4,12 +4,14 @@ public class UserInfoRequest {
     private Integer channel;
     private String userName;
     private String account;
+    private String pwd;
     private PageParam page;
 
-    public UserInfoRequest(Integer channel, String userName, String account, PageParam page) {
+    public UserInfoRequest(Integer channel, String userName, String account, String pwd, PageParam page) {
         this.channel = channel;
         this.userName = userName;
         this.account = account;
+        this.pwd = pwd;
         this.page = page;
     }
 
@@ -35,6 +37,14 @@ public class UserInfoRequest {
 
     public void setAccount(String account) {
         this.account = account;
+    }
+
+    public String getPwd() {
+        return pwd;
+    }
+
+    public void setPwd(String pwd) {
+        this.pwd = pwd;
     }
 
     public PageParam getPage() {

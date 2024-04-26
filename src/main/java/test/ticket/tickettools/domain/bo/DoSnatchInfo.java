@@ -12,7 +12,12 @@ public class DoSnatchInfo {
     private String authorization;
     private Date useDate;
     private Integer session;
-    private Map<String,String> nameIDMap;
+    private Map<String,String> IdNameMap;
+    private Long userInfoId;
+    private String ip;
+    private Integer port;
+    private String account;
+    private String pwd;
 
     public Long getTaskId() {
         return taskId;
@@ -70,11 +75,51 @@ public class DoSnatchInfo {
         this.session = session;
     }
 
-    public Map<String, String> getNameIDMap() {
-        return nameIDMap;
+    public Map<String, String> getIdNameMap() {
+        return IdNameMap;
     }
 
-    public void setNameIDMap(Map<String, String> nameIDMap) {
-        this.nameIDMap = nameIDMap;
+    public void setIdNameMap(Map<String, String> idNameMap) {
+        this.IdNameMap = idNameMap;
+    }
+
+    public Long getUserInfoId() {
+        return userInfoId;
+    }
+
+    public void setUserInfoId(Long userInfoId) {
+        this.userInfoId = userInfoId;
+    }
+
+    public String getIp() {
+        return ip;
+    }
+
+    public void setIp(String ip) {
+        this.ip = ip;
+    }
+
+    public Integer getPort() {
+        return port;
+    }
+
+    public void setPort(Integer port) {
+        this.port = port;
+    }
+
+    public String getAccount() {
+        return account;
+    }
+
+    public void setAccount(String account) {
+        this.account = account;
+    }
+
+    public String getPwd() {
+        return pwd;
+    }
+
+    public void setPwd(String pwd) {
+        this.pwd = pwd;
     }
 }

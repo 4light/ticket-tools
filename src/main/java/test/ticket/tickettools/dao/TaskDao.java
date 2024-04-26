@@ -14,9 +14,9 @@ public interface TaskDao{
     Integer updateAuthByPhone(TaskEntity taskEntity);
     Integer deleteByPrimaryKey(Long id);
     List<TaskEntity> fuzzyQuery(TaskEntity taskEntity);
-    //获取需要抢票的任务
+    //获取当天需要抢票的任务
     List<TaskEntity> getUnDoneTasks(TaskEntity taskEntity);
     //获取所有需要抢票的任务
     List<TaskEntity> getAllUnDoneTasks(TaskEntity taskEntity);
-    List<TaskEntity> getUnpaidTasks();
+    List<TaskEntity> getUnpaidTasks(Long taskId);
 }

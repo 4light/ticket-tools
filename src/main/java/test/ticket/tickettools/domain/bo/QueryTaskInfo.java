@@ -3,6 +3,7 @@ package test.ticket.tickettools.domain.bo;
 import java.util.Date;
 
 public class QueryTaskInfo {
+    private String account;
     private String loginPhone;
     private String apiToken;
     private String url;
@@ -11,6 +12,14 @@ public class QueryTaskInfo {
     private Date useDate;
     private Boolean done;
     private PageParam page;
+
+    public String getAccount() {
+        return account;
+    }
+
+    public void setAccount(String account) {
+        this.account = account;
+    }
 
     public String getLoginPhone() {
         return loginPhone;

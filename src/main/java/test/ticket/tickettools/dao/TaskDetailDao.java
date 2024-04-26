@@ -19,4 +19,5 @@ public interface TaskDetailDao {
     void deleteTaskDetailBath(@Param("list")List<TaskDetailEntity> taskDetailIds);
     Integer deleteByTaskId(Long taskId);
     Integer initTaskDetail(@Param("list")List<TaskDetailEntity> taskDetailIds);
+    Integer updateByTaskId(Long id);
 }

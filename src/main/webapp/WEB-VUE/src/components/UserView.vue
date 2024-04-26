@@ -26,6 +26,9 @@
         <el-table-column
           prop="channel"
           label="渠道">
+          <template slot-scope="{ row }">
+            <div>{{ channelObj[row.channel]}}</div>
+          </template>
         </el-table-column>
         <el-table-column
           prop="account"
@@ -34,20 +37,20 @@
         <el-table-column
           label="是否有效">
           <template slot-scope="scope">
-            <el-link class="el-icon-success" type="success" v-if="!scope.row.yn" :underline="false"></el-link>
-            <el-link icon="el-icon-error" type="danger" v-if="scope.row.yn" :underline="false"></el-link>
+            <el-link class="el-icon-success" type="success" v-if="!scope.row.status" :underline="false"></el-link>
+            <el-link icon="el-icon-error" type="danger" v-if="scope.row.status" :underline="false"></el-link>
           </template>
         </el-table-column>
         <el-table-column label="操作" prop="option">
           <template slot-scope="scope">
             <el-link
-              type="primary" @click="editUser(scope.row.id)">编辑
+              type="primary" @click="editUser(scope.row)">编辑
             </el-link>
             <el-link
-              type="danger" @click="frozenUser(scope.row)" v-if="!scope.row.yn">禁用
+              type="danger" @click="frozenUser(scope.row)" v-if="!scope.row.status">禁用
             </el-link>
             <el-link
-              type="danger" @click="frozenUser(scope.row)" v-if="scope.row.yn">启用
+              type="danger" @click="frozenUser(scope.row)" v-if="scope.row.status">启用
             </el-link>
             <el-link
               type="danger" @click="deleteUser(scope.row.id)">删除
@@ -91,7 +94,7 @@
           <el-input v-model="formData.pwd" class="inputStyle"></el-input>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="onSubmit" round style="margin-left: 20vw">创建</el-button>
+          <el-button type="primary" @click="onSubmit" round style="margin-left: 20vw">保存</el-button>
           <el-button type="warning" @click="closeForm" round>取消</el-button>
         </el-form-item>
       </el-form>
@@ -110,7 +113,7 @@ export default {
         userName: '',
         account: ''
       },
-      channelList:[
+      channelList: [
         {
           "id": 0,
           "channelName": "科技馆"
@@ -124,6 +127,11 @@ export default {
           "channelName": "故宫"
         }
       ],
+      channelObj: {
+        "0": "科技馆",
+        "1": "毛纪",
+        "2": "故宫"
+      },
       userData: [],
       page: {
         pageNum: 1,
@@ -132,8 +140,7 @@ export default {
       },
       showDialog: false,
       labelPosition: 'right',
-      formData:{
-      }
+      formData: {},
     }
   },
   mounted() {
@@ -157,27 +164,16 @@ export default {
       })
     },
     addUser() {
-      this.formData={}
-      this.showDialog=true
+      this.formData = {}
+      this.showDialog = true
 
     },
-    editUser(id) {
-
+    editUser(row) {
+      this.showDialog = true
+      this.formData = row
     },
     deleteUser(id) {
-
-    },
-    frozenUser(id) {
-
-    },
-    handleSizeChange() {
-
-    },
-    handleCurrentChange() {
-
-    },
-    onSubmit(){
-      axios.post("/ticket/user/add", this.formData).then(res => {
+      axios.get("/ticket/user/del?id=" + id).then(res => {
         if (res.data.status != 0) {
           this.$notify.error({
             title: '失败',
@@ -185,20 +181,69 @@ export default {
             duration: 2000
           });
         } else {
-          this.showDialog=false
+          this.showDialog = false
           this.queryUser()
         }
       })
     },
-    closeForm(){
-      this.showDialog=false
+    frozenUser(row) {
+      row.status = row.status == 0 ? 1 : 0;
+      axios.post("/ticket/user/update", row).then(res => {
+        if (res.data.status != 0) {
+          this.$notify.error({
+            title: '失败',
+            message: res.data.msg,
+            duration: 2000
+          });
+        } else {
+          this.queryUser()
+        }
+      })
+    },
+    handleSizeChange() {
+
+    },
+    handleCurrentChange() {
+
+    },
+    onSubmit() {
+      if (this.formData) {
+        axios.post("/ticket/user/update", this.formData).then(res => {
+          if (res.data.status != 0) {
+            this.$notify.error({
+              title: '失败',
+              message: res.data.msg,
+              duration: 2000
+            });
+          } else {
+            this.showDialog = false
+            this.queryUser()
+          }
+        })
+      } else {
+        axios.post("/ticket/user/add", this.formData).then(res => {
+          if (res.data.status != 0) {
+            this.$notify.error({
+              title: '失败',
+              message: res.data.msg,
+              duration: 2000
+            });
+          } else {
+            this.showDialog = false
+            this.queryUser()
+          }
+        })
+      }
+    },
+    closeForm() {
+      this.showDialog = false
     }
   }
 }
 </script>
 
 <style scoped>
-.inputStyle{
+.inputStyle {
   width: 50%;
 }
 </style>
