@@ -135,9 +135,12 @@
                 auth = #{auth},
             </if>
             <if test='updateDate!=null'>
-                update_date = #{updateDate}
+                update_date = #{updateDate},
+            </if>
+            <if test='channel!=null'>
+                channel = #{channel}
             </if>
         </set>
-        where login_phone = #{loginPhone}
+        where account = #{account}
     </update>
 </mapper>

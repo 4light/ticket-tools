@@ -35,6 +35,7 @@ import test.ticket.tickettools.domain.entity.TaskDetailEntity;
 import test.ticket.tickettools.domain.entity.TaskEntity;
 import test.ticket.tickettools.service.TicketService;
 import test.ticket.tickettools.service.WebSocketServer;
+import test.ticket.tickettools.utils.AESUtil;
 import test.ticket.tickettools.utils.DateUtils;
 import test.ticket.tickettools.utils.ImageUtils;
 
@@ -121,6 +122,7 @@ public class TicketServiceImpl implements TicketService {
                 taskEntity.setAuth(queryTaskInfo.getApiToken());
                 taskEntity.setAccount(getUserInfoJson.getJSONObject("user").getString("phoneNumber"));
                 taskEntity.setUpdateDate(new Date());
+                taskEntity.setChannel(ChannelEnum.CSTM.getCode());
                 taskDao.updateAuthByPhone(taskEntity);
                 return ServiceResponse.createBySuccess(getUserInfoJson.get("user"));
             }
@@ -548,7 +550,6 @@ public class TicketServiceImpl implements TicketService {
                     }
                 }
             }
-
             //余票充足
             if (flag) {
                 //几个人添加几次
@@ -571,7 +572,10 @@ public class TicketServiceImpl implements TicketService {
                     ImageUtils.imagCreate(originalImageBase64, backImageName, 155, 310);
                     //图片验证码处理
                     Double x = getPoint(sliderImageName, backImageName, imageUuid);
-                    String point = doSecretKey(x, secretKey);
+                    JSONObject param = new JSONObject();
+                    param.put("x", x);
+                    param.put("y", 5);
+                    String point = AESUtil.doAES(JSON.toJSONString(param), secretKey);
                     HttpEntity shoppingCartUrlEntity = new HttpEntity<>(buildParam(token, priceNameCountMap.get("childrenTicket"), point, doSnatchInfo.getSession(), useDate, priceId, childrenPriceId, discountPriceId, olderPriceId, phone, nameIDMap), headers);
                     ResponseEntity<String> exchange = restTemplate.exchange(shoppingCartUrl, HttpMethod.POST, shoppingCartUrlEntity, String.class);
                     //log.info(exchange.getBody());
@@ -755,35 +759,6 @@ public class TicketServiceImpl implements TicketService {
         int real = maxLoc.x() * 330 / 310;
         //log.info("real:{}", real);
         return real * 310 / 330.0;
-    }
-
-    /**
-     * js加密
-     *
-     * @param x
-     * @param secretKey
-     * @return
-     */
-    public String doSecretKey(Double x, String secretKey) {
-        ScriptEngineManager manager = new ScriptEngineManager();
-        ScriptEngine engine = manager.getEngineByName("javascript");
-        try {
-            engine.eval(new java.io.InputStreamReader(TicketServiceImpl.class.getResourceAsStream("/META-INF/resources/webjars/crypto-js/3.1.9-1/crypto-js.js")));
-            // 读取 JavaScript 文件并执行
-            engine.eval(new java.io.InputStreamReader(Thread.currentThread().getContextClassLoader().getResourceAsStream("getPoint.js")));
-            JSONObject param = new JSONObject();
-            param.put("x", x);
-            param.put("y", 5);
-            // 获取 JavaScript 函数的执行结果
-            Invocable invocable = (Invocable) engine;
-            Object result = invocable.invokeFunction("getPoint", param.toString(), secretKey);
-            if (result != null) {
-                return result.toString();
-            }
-        } catch (ScriptException | NoSuchMethodException e) {
-            e.printStackTrace();
-        }
-        return null;
     }
 
     /**

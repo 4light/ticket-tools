@@ -74,7 +74,7 @@ public class DoSnatchingSchedule {
             CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo), taskExecutorConfig.getAsyncExecutor());
         }
     }
-    //@Scheduled(cron = "0/1 31-59 18 * * ?")
+    @Scheduled(cron = "0/1 31-59 18 * * ?")
     public void doSingleSnatch(){
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
         for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
