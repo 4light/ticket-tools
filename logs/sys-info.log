@@ -2072,3 +2072,17 @@
 11:19:06.600 [restartedMain] INFO  o.a.c.h.Http11NioProtocol - [log,173] - Starting ProtocolHandler ["http-nio-8082"]
 11:19:06.653 [restartedMain] INFO  t.t.t.TicketToolsApplication - [logStarted,61] - Started TicketToolsApplication in 2.833 seconds (JVM running for 4.862)
 11:19:07.120 [scheduling-1] INFO  c.a.d.p.DruidDataSource - [init,995] - {dataSource-1} inited
+11:37:06.992 [http-nio-8082-exec-1] INFO  o.a.c.c.C.[.[.[/] - [log,173] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+14:19:13.224 [SpringContextShutdownHook] INFO  c.a.d.p.DruidDataSource - [close,2073] - {dataSource-1} closing ...
+14:19:13.229 [SpringContextShutdownHook] INFO  c.a.d.p.DruidDataSource - [close,2146] - {dataSource-1} closed
+14:28:46.987 [restartedMain] INFO  t.t.t.TicketToolsApplication - [logStarting,55] - Starting TicketToolsApplication on devinzhangdeMacBook-Pro.local with PID 92015 (/Users/devin.zhang/IdeaProjects/ticket-tools/target/classes started by devin.zhang in /Users/devin.zhang/IdeaProjects/ticket-tools)
+14:28:46.991 [restartedMain] INFO  t.t.t.TicketToolsApplication - [logStartupProfileInfo,655] - The following profiles are active: test
+14:28:48.367 [restartedMain] INFO  o.a.c.h.Http11NioProtocol - [log,173] - Initializing ProtocolHandler ["http-nio-8082"]
+14:28:48.368 [restartedMain] INFO  o.a.c.c.StandardService - [log,173] - Starting service [Tomcat]
+14:28:48.369 [restartedMain] INFO  o.a.c.c.StandardEngine - [log,173] - Starting Servlet engine: [Apache Tomcat/9.0.36]
+14:28:48.482 [restartedMain] INFO  o.a.c.c.C.[.[.[/] - [log,173] - Initializing Spring embedded WebApplicationContext
+14:28:49.567 [restartedMain] INFO  o.a.c.h.Http11NioProtocol - [log,173] - Starting ProtocolHandler ["http-nio-8082"]
+14:28:49.603 [restartedMain] INFO  t.t.t.TicketToolsApplication - [logStarted,61] - Started TicketToolsApplication in 3.105 seconds (JVM running for 4.433)
+14:28:50.094 [scheduling-1] INFO  c.z.h.HikariDataSource - [getConnection,110] - HikariPool-1 - Starting...
+14:28:50.418 [scheduling-1] INFO  c.z.h.HikariDataSource - [getConnection,123] - HikariPool-1 - Start completed.
+14:29:14.754 [http-nio-8082-exec-1] INFO  o.a.c.c.C.[.[.[/] - [log,173] - Initializing Spring DispatcherServlet 'dispatcherServlet'
