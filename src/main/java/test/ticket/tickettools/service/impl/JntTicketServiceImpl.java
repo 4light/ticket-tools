@@ -118,9 +118,12 @@ public class JntTicketServiceImpl implements JntTicketService {
             JSONObject useDateTickInfo = queryRes.getJSONObject(formatDate);
             JSONArray sessions = useDateTickInfo.getJSONArray("sessions");
             for (int i = 0; i < sessions.size(); i++) {
-                String eventsSessionId = sessions.getJSONObject(i).getString("eventssessionid");
-                sessionList.add(0, eventsSessionId);
-                sessionMap.put(eventsSessionId, sessions.getJSONObject(i));
+                JSONObject session = sessions.getJSONObject(i);
+                String eventsSessionId = session.getString("eventssessionid");
+                if(session!=null&&session.getIntValue("remaining_check")==1) {
+                    sessionList.add(0, eventsSessionId);
+                    sessionMap.put(eventsSessionId, sessions.getJSONObject(i));
+                }
             }
         }
         log.info("场馆信息:{}",sessionMap);
@@ -486,5 +489,4 @@ public class JntTicketServiceImpl implements JntTicketService {
         }
         return param;
     }
-
 }
