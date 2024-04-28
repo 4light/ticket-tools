@@ -443,7 +443,6 @@ public class TicketServiceImpl implements TicketService {
             //获取成人票和儿童票
             JSONArray getPriceByScheduleData = getPriceByScheduleJson == null ? null : getPriceByScheduleJson.getJSONArray("data");
             if (ObjectUtils.isEmpty(getPriceByScheduleData)) {
-                log.info("获取到的场次失败");
                 return;
             }
             boolean flag = true;
