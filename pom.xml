@@ -139,6 +139,7 @@
                     <include>application.properties</include>
                     <include>application-${environment}.properties</include>
                     <include>**/*.xml</include>
+                    <include>*.xml</include>
                 </includes>
             </resource>
         </resources>
