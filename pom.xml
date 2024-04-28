@@ -73,11 +73,11 @@
             </exclusions>
             <version>2.1.4</version>
         </dependency>
-<!--        <dependency>
+        <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>druid</artifactId>
             <version>1.2.9</version>
-        </dependency>-->
+        </dependency>
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-annotation</artifactId>
