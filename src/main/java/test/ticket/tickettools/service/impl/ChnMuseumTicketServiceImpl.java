@@ -270,7 +270,7 @@ public class ChnMuseumTicketServiceImpl implements ChnMuseumTicketService {
             }
         });
         HttpEntity entity=new HttpEntity(headers);
-        JSONObject response = TemplateUtil.getResponse(TemplateUtil.initSSLTemplate(), getChnMuUserInfoUrl, HttpMethod.GET, entity);
+        JSONObject response = TemplateUtil.getResponse(TemplateUtil.initSSLTemplateWithProxy("106.118.104.109",4237), getChnMuUserInfoUrl, HttpMethod.GET, entity);
         if(response==null||response.getIntValue("status")!=200){
             log.info("请求用户信息异常：{}",response);
         }
