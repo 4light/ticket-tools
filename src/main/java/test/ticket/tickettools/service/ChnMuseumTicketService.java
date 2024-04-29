@@ -6,6 +6,8 @@ import java.util.List;
 
 public interface ChnMuseumTicketService {
 
+    void test();
+
     void initData();
     //获取抢票数据
     List<DoSnatchInfo> snatchingTicket();

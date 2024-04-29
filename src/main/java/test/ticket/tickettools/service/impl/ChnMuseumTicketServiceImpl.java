@@ -20,6 +20,7 @@ import test.ticket.tickettools.dao.TaskDao;
 import test.ticket.tickettools.dao.TaskDetailDao;
 import test.ticket.tickettools.dao.UserInfoDao;
 import test.ticket.tickettools.domain.bo.DoSnatchInfo;
+import test.ticket.tickettools.domain.bo.ServiceResponse;
 import test.ticket.tickettools.domain.constant.ChannelEnum;
 import test.ticket.tickettools.domain.entity.TaskDetailEntity;
 import test.ticket.tickettools.domain.entity.TaskEntity;
@@ -251,6 +252,30 @@ public class ChnMuseumTicketServiceImpl implements ChnMuseumTicketService {
             e.printStackTrace();
         }
     }*/
+    private String getChnMuUserInfoUrl="https://lotswap.dpm.org.cn/lotsapi/leaguer/api/userLeaguer/manage/leaguerInfo?cipherText=0&merchantId=2655&merchantInfoId=2655";
+
+
+    @Override
+    public void test() {
+        UserInfoEntity userInfoEntity = userInfoDao.selectById(16L);
+        //故宫获取用户信息
+        HttpHeaders headers=new HttpHeaders();
+        String proxyHeadersStr = userInfoEntity.getHeaders();
+        JSONObject proxyHeadersJson = JSON.parseObject(proxyHeadersStr);
+        proxyHeadersJson.entrySet().forEach(o->{
+            if(StrUtil.equals(o.getKey(),"Accept-Encoding")){
+                headers.set("Accept-Encoding","gzip, deflate");
+            }else{
+                headers.set(o.getKey(),o.getValue().toString());
+            }
+        });
+        HttpEntity entity=new HttpEntity(headers);
+        JSONObject response = TemplateUtil.getResponse(TemplateUtil.initSSLTemplate(), getChnMuUserInfoUrl, HttpMethod.GET, entity);
+        if(response==null||response.getIntValue("status")!=200){
+            log.info("请求用户信息异常：{}",response);
+        }
+        log.info("获取到的用户信息:{}",response);
+    }
 
     @Override
     public void initData() {

@@ -1,17 +1,11 @@
 package test.ticket.tickettools.web.controller;
 
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.web.bind.annotation.*;
 import test.ticket.tickettools.domain.bo.*;
 import test.ticket.tickettools.domain.entity.UserInfoEntity;
-import test.ticket.tickettools.service.JntTicketService;
+import test.ticket.tickettools.service.ChnMuseumTicketService;
 import test.ticket.tickettools.service.UserService;
-import test.ticket.tickettools.utils.TemplateUtil;
 
 import javax.annotation.Resource;
 
@@ -21,6 +15,8 @@ public class UserController {
 
     @Resource
     UserService userServiceImpl;
+    @Resource
+    ChnMuseumTicketService chnMuseumTicketServiceImpl;
 
 
 
@@ -57,8 +53,7 @@ public class UserController {
 
     @GetMapping(value = "/test/init")
     public ServiceResponse init() {
-        //JntTicketServiceImpl.initCookie();
-        JSONObject response = TemplateUtil.getResponse(TemplateUtil.initSSLTemplate(), "https://lotswap.dpm.org.cn/lotsapi/merchant/api/fsyy/calendar?parkId=11324&year=2024&month=03&merchantId=2655&merchantInfoId=2655", HttpMethod.GET, new HttpEntity(new HttpHeaders()));
-        return ServiceResponse.createBySuccess(response);
+        chnMuseumTicketServiceImpl.test();
+        return ServiceResponse.createBySuccess();
     }
 }
