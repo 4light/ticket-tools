@@ -18,6 +18,8 @@ public class DoSnatchInfo {
     private Integer port;
     private String account;
     private String pwd;
+    private String headers;
+    private String channelUserId;
 
     public Long getTaskId() {
         return taskId;
@@ -121,5 +123,21 @@ public class DoSnatchInfo {
 
     public void setPwd(String pwd) {
         this.pwd = pwd;
+    }
+
+    public String getHeaders() {
+        return headers;
+    }
+
+    public void setHeaders(String headers) {
+        this.headers = headers;
+    }
+
+    public String getChannelUserId() {
+        return channelUserId;
+    }
+
+    public void setChannelUserId(String channelUserId) {
+        this.channelUserId = channelUserId;
     }
 }

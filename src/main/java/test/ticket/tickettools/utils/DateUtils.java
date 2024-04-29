@@ -1,6 +1,7 @@
 package test.ticket.tickettools.utils;
 
 
+import java.text.SimpleDateFormat;
 import java.time.*;
 import java.util.*;
 
@@ -22,5 +23,9 @@ public class DateUtils {
         ZoneId zone = ZoneId.systemDefault();
         Instant instant = date.atStartOfDay().atZone(zone).toInstant();
         return Date.from(instant);
+    }
+    public static String dateToStr(Date date,String format){
+        SimpleDateFormat simpleDateFormat=new SimpleDateFormat(format);
+        return simpleDateFormat.format(date);
     }
 }

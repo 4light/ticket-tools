@@ -38,6 +38,7 @@ import test.ticket.tickettools.service.WebSocketServer;
 import test.ticket.tickettools.utils.AESUtil;
 import test.ticket.tickettools.utils.DateUtils;
 import test.ticket.tickettools.utils.ImageUtils;
+import test.ticket.tickettools.utils.SendMessageUtil;
 
 import javax.annotation.Resource;
 import javax.script.Invocable;
@@ -609,6 +610,7 @@ public class TicketServiceImpl implements TicketService {
                             }
                         }
                         taskDetailDao.updateTaskDetailBath(taskDetailEntities);
+                        SendMessageUtil.send(SendMessageUtil.initMsg(ChannelEnum.CSTM.getDesc(), doSnatchInfo.getAccount(),String.join(",",doSnatchInfo.getIdNameMap().values())));
                         WebSocketServer.sendInfo(socketMsg("抢票成功", JSON.toJSONString(nameIDMap), 0), null);
                     }
                     /*if (!ObjectUtils.isEmpty(bodyJson) && bodyJson.getIntValue("code") == 550) {

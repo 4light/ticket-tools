@@ -26,7 +26,7 @@ public class TaskEntity {
     private Integer channel;
     //场馆
     private Integer venue;
-    //场次
+    //场次 故宫0：上午 1：下午
     private Integer session;
 
     //删除标识
