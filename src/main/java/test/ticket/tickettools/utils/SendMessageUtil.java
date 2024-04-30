@@ -20,7 +20,7 @@ import java.util.Arrays;
 public class SendMessageUtil {
     private static String secretKey="SECe4602ef7a06ff23af115c8f8ba39fefa18d50290dd394fcdcd69ffc4ba5fee01";
     private static String robotToken="b8c66518ecacb83e0b26f58471d20a1f6a5da9ea4acc93362d259ceb70b2eaab";
-    public static void send(String msg){
+    public static void send(String title,String msg){
         try {
             Long timestamp = System.currentTimeMillis();
             String stringToSign = timestamp + "\n" + secretKey;
@@ -37,10 +37,13 @@ public class SendMessageUtil {
              */
             //定义文本内容
             OapiRobotSendRequest.Markdown markdown = new OapiRobotSendRequest.Markdown();
-            markdown.setText("钉钉，让进步发生");
+            markdown.setText(msg);
+            markdown.setTitle(title);
             //设置消息类型
             req.setMsgtype("markdown");
-            req.setMarkdown(msg);
+            OapiRobotSendRequest.At at = new OapiRobotSendRequest.At();
+            at.setIsAtAll(true);
+            req.setAt(at);
             OapiRobotSendResponse rsp = client.execute(req, robotToken);
             System.out.println(rsp.getBody());
         } catch (ApiException e) {
@@ -54,7 +57,7 @@ public class SendMessageUtil {
         }
     }
 
-    public static String initMsg(String channel,String account,String user){
+/*    public static String initMsg(String channel,String account,String user){
         JSONObject markdownMsg=new JSONObject();
         markdownMsg.put("msgtype","markdown");
         JSONObject text=new JSONObject();
@@ -62,5 +65,5 @@ public class SendMessageUtil {
         text.put("text","账号："+account+"购票成功,游客姓名:"+user);
         markdownMsg.put("markdown",text);
         return JSON.toJSONString(markdownMsg);
-    }
+    }*/
 }

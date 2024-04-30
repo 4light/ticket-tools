@@ -270,7 +270,7 @@ public class ChnMuseumTicketServiceImpl implements ChnMuseumTicketService {
             }
         });
         HttpEntity entity=new HttpEntity(headers);
-        JSONObject response = TemplateUtil.getResponse(TemplateUtil.initSSLTemplateWithProxy("106.118.104.109",4237), getChnMuUserInfoUrl, HttpMethod.GET, entity);
+        JSONObject response = TemplateUtil.getResponse(TemplateUtil.initSSLTemplate(), getChnMuUserInfoUrl, HttpMethod.GET, entity);
         if(response==null||response.getIntValue("status")!=200){
             log.info("请求用户信息异常：{}",response);
         }
@@ -507,7 +507,7 @@ public class ChnMuseumTicketServiceImpl implements ChnMuseumTicketService {
                 taskEntity.setUpdateDate(new Date());
                 taskDao.updateTask(taskEntity);
                 taskDetailDao.updateByTaskId(doSnatchInfo.getTaskId());
-                SendMessageUtil.send(SendMessageUtil.initMsg(ChannelEnum.LOTS.getDesc(),doSnatchInfo.getAccount(),String.join(",",doSnatchInfo.getIdNameMap().values())));
+                SendMessageUtil.send(ChannelEnum.CSTM.getDesc()+"出票成功","账号:"+doSnatchInfo.getAccount()+"购票成功,游客姓名:"+String.join(",",doSnatchInfo.getIdNameMap().values()));
             }
         } catch (Exception e) {
             e.printStackTrace();
