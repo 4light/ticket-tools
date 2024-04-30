@@ -62,9 +62,9 @@ public class TicketServiceImpl implements TicketService {
     //查询个人信息
     private static String queryUserInfoUrl ="/prod-api/getUserInfoToIndividual";
     //获取场次url
-    private static String getScheduleUrl = "https://pcticket.cstm.org.cn/prod-api/pool/getScheduleByHallId?hallId=1&openPerson=1&queryDate=%s&saleMode=1&single=true";
+    //private static String getScheduleUrl = "https://pcticket.cstm.org.cn/prod-api/pool/getScheduleByHallId?hallId=1&openPerson=1&queryDate=%s&saleMode=1&single=true";
     //获取场次下余票url
-    private static String getPriceByScheduleIdUrl = "https://pcticket.cstm.org.cn/prod-api/pool/getPriceByScheduleId?hallId=1&openPerson=1&queryDate=%s&saleMode=1&scheduleId=";
+    //private static String getPriceByScheduleIdUrl = "https://pcticket.cstm.org.cn/prod-api/pool/getPriceByScheduleId?hallId=1&openPerson=1&queryDate=%s&saleMode=1&scheduleId=";
     //添加人员url
     private static String addUrl = "https://pcticket.cstm.org.cn/prod-api/system/individualContact/add";
     //获取验证码图片
@@ -124,6 +124,7 @@ public class TicketServiceImpl implements TicketService {
                 taskEntity.setAccount(getUserInfoJson.getJSONObject("user").getString("phoneNumber"));
                 taskEntity.setUpdateDate(new Date());
                 taskEntity.setChannel(ChannelEnum.CSTM.getCode());
+                taskEntity.setUserId(getUserInfoJson.getJSONObject("user").getLongValue("userId"));
                 taskDao.updateAuthByPhone(taskEntity);
                 return ServiceResponse.createBySuccess(getUserInfoJson.get("user"));
             }
@@ -418,10 +419,12 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     public void snatchingTicket(DoSnatchInfo doSnatchInfo) {
+        String getScheduleUrl = "https://pcticket.cstm.org.cn/prod-api/pool/getScheduleByHallId?hallId=1&openPerson=1&queryDate=%s&saleMode=1&single=true";
+        String getPriceByScheduleIdUrl = "https://pcticket.cstm.org.cn/prod-api/pool/getPriceByScheduleId?hallId=1&openPerson=1&queryDate=%s&saleMode=1&scheduleId=";
         Map<String, String> nameIDMap = doSnatchInfo.getIdNameMap();
         String useDate = DateUtil.format(doSnatchInfo.getUseDate(), "yyyy-MM-dd hh:mm:ss");
-        getScheduleUrl = String.format(getScheduleUrl, DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"));
-        getPriceByScheduleIdUrl = String.format(getPriceByScheduleIdUrl, DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"));
+        String formatGetScheduleUrl = String.format(getScheduleUrl, DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"));
+        String formatGetPriceByScheduleIdUrl = String.format(getPriceByScheduleIdUrl, DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"));
         try {
             RestTemplateBuilder restTemplateBuilder = new RestTemplateBuilder()
                     .setConnectTimeout(Duration.ofSeconds(60)) //连接超时时间10秒
@@ -438,7 +441,7 @@ public class TicketServiceImpl implements TicketService {
             long userId = doSnatchInfo.getUserId();
             String phone = doSnatchInfo.getAccount();
             //获取场次下余票
-            ResponseEntity getPriceByScheduleRes = restTemplate.exchange(getPriceByScheduleIdUrl + doSnatchInfo.getSession(), HttpMethod.GET, entity, String.class);
+            ResponseEntity getPriceByScheduleRes = restTemplate.exchange(formatGetPriceByScheduleIdUrl + doSnatchInfo.getSession(), HttpMethod.GET, entity, String.class);
             JSONObject getPriceByScheduleJson = JSON.parseObject(getPriceByScheduleRes.getBody().toString());
             //log.info("获取到的场次下余票为:{}",getPriceByScheduleJson);
             //获取成人票和儿童票

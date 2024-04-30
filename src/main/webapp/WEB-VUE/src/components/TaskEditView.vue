@@ -17,6 +17,12 @@
           </el-option>
         </el-select>
       </el-form-item>
+      <el-form-item label="场次" v-if="form.channel==2">
+        <el-checkbox-group v-model="session">
+          <el-checkbox label="0">上午</el-checkbox>
+          <el-checkbox label="1">下午</el-checkbox>
+        </el-checkbox-group>
+      </el-form-item>
       <el-form-item label="账号">
         <el-select v-model="form.userInfoId">
           <el-option
@@ -150,7 +156,7 @@ export default {
       userText: "",
       userList: [],
       showUserList: false,
-
+      session:["0","1"]
     }
   },
   /* watch: {
@@ -189,6 +195,11 @@ export default {
       if (this.form.channel==0&&this.userList.length > 15) {
         this.$alert("最多只能添加15条，请检查","添加失败")
         return
+      }
+      if(this.form.channel==2){
+        if(this.session.length==1){
+          this.form.session=parseInt(this.session[0])
+        }
       }
       this.form.userList = this.userList
       axios.post("/ticket/add/taskInfo", this.form).then(res => {
