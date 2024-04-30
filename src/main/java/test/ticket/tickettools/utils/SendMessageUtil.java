@@ -44,6 +44,7 @@ public class SendMessageUtil {
             OapiRobotSendRequest.At at = new OapiRobotSendRequest.At();
             at.setIsAtAll(true);
             req.setAt(at);
+            req.setMarkdown(markdown);
             OapiRobotSendResponse rsp = client.execute(req, robotToken);
             System.out.println(rsp.getBody());
         } catch (ApiException e) {
