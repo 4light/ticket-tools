@@ -82,7 +82,7 @@ public class DoSnatchingSchedule {
         }
     }
 
-    @Scheduled(cron = "0/1 * 8-17,19-23 * * ?")
+    @Scheduled(cron = "0/1 * 8-17,19-22 * * ?")
     public void doSingleSnatchOtherTime(){
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
         for (DoSnatchInfo doSnatchInfo : allTaskForRun) {

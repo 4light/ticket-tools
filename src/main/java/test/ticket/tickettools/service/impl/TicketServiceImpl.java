@@ -441,7 +441,7 @@ public class TicketServiceImpl implements TicketService {
             long userId = doSnatchInfo.getUserId();
             String phone = doSnatchInfo.getAccount();
             //获取场次下余票
-            ResponseEntity getPriceByScheduleRes = restTemplate.exchange(formatGetPriceByScheduleIdUrl + doSnatchInfo.getSession(), HttpMethod.GET, entity, String.class);
+            /*ResponseEntity getPriceByScheduleRes = restTemplate.exchange(formatGetPriceByScheduleIdUrl + doSnatchInfo.getSession(), HttpMethod.GET, entity, String.class);
             JSONObject getPriceByScheduleJson = JSON.parseObject(getPriceByScheduleRes.getBody().toString());
             //log.info("获取到的场次下余票为:{}",getPriceByScheduleJson);
             //获取成人票和儿童票
@@ -449,11 +449,15 @@ public class TicketServiceImpl implements TicketService {
             if (ObjectUtils.isEmpty(getPriceByScheduleData)) {
                 return;
             }
-            boolean flag = true;
-            int priceId = 0;
-            int childrenPriceId = 0;
-            int discountPriceId = 0;
-            int olderPriceId = 0;
+            boolean flag = true;*/
+            //普通票
+            int priceId = 35;
+            //儿童票
+            int childrenPriceId = 37;
+            //优惠票
+            int discountPriceId = 36;
+            //老年票
+            int olderPriceId = 38;
             Map<String, Integer> priceNameCountMap = new HashMap<>();
             for (String value : nameIDMap.values()) {
                 int ageForIdcard = getAgeForIdcard(value);
@@ -489,7 +493,7 @@ public class TicketServiceImpl implements TicketService {
                     }
                 }
             }
-            int ticketPool = 0;
+            /*int ticketPool = 0;
             int childrenTicketPool = 0;
             int discountTicketPool = 0;
             int olderTicketPool = 0;
@@ -513,9 +517,8 @@ public class TicketServiceImpl implements TicketService {
                     olderTicketPool = obj.getIntValue("ticketPool");
                     olderPriceId = obj.getInteger("priceId");
                 }
-            }
-            ;
-            for (Map.Entry<String, Integer> priceNameCountEntry : priceNameCountMap.entrySet()) {
+            }*/
+            /*for (Map.Entry<String, Integer> priceNameCountEntry : priceNameCountMap.entrySet()) {
                 if ("normalTicket".equals(priceNameCountEntry.getKey())) {
                     flag = flag && ticketPool >= priceNameCountEntry.getValue();
                     if (flag) {
@@ -552,9 +555,9 @@ public class TicketServiceImpl implements TicketService {
                         }
                     }
                 }
-            }
+            }*/
             //余票充足
-            if (flag) {
+            /*if (flag) {*/
                 //几个人添加几次
                 for (Map.Entry<String, String> entry : nameIDMap.entrySet()) {
                     HttpEntity addEntity = new HttpEntity<>(buildAddParam(entry.getValue(), entry.getKey(), userId), headers);
@@ -584,9 +587,12 @@ public class TicketServiceImpl implements TicketService {
                     //log.info(exchange.getBody());
                     String body = exchange.getBody();
                     JSONObject bodyJson = JSON.parseObject(body);
+                    if(!ObjectUtils.isEmpty(bodyJson) && bodyJson.getIntValue("code") == 550){
+                        return;
+                    }
                     //WebSocketServer.sendInfo("余票不足","web");
                     if (!ObjectUtils.isEmpty(bodyJson) && bodyJson.getIntValue("code") == 200) {
-                        log.info(exchange.getBody());
+                        log.info("提交订单结果：{}",body);
                         //doneList.addAll(nameIDMap.values());
                         ResponseEntity<String> shoppingCartRes = restTemplate.exchange(getShoppingCart, HttpMethod.GET, entity, String.class);
                         String shoppingCartBody = shoppingCartRes.getBody();
@@ -632,7 +638,7 @@ public class TicketServiceImpl implements TicketService {
                         e.printStackTrace();
                     }
                 }
-            }
+           /* }*/
         } catch (Exception e) {
            //e.printStackTrace();
         }
