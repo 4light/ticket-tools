@@ -613,7 +613,7 @@ public class TicketServiceImpl implements TicketService {
                             }
                         }
                         taskDetailDao.updateTaskDetailBath(taskDetailEntities);
-                        SendMessageUtil.send(ChannelEnum.CSTM.getDesc()+"出票成功", "账号："+doSnatchInfo.getAccount()+"购票成功,游客姓名:"+String.join(",",doSnatchInfo.getIdNameMap().values()));
+                        //SendMessageUtil.send(ChannelEnum.CSTM.getDesc()+"出票成功", "账号："+doSnatchInfo.getAccount()+"购票成功,游客姓名:"+String.join(",",doSnatchInfo.getIdNameMap().values()));
                         WebSocketServer.sendInfo(socketMsg("抢票成功", JSON.toJSONString(nameIDMap), 0), null);
                     }
                     /*if (!ObjectUtils.isEmpty(bodyJson) && bodyJson.getIntValue("code") == 550) {

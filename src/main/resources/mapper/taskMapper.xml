@@ -137,8 +137,11 @@
             <if test='updateDate!=null'>
                 update_date = #{updateDate},
             </if>
-            <if test='channel!=null'>
-                channel = #{channel}
+            <if test='updateDate!=null'>
+                update_date = #{updateDate},
+            </if>
+            <if test='userId!=null'>
+                user_id = #{userId}
             </if>
         </set>
         where account = #{account}

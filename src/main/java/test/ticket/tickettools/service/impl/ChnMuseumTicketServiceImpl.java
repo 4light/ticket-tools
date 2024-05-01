@@ -43,18 +43,10 @@ import java.util.*;
 @Service
 public class ChnMuseumTicketServiceImpl implements ChnMuseumTicketService {
 
-    //查询用户信息
-    private static final String queryUserInfoUrl = "https://lotswap.dpm.org.cn/lotsapi/leaguer/api/userLeaguer/manage/leaguerInfo?cipherText=0&merchantId=2655&merchantInfoId=2655";
-    //查询余票
-    private static String queryImperialPalaceTicketsUrl = "https://lotswap.dpm.org.cn/lotsapi/merchant/api/fsyy/calendar?parkId=11324&year=%s&month=%s&merchantId=2655&merchantInfoId=2655";
-    //获取门票种类
-    private static String getTicketGridUrl = "https://lotswap.dpm.org.cn/lotsapi/merchant/api/merchantParkTicketGridNew?date=%s&merchantParkInfoId=11324&currPage=1&pageSize=200&merchantInfoId=2655&playDate=%s&businessType=park";
     //获取余票信息
     private static final String getReserveListUrl = "https://lotswap.dpm.org.cn/lotsapi/order/api/batchTimeReserveList";
     //校验成员信息
     private static final String checkUserUrl = "https://lotswap.dpm.org.cn/dubboApi/trade-core/tradeCreateService/ticketVerificationCheck";
-    //提交订单
-    private static String createUrl = "https://lotswap.dpm.org.cn/dubboApi/trade-core/tradeCreateService/create?sign=%s&timestamp=%s";
 
     @Resource
     TaskDao taskDao;
@@ -324,6 +316,12 @@ public class ChnMuseumTicketServiceImpl implements ChnMuseumTicketService {
 
     @Override
     public void doSnatchingTicket(DoSnatchInfo doSnatchInfo) {
+        //查询余票
+        String queryImperialPalaceTicketsUrl = "https://lotswap.dpm.org.cn/lotsapi/merchant/api/fsyy/calendar?parkId=11324&year=%s&month=%s&merchantId=2655&merchantInfoId=2655";
+        //获取门票种类
+        String getTicketGridUrl = "https://lotswap.dpm.org.cn/lotsapi/merchant/api/merchantParkTicketGridNew?date=%s&merchantParkInfoId=11324&currPage=1&pageSize=200&merchantInfoId=2655&playDate=%s&businessType=park";
+        //提交订单
+        String createUrl = "https://lotswap.dpm.org.cn/dubboApi/trade-core/tradeCreateService/create?sign=%s&timestamp=%s";
         //记录有票的具体日期
         JSONArray parkFsyyDetailDTOs = new JSONArray();
         try {
@@ -347,8 +345,8 @@ public class ChnMuseumTicketServiceImpl implements ChnMuseumTicketService {
             LocalDate localDate = useDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
             int monthValue = localDate.getMonthValue();
             String month = monthValue > 10 ? String.valueOf(monthValue) : "0" + monthValue;
-            queryImperialPalaceTicketsUrl = String.format(queryImperialPalaceTicketsUrl, now.getYear(), month);
-            JSONObject responseJson = TemplateUtil.getResponse(restTemplate, queryImperialPalaceTicketsUrl, HttpMethod.GET, entity);
+            String formatQueryImperialPalaceTicketsUrl = String.format(queryImperialPalaceTicketsUrl, now.getYear(), month);
+            JSONObject responseJson = TemplateUtil.getResponse(restTemplate, formatQueryImperialPalaceTicketsUrl, HttpMethod.GET, entity);
             if (ObjectUtils.isEmpty(responseJson)) {
                 return;
             }
@@ -408,8 +406,8 @@ public class ChnMuseumTicketServiceImpl implements ChnMuseumTicketService {
             }
             headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
             HttpEntity getTicketEntity = new HttpEntity<>(headers);
-            getTicketGridUrl = String.format(getTicketGridUrl, useDate, useDate);
-            JSONObject ticketGridJson = TemplateUtil.getResponse(restTemplate, getTicketGridUrl, HttpMethod.GET, getTicketEntity);
+            String formatGetTicketGridUrl = String.format(getTicketGridUrl, useDate, useDate);
+            JSONObject ticketGridJson = TemplateUtil.getResponse(restTemplate, formatGetTicketGridUrl, HttpMethod.GET, getTicketEntity);
             if (ObjectUtils.isEmpty(ticketGridJson)) {
                 return;
             }
@@ -497,8 +495,8 @@ public class ChnMuseumTicketServiceImpl implements ChnMuseumTicketService {
             headers.setContentLength(JSON.toJSONString(jsonObject).getBytes(StandardCharsets.UTF_8).length);
             log.info("headers：{}", headers);
             HttpEntity addTicketQueryEntity = new HttpEntity<>(jsonObject, headers);
-            createUrl = String.format(createUrl, sign, timestamp);
-            JSONObject createRes = TemplateUtil.getResponse(restTemplate, createUrl, HttpMethod.POST, addTicketQueryEntity);
+            String formatCreateUrl = String.format(createUrl, sign, timestamp);
+            JSONObject createRes = TemplateUtil.getResponse(restTemplate, formatCreateUrl, HttpMethod.POST, addTicketQueryEntity);
             log.info("请求结果{}", createRes);
             if(createRes.getIntValue("code")==200){
                 TaskEntity taskEntity=new TaskEntity();
