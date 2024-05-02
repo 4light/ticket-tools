@@ -604,7 +604,8 @@ public class TicketServiceImpl implements TicketService {
                         }
                         long orderId = placeOrderJson.getJSONObject("data").getLongValue("orderId");
                         //查询个人订单
-                        HttpEntity searchEntity=new HttpEntity(entity);
+                        headers.set("Referer","https://pcticket.cstm.org.cn/personal/pay?orderId="+orderId+"&orderNum="+placeOrderJson.getJSONObject("data").getString("orderNumber"));
+                        HttpEntity searchEntity=new HttpEntity(headers);
                         ResponseEntity<String> searchResEntity = restTemplate.exchange("https://pcticket.cstm.org.cn/prod-api/order/OrderInfo/searchPersonOrder/" + orderId, HttpMethod.GET, searchEntity, String.class);
                         String searchResBody = searchResEntity.getBody();
                         JSONObject searchBodyJson = JSON.parseObject(searchResBody);
