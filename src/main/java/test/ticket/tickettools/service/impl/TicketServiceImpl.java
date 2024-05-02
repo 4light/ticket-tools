@@ -588,6 +588,12 @@ public class TicketServiceImpl implements TicketService {
                     String body = exchange.getBody();
                     JSONObject bodyJson = JSON.parseObject(body);
                     if(!ObjectUtils.isEmpty(bodyJson) && bodyJson.getIntValue("code") == 550){
+                        try {
+                            Files.delete(Paths.get(sliderImageName));
+                            Files.delete(Paths.get(backImageName));
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                         return;
                     }
                     //WebSocketServer.sendInfo("余票不足","web");
@@ -600,6 +606,12 @@ public class TicketServiceImpl implements TicketService {
                         log.info("下单结果：{}",placeOrderBody);
                         JSONObject placeOrderJson = JSON.parseObject(placeOrderBody);
                         if(placeOrderJson==null||placeOrderJson.getIntValue("code")!=200){
+                            try {
+                                Files.delete(Paths.get(sliderImageName));
+                                Files.delete(Paths.get(backImageName));
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
                             return;
                         }
                         long orderId = placeOrderJson.getJSONObject("data").getLongValue("orderId");
@@ -611,6 +623,12 @@ public class TicketServiceImpl implements TicketService {
                         JSONObject searchBodyJson = JSON.parseObject(searchResBody);
                         if(searchBodyJson==null||searchBodyJson.getIntValue("code")!=200){
                             log.info("查询个人订单失败：{}",searchBodyJson);
+                            try {
+                                Files.delete(Paths.get(sliderImageName));
+                                Files.delete(Paths.get(backImageName));
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
                             return;
                         }
                         JSONArray dataArr = searchBodyJson.getJSONObject("data").getJSONArray("tickets");
