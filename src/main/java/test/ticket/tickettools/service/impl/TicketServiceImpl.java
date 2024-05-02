@@ -73,7 +73,7 @@ public class TicketServiceImpl implements TicketService {
     private static String shoppingCartUrl = "https://pcticket.cstm.org.cn/prod-api/config/orderRule/shoppingCart";
     private static String getCurrentUserUrl = "https://pcticket.cstm.org.cn/prod-api/getUserInfoToIndividual";
     //购物车接口
-    private static String getShoppingCart = "https://pcticket.cstm.org.cn/prod-api/query/order/getShoppingCart";
+    //private static String getShoppingCart = "https://pcticket.cstm.org.cn/prod-api/config/orderRule/shoppingCart";
     //提交订单
     private static String placeOrderUrl = "https://pcticket.cstm.org.cn/prod-api/config/orderRule/placeOrder";
     private static String wxPayForPcUrl = "https://pcticket.cstm.org.cn/prod-api/order/OrderInfo/wxPayForPc";
@@ -594,11 +594,25 @@ public class TicketServiceImpl implements TicketService {
                     if (!ObjectUtils.isEmpty(bodyJson) && bodyJson.getIntValue("code") == 200) {
                         log.info("提交订单结果：{}",body);
                         //doneList.addAll(nameIDMap.values());
-                        ResponseEntity<String> shoppingCartRes = restTemplate.exchange(getShoppingCart, HttpMethod.GET, entity, String.class);
-                        String shoppingCartBody = shoppingCartRes.getBody();
-                        log.info("购物车内订单：{}",shoppingCartBody);
-                        JSONObject shoppingCartJson = JSON.parseObject(shoppingCartBody);
-                        JSONArray dataArr = shoppingCartJson == null ? null : shoppingCartJson.getJSONArray("data");
+                        HttpEntity placeOrderEntity = new HttpEntity<>(buildPlaceOrderParam(priceNameCountMap.get("childrenTicket"), useDate, phone, bodyJson.getJSONArray("data").toJavaList(Long.class)), headers);
+                        ResponseEntity<String> placeOrderRes = restTemplate.exchange(placeOrderUrl, HttpMethod.POST, placeOrderEntity, String.class);
+                        String placeOrderBody = placeOrderRes.getBody();
+                        log.info("下单结果：{}",placeOrderBody);
+                        JSONObject placeOrderJson = JSON.parseObject(placeOrderBody);
+                        if(placeOrderJson==null||placeOrderJson.getIntValue("code")!=200){
+                            return;
+                        }
+                        long orderId = placeOrderJson.getJSONObject("data").getLongValue("orderId");
+                        //查询个人订单
+                        HttpEntity searchEntity=new HttpEntity(entity);
+                        ResponseEntity<String> searchResEntity = restTemplate.exchange("https://pcticket.cstm.org.cn/prod-api/order/OrderInfo/searchPersonOrder/" + orderId, HttpMethod.GET, searchEntity, String.class);
+                        String searchResBody = searchResEntity.getBody();
+                        JSONObject searchBodyJson = JSON.parseObject(searchResBody);
+                        if(searchBodyJson==null||searchBodyJson.getIntValue("code")!=200){
+                            log.info("查询个人订单失败：{}",searchBodyJson);
+                            return;
+                        }
+                        JSONArray dataArr = searchBodyJson.getJSONObject("data").getJSONArray("tickets");
                         List<TaskDetailEntity> taskDetailEntities = new ArrayList<>();
                         if (!ObjectUtils.isEmpty(dataArr)) {
                             for (int i = 0; i < dataArr.size(); i++) {
@@ -619,7 +633,7 @@ public class TicketServiceImpl implements TicketService {
                             }
                         }
                         taskDetailDao.updateTaskDetailBath(taskDetailEntities);
-                        //SendMessageUtil.send(ChannelEnum.CSTM.getDesc()+"出票成功", "账号："+doSnatchInfo.getAccount()+"购票成功,游客姓名:"+String.join(",",doSnatchInfo.getIdNameMap().values()));
+                        SendMessageUtil.send(SendMessageUtil.initMsg(ChannelEnum.CSTM.getDesc(), doSnatchInfo.getAccount(),String.join(",",doSnatchInfo.getIdNameMap().values())));
                         WebSocketServer.sendInfo(socketMsg("抢票成功", JSON.toJSONString(nameIDMap), 0), null);
                     }
                     /*if (!ObjectUtils.isEmpty(bodyJson) && bodyJson.getIntValue("code") == 550) {
@@ -833,6 +847,27 @@ public class TicketServiceImpl implements TicketService {
             ticketInfoList.add(ticketInfo);
         }
         param.put("ticketInfoList", ticketInfoList);
+        return param;
+    }
+
+    private JSONObject buildPlaceOrderParam(Integer childTicketNum, String useDate, String phone, List<Long> ticketList){
+        JSONObject param = new JSONObject();
+        param.put("childTicketNum", childTicketNum);
+        param.put("date", useDate);
+        param.put("phone", phone);
+        param.put("platform", 1);
+        param.put("poolFlag", 1);
+        param.put("realNameFlag", 1);
+        param.put("saleMode", 1);
+        JSONArray ticketInfoList=new JSONArray();
+        for (Long ticketId : ticketList) {
+            JSONObject ticketInfo=new JSONObject();
+            ticketInfo.put("id",ticketId);
+            ticketInfoList.add(ticketInfo);
+        }
+        param.put("ticketInfoList", ticketInfoList);
+        param.put("ticketNum", ticketList.size());
+        param.put("useTicketType", 1);
         return param;
     }
 
