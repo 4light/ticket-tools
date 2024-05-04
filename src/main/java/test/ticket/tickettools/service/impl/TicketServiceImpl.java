@@ -62,9 +62,9 @@ public class TicketServiceImpl implements TicketService {
     //查询个人信息
     private static String queryUserInfoUrl ="/prod-api/getUserInfoToIndividual";
     //获取场次url
-    //private static String getScheduleUrl = "https://pcticket.cstm.org.cn/prod-api/pool/getScheduleByHallId?hallId=1&openPerson=1&queryDate=%s&saleMode=1&single=true";
+    private static String getScheduleUrl = "https://pcticket.cstm.org.cn/prod-api/pool/getScheduleByHallId?hallId=1&openPerson=1&queryDate=%s&saleMode=1&single=true";
     //获取场次下余票url
-    //private static String getPriceByScheduleIdUrl = "https://pcticket.cstm.org.cn/prod-api/pool/getPriceByScheduleId?hallId=1&openPerson=1&queryDate=%s&saleMode=1&scheduleId=";
+    //private static String getPriceByScheduleIdUrl = "https://pcticket.cstm.org.cn/prod-api/pool/ingore/getCalendar?saleMode=1&openPerson=1";
     //添加人员url
     private static String addUrl = "https://pcticket.cstm.org.cn/prod-api/system/individualContact/add";
     //获取验证码图片
@@ -73,7 +73,7 @@ public class TicketServiceImpl implements TicketService {
     private static String shoppingCartUrl = "https://pcticket.cstm.org.cn/prod-api/config/orderRule/shoppingCart";
     private static String getCurrentUserUrl = "https://pcticket.cstm.org.cn/prod-api/getUserInfoToIndividual";
     //购物车接口
-    //private static String getShoppingCart = "https://pcticket.cstm.org.cn/prod-api/config/orderRule/shoppingCart";
+    private static String getShoppingCart = "https://pcticket.cstm.org.cn/prod-api/query/order/getShoppingCart";
     //提交订单
     private static String placeOrderUrl = "https://pcticket.cstm.org.cn/prod-api/config/orderRule/placeOrder";
     private static String wxPayForPcUrl = "https://pcticket.cstm.org.cn/prod-api/order/OrderInfo/wxPayForPc";
@@ -419,12 +419,10 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     public void snatchingTicket(DoSnatchInfo doSnatchInfo) {
-        String getScheduleUrl = "https://pcticket.cstm.org.cn/prod-api/pool/getScheduleByHallId?hallId=1&openPerson=1&queryDate=%s&saleMode=1&single=true";
-        String getPriceByScheduleIdUrl = "https://pcticket.cstm.org.cn/prod-api/pool/getPriceByScheduleId?hallId=1&openPerson=1&queryDate=%s&saleMode=1&scheduleId=";
+        String getHallUrl = "https://pcticket.cstm.org.cn/prod-api/pool/ingore/getHall?saleMode=1&openPerson=1&queryDate=%s";
         Map<String, String> nameIDMap = doSnatchInfo.getIdNameMap();
         String useDate = DateUtil.format(doSnatchInfo.getUseDate(), "yyyy-MM-dd hh:mm:ss");
-        String formatGetScheduleUrl = String.format(getScheduleUrl, DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"));
-        String formatGetPriceByScheduleIdUrl = String.format(getPriceByScheduleIdUrl, DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"));
+        String formatGetHallUrl = String.format(getHallUrl, DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"));
         try {
             RestTemplateBuilder restTemplateBuilder = new RestTemplateBuilder()
                     .setConnectTimeout(Duration.ofSeconds(60)) //连接超时时间10秒
@@ -441,7 +439,7 @@ public class TicketServiceImpl implements TicketService {
             long userId = doSnatchInfo.getUserId();
             String phone = doSnatchInfo.getAccount();
             //获取场次下余票
-            /*ResponseEntity getPriceByScheduleRes = restTemplate.exchange(formatGetPriceByScheduleIdUrl + doSnatchInfo.getSession(), HttpMethod.GET, entity, String.class);
+            ResponseEntity getPriceByScheduleRes = restTemplate.exchange(formatGetHallUrl, HttpMethod.GET, entity, String.class);
             JSONObject getPriceByScheduleJson = JSON.parseObject(getPriceByScheduleRes.getBody().toString());
             //log.info("获取到的场次下余票为:{}",getPriceByScheduleJson);
             //获取成人票和儿童票
@@ -449,7 +447,15 @@ public class TicketServiceImpl implements TicketService {
             if (ObjectUtils.isEmpty(getPriceByScheduleData)) {
                 return;
             }
-            boolean flag = true;*/
+            JSONArray scheduleTicketPoolVOS=new JSONArray();
+            for (int i = 0; i < getPriceByScheduleData.size(); i++) {
+                JSONObject priceByScheduleJson = getPriceByScheduleData.getJSONObject(i);
+                if(priceByScheduleJson.getIntValue("hallId")==1){
+                    scheduleTicketPoolVOS=priceByScheduleJson.getJSONArray("priceByScheduleJson");
+                    break;
+                }
+            }
+            boolean flag = true;
             //普通票
             int priceId = 35;
             //儿童票
@@ -493,11 +499,11 @@ public class TicketServiceImpl implements TicketService {
                     }
                 }
             }
-            /*int ticketPool = 0;
+            int ticketPool = 0;
             int childrenTicketPool = 0;
             int discountTicketPool = 0;
             int olderTicketPool = 0;
-            for (int i = 0; i < getPriceByScheduleData.size(); i++) {
+            for (int i = 0; i < scheduleTicketPoolVOS.size(); i++) {
                 JSONObject obj = getPriceByScheduleData.getJSONObject(i);
                 if ("普通票".equals(obj.getString("priceName")) || "儿童免费票".equals(obj.getString("priceName")) || "优惠票".equals(obj.getString("priceName")) || "老人免费票".equals(obj.getString("priceName"))) {
                     if ("普通票".equals(obj.getString("priceName"))) {
@@ -517,8 +523,8 @@ public class TicketServiceImpl implements TicketService {
                     olderTicketPool = obj.getIntValue("ticketPool");
                     olderPriceId = obj.getInteger("priceId");
                 }
-            }*/
-            /*for (Map.Entry<String, Integer> priceNameCountEntry : priceNameCountMap.entrySet()) {
+            }
+            for (Map.Entry<String, Integer> priceNameCountEntry : priceNameCountMap.entrySet()) {
                 if ("normalTicket".equals(priceNameCountEntry.getKey())) {
                     flag = flag && ticketPool >= priceNameCountEntry.getValue();
                     if (flag) {
@@ -555,9 +561,9 @@ public class TicketServiceImpl implements TicketService {
                         }
                     }
                 }
-            }*/
+            }
             //余票充足
-            /*if (flag) {*/
+            if (flag) {
                 //几个人添加几次
                 for (Map.Entry<String, String> entry : nameIDMap.entrySet()) {
                     HttpEntity addEntity = new HttpEntity<>(buildAddParam(entry.getValue(), entry.getKey(), userId), headers);
@@ -614,11 +620,10 @@ public class TicketServiceImpl implements TicketService {
                             }
                             return;
                         }
-                        long orderId = placeOrderJson.getJSONObject("data").getLongValue("orderId");
                         //查询个人订单
-                        headers.set("Referer","https://pcticket.cstm.org.cn/personal/pay?orderId="+orderId+"&orderNum="+placeOrderJson.getJSONObject("data").getString("orderNumber"));
+                        headers.set("Referer","https://pcticket.cstm.org.cn/personal/car");
                         HttpEntity searchEntity=new HttpEntity(headers);
-                        ResponseEntity<String> searchResEntity = restTemplate.exchange("https://pcticket.cstm.org.cn/prod-api/order/OrderInfo/searchPersonOrder/" + orderId, HttpMethod.GET, searchEntity, String.class);
+                        ResponseEntity<String> searchResEntity = restTemplate.exchange(getShoppingCart, HttpMethod.GET, searchEntity, String.class);
                         String searchResBody = searchResEntity.getBody();
                         JSONObject searchBodyJson = JSON.parseObject(searchResBody);
                         if(searchBodyJson==null||searchBodyJson.getIntValue("code")!=200){
@@ -631,7 +636,7 @@ public class TicketServiceImpl implements TicketService {
                             }
                             return;
                         }
-                        JSONArray dataArr = searchBodyJson.getJSONObject("data").getJSONArray("tickets");
+                        JSONArray dataArr = searchBodyJson.getJSONArray("data");
                         List<TaskDetailEntity> taskDetailEntities = new ArrayList<>();
                         if (!ObjectUtils.isEmpty(dataArr)) {
                             for (int i = 0; i < dataArr.size(); i++) {
@@ -671,9 +676,9 @@ public class TicketServiceImpl implements TicketService {
                         e.printStackTrace();
                     }
                 }
-           /* }*/
+            }
         } catch (Exception e) {
-           //e.printStackTrace();
+           e.printStackTrace();
         }
     }
 
@@ -695,7 +700,7 @@ public class TicketServiceImpl implements TicketService {
         headers.set("cookie", "SL_G_WPT_TO=zh; SL_GWPT_Show_Hide_tmp=1; SL_wptGlobTipTmp=1");
         headers.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
         JSONObject param = new JSONObject();
-        param.put("childTicketNum", placeOrderInfo.getChildTicketNum());
+        /*param.put("childTicketNum", placeOrderInfo.getChildTicketNum());
         param.put("date", DateUtil.format(placeOrderInfo.getDate(), "yyyy-MM-dd"));
         param.put("phone", placeOrderInfo.getLoginPhone());
         param.put("platform", 1);
@@ -703,8 +708,8 @@ public class TicketServiceImpl implements TicketService {
         param.put("realNameFlag", 1);
         param.put("saleMode", 1);
         param.put("ticketInfoList", placeOrderInfo.getTicketInfoList());
-        param.put("ticketNum", placeOrderInfo.getTicketNum());
-        param.put("useTicketType", 1);
+        param.put("id", placeOrderInfo.getTicketNum());*/
+        param.put("payType", 0);
         HttpEntity entity = new HttpEntity<>(param, headers);
         ResponseEntity<JSONObject> exchange = restTemplate.exchange(placeOrderUrl, HttpMethod.POST, entity, JSONObject.class);
         log.info("提交订单结果:{}",exchange.getBody());
