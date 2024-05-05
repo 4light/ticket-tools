@@ -25,6 +25,8 @@ public class TaskInfoListResponse implements Serializable {
     private Long ticketId;
     private String account;
     private Integer channel;
+    private Long orderId;
+    private Integer price;
 
 
     public Long getTaskId() {
@@ -137,5 +139,21 @@ public class TaskInfoListResponse implements Serializable {
 
     public void setChannel(Integer channel) {
         this.channel = channel;
+    }
+
+    public Long getOrderId() {
+        return orderId;
+    }
+
+    public void setOrderId(Long orderId) {
+        this.orderId = orderId;
+    }
+
+    public Integer getPrice() {
+        return price;
+    }
+
+    public void setPrice(Integer price) {
+        this.price = price;
     }
 }

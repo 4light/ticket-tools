@@ -13,8 +13,10 @@ public class PlaceOrderInfo {
     private String IDCard;
     private String authorization;
     private Integer ticketNum;
+    private String orderId;
     private Date date;
     private String loginPhone;
+    private String account;
     private Integer childTicketNum;
     private List ticketInfoList;
     private List<Long> taskDetailIds;
@@ -67,6 +69,14 @@ public class PlaceOrderInfo {
         this.ticketNum = ticketNum;
     }
 
+    public String getOrderId() {
+        return orderId;
+    }
+
+    public void setOrderId(String orderId) {
+        this.orderId = orderId;
+    }
+
     public Date getDate() {
         return date;
     }
@@ -81,6 +91,14 @@ public class PlaceOrderInfo {
 
     public void setLoginPhone(String loginPhone) {
         this.loginPhone = loginPhone;
+    }
+
+    public String getAccount() {
+        return account;
+    }
+
+    public void setAccount(String account) {
+        this.account = account;
     }
 
     public Integer getChildTicketNum() {

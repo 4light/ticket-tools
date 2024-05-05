@@ -1,5 +1,5 @@
 <template>
-  <el-tabs :tab-position="tabPosition">
+  <el-tabs :tab-position="tabPosition" class="tabStyle">
     <el-tab-pane label="用户管理">
       <userView></userView>
     </el-tab-pane>
@@ -21,12 +21,14 @@ export default {
   },
   data() {
     return {
-      tabPosition: 'left'
+      tabPosition: 'top'
     }
   }
 }
 </script>
 
-<style scoped>
-
+<style>
+ .tabStyle .el-tabs__header{
+  margin-bottom: unset;
+}
 </style>

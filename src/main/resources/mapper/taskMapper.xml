@@ -82,6 +82,9 @@
         <if test='account!=null'>
             AND account = #{account}
         </if>
+        <if test='channel!=null'>
+            AND channel = #{channel}
+        </if>
         and yn =0
         order by id DESC
     </select>

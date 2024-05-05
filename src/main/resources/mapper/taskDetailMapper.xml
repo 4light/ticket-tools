@@ -17,6 +17,8 @@
             <arg column="children_ticket" javaType="java.lang.Boolean" jdbcType="BIT"/>
             <arg column="order_number" javaType="java.lang.String" jdbcType="VARCHAR"/>
             <arg column="yn" javaType="java.lang.Boolean" jdbcType="BIT"/>
+            <arg column="order_id" javaType="java.lang.Long" jdbcType="BIGINT"/>
+            <arg column="price" javaType="java.lang.Integer" jdbcType="INTEGER"/>
         </constructor>
     </resultMap>
     <insert id="insert" parameterType="test.ticket.tickettools.domain.entity.TaskDetailEntity">
@@ -63,7 +65,13 @@
                     ID_card = #{entity.IDCard},
                 </if>
                 <if test='entity.updateDate!=null'>
-                    update_date = #{entity.updateDate}
+                    update_date = #{entity.updateDate},
+                </if>
+                <if test='entity.orderId!=null'>
+                    order_id = #{entity.orderId},
+                </if>
+                <if test='entity.price!=null'>
+                    price = #{entity.price}
                 </if>
             </set>
             <where>

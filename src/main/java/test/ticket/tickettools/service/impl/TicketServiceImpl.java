@@ -38,13 +38,8 @@ import test.ticket.tickettools.service.WebSocketServer;
 import test.ticket.tickettools.utils.AESUtil;
 import test.ticket.tickettools.utils.DateUtils;
 import test.ticket.tickettools.utils.ImageUtils;
-import test.ticket.tickettools.utils.SendMessageUtil;
 
 import javax.annotation.Resource;
-import javax.script.Invocable;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -60,7 +55,7 @@ import java.util.stream.Collectors;
 public class TicketServiceImpl implements TicketService {
     //-----------------------------科技馆----------------------------------
     //查询个人信息
-    private static String queryUserInfoUrl ="/prod-api/getUserInfoToIndividual";
+    private static String queryUserInfoUrl = "/prod-api/getUserInfoToIndividual";
     //获取场次url
     private static String getScheduleUrl = "https://pcticket.cstm.org.cn/prod-api/pool/getScheduleByHallId?hallId=1&openPerson=1&queryDate=%s&saleMode=1&single=true";
     //获取场次下余票url
@@ -78,9 +73,9 @@ public class TicketServiceImpl implements TicketService {
     private static String placeOrderUrl = "https://pcticket.cstm.org.cn/prod-api/config/orderRule/placeOrder";
     private static String wxPayForPcUrl = "https://pcticket.cstm.org.cn/prod-api/order/OrderInfo/wxPayForPc";
     //-------------------------------毛纪--------------------------
-    private static String mfuQueryUserInfoPath="/ajax?ugi=tg/account&action=logininfo&bundleid=com.maiget.tickets&moduleid=6f77be86038c47269f1e00f7ddee9af4";
+    private static String mfuQueryUserInfoPath = "/ajax?ugi=tg/account&action=logininfo&bundleid=com.maiget.tickets&moduleid=6f77be86038c47269f1e00f7ddee9af4";
 
-    private static List<String> doneList=new ArrayList<>();
+    private static List<String> doneList = new ArrayList<>();
 
     private static CloseableHttpClient httpClient = HttpClientBuilder.create()
             .setMaxConnTotal(100) // 设置最大连接数
@@ -104,7 +99,7 @@ public class TicketServiceImpl implements TicketService {
     @Override
     public ServiceResponse getCurrentUser(QueryTaskInfo queryTaskInfo) {
         try {
-            if(ChannelEnum.CSTM.getCode().equals(queryTaskInfo.getChannel())) {
+            if (ChannelEnum.CSTM.getCode().equals(queryTaskInfo.getChannel())) {
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_JSON);
                 headers.set("authority", "pcticket.cstm.org.cn");
@@ -113,7 +108,7 @@ public class TicketServiceImpl implements TicketService {
                 headers.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
                 HttpEntity entity = new HttpEntity<>(headers);
                 //获取场次下余票
-                ResponseEntity getUserInfoRes = restTemplate.exchange(ChannelEnum.CSTM.getBaseUrl()+queryUserInfoUrl, HttpMethod.GET, entity, String.class);
+                ResponseEntity getUserInfoRes = restTemplate.exchange(ChannelEnum.CSTM.getBaseUrl() + queryUserInfoUrl, HttpMethod.GET, entity, String.class);
                 JSONObject getUserInfoJson = JSON.parseObject(getUserInfoRes.getBody().toString());
                 if (getUserInfoJson == null || getUserInfoJson.getIntValue("code") != 200) {
                     log.info("获取用户信息失败：", getUserInfoJson);
@@ -128,10 +123,10 @@ public class TicketServiceImpl implements TicketService {
                 taskDao.updateAuthByPhone(taskEntity);
                 return ServiceResponse.createBySuccess(getUserInfoJson.get("user"));
             }
-            if(ChannelEnum.MFU.equals(queryTaskInfo.getChannel())){
+            if (ChannelEnum.MFU.equals(queryTaskInfo.getChannel())) {
 
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
@@ -140,11 +135,11 @@ public class TicketServiceImpl implements TicketService {
     @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRED)
     @Override
     public ServiceResponse addTaskInfo(TaskInfo taskInfo) {
-        TaskEntity taskEntity = JSON.parseObject(JSON.toJSONString(taskInfo),TaskEntity.class);
+        TaskEntity taskEntity = JSON.parseObject(JSON.toJSONString(taskInfo), TaskEntity.class);
         BeanUtils.copyProperties(taskInfo, taskEntity);
         Long userInfoId = taskInfo.getUserInfoId();
         UserInfoEntity userInfoEntity = userInfoDao.selectById(userInfoId);
-        if(userInfoEntity!=null){
+        if (userInfoEntity != null) {
             taskEntity.setAccount(userInfoEntity.getAccount());
             taskEntity.setPwd(userInfoEntity.getPwd());
         }
@@ -153,8 +148,8 @@ public class TicketServiceImpl implements TicketService {
             taskEntity.setAccount(taskInfo.getAccount());
             taskEntity.setAuth(taskInfo.getAuth());
             taskEntity.setUserInfoId(taskInfo.getUserInfoId());
-            Long userId = taskInfo.getSource()==0&&taskInfo.getChannel()==0?getUserId(taskEntity.getAuth()):taskInfo.getUserId();
-            if(ObjectUtils.isEmpty(userId)&&taskInfo.getChannel()==0){
+            Long userId = taskInfo.getSource() == 0 && taskInfo.getChannel() == 0 ? getUserId(taskEntity.getAuth()) : taskInfo.getUserId();
+            if (ObjectUtils.isEmpty(userId) && taskInfo.getChannel() == 0) {
                 return ServiceResponse.createByErrorMessage("获取用户Id失败");
             }
             taskEntity.setUserId(userId);
@@ -177,8 +172,8 @@ public class TicketServiceImpl implements TicketService {
             }
         } else {
             taskEntity.setUpdateDate(new Date());
-            Long userId = taskInfo.getSource()==0?getUserId(taskEntity.getAuth()):taskInfo.getUserId();
-            if(ObjectUtils.isEmpty(userId)){
+            Long userId = taskInfo.getSource() == 0 ? getUserId(taskEntity.getAuth()) : taskInfo.getUserId();
+            if (ObjectUtils.isEmpty(userId)) {
                 return ServiceResponse.createByErrorMessage("获取用户Id失败");
             }
             taskEntity.setAccount(userInfoEntity.getAccount());
@@ -190,9 +185,9 @@ public class TicketServiceImpl implements TicketService {
                 List<TaskDetailEntity> userList = taskInfo.getUserList();
                 List<TaskDetailEntity> addList = userList.stream().filter(o -> o.getId() == null).collect(Collectors.toList());
                 List<TaskDetailEntity> updateList = userList.stream().filter(o -> o.getId() != null).collect(Collectors.toList());
-                List<TaskDetailEntity> deleteList=new ArrayList<>();
+                List<TaskDetailEntity> deleteList = new ArrayList<>();
                 List<Long> taskDetailIds = updateList.stream().map(TaskDetailEntity::getId).collect(Collectors.toList());
-                if(updateList.size()!=all.size()) {
+                if (updateList.size() != all.size()) {
                     all.forEach(allEntity -> {
                         if (!taskDetailIds.contains(allEntity.getId())) {
                             deleteList.add(allEntity);
@@ -200,14 +195,14 @@ public class TicketServiceImpl implements TicketService {
                     });
                     taskDetailDao.deleteTaskDetailBath(deleteList);
                 }
-                if(!ObjectUtils.isEmpty(addList)) {
-                    addList.forEach(o->{
+                if (!ObjectUtils.isEmpty(addList)) {
+                    addList.forEach(o -> {
                         o.setCreateDate(new Date());
                         o.setTaskId(taskEntity.getId());
                     });
                     taskDetailDao.insertBatch(addList);
                 }
-                if(!ObjectUtils.isEmpty(updateList)) {
+                if (!ObjectUtils.isEmpty(updateList)) {
                     taskDetailDao.updateTaskDetailBath(updateList);
                 }
                 return ServiceResponse.createBySuccess();
@@ -219,7 +214,7 @@ public class TicketServiceImpl implements TicketService {
     @Override
     public ServiceResponse initTask(List<TaskDetailEntity> taskDetailEntityList) {
         Integer res = taskDetailDao.initTaskDetail(taskDetailEntityList);
-        if(res>0){
+        if (res > 0) {
             return ServiceResponse.createBySuccess();
         }
         return ServiceResponse.createByErrorMessage("重置失败");
@@ -259,7 +254,7 @@ public class TicketServiceImpl implements TicketService {
             for (TaskDetailEntity taskDetailEntity : taskDetailEntities) {
                 TaskInfoListResponse taskInfoListResponse = new TaskInfoListResponse();
                 taskInfoListResponse.setTaskId(id);
-                taskInfoListResponse.setAccount(ObjectUtils.isEmpty(userInfoEntity)?null:userInfoEntity.getUserName());
+                taskInfoListResponse.setAccount(ObjectUtils.isEmpty(userInfoEntity) ? null : userInfoEntity.getUserName());
                 taskInfoListResponse.setId(taskDetailEntity.getId());
                 taskInfoListResponse.setAuthorization(taskEntity.getAuth());
                 taskInfoListResponse.setAccount(taskEntity.getAccount());
@@ -272,6 +267,8 @@ public class TicketServiceImpl implements TicketService {
                 taskInfoListResponse.setTicketId(taskDetailEntity.getTicketId());
                 taskInfoListResponse.setChildrenTicket(taskDetailEntity.getChildrenTicket());
                 taskInfoListResponse.setChannel(taskEntity.getChannel());
+                taskInfoListResponse.setOrderId(taskDetailEntity.getOrderId());
+                taskInfoListResponse.setPrice(taskDetailEntity.getPrice());
                 list.add(taskInfoListResponse);
             }
         }
@@ -298,9 +295,9 @@ public class TicketServiceImpl implements TicketService {
     @Override
     public ServiceResponse delete(Long taskId) {
         Integer integer = taskDao.deleteByPrimaryKey(taskId);
-        if(integer>0){
+        if (integer > 0) {
             Integer res = taskDetailDao.deleteByTaskId(taskId);
-            if(res>0){
+            if (res > 0) {
                 return ServiceResponse.createBySuccess();
             }
             return ServiceResponse.createByErrorMessage("删除详情失败");
@@ -414,7 +411,7 @@ public class TicketServiceImpl implements TicketService {
     @Override
     public Boolean updateTaskDetail(TaskDetailEntity taskDetailEntity) {
         Integer integer = taskDetailDao.updateTaskDetail(taskDetailEntity);
-        return integer>0;
+        return integer > 0;
     }
 
     @Override
@@ -447,12 +444,15 @@ public class TicketServiceImpl implements TicketService {
             if (ObjectUtils.isEmpty(getPriceByScheduleData)) {
                 return;
             }
-            JSONArray scheduleTicketPoolVOS=new JSONArray();
+            JSONArray priceTicketPoolVOS = new JSONArray();
             for (int i = 0; i < getPriceByScheduleData.size(); i++) {
                 JSONObject priceByScheduleJson = getPriceByScheduleData.getJSONObject(i);
-                if(priceByScheduleJson.getIntValue("hallId")==1){
-                    scheduleTicketPoolVOS=priceByScheduleJson.getJSONArray("priceByScheduleJson");
-                    break;
+                if (priceByScheduleJson.getIntValue("hallId") == 1) {
+                    JSONArray scheduleTicketPoolVOS = priceByScheduleJson.getJSONArray("scheduleTicketPoolVOS");
+                    for (int j = 0; j < scheduleTicketPoolVOS.size(); j++) {
+                        priceTicketPoolVOS = scheduleTicketPoolVOS.getJSONObject(j).getJSONArray("priceTicketPoolVOS");
+                        break;
+                    }
                 }
             }
             boolean flag = true;
@@ -503,8 +503,8 @@ public class TicketServiceImpl implements TicketService {
             int childrenTicketPool = 0;
             int discountTicketPool = 0;
             int olderTicketPool = 0;
-            for (int i = 0; i < scheduleTicketPoolVOS.size(); i++) {
-                JSONObject obj = getPriceByScheduleData.getJSONObject(i);
+            for (int i = 0; i < priceTicketPoolVOS.size(); i++) {
+                JSONObject obj = priceTicketPoolVOS.getJSONObject(i);
                 if ("普通票".equals(obj.getString("priceName")) || "儿童免费票".equals(obj.getString("priceName")) || "优惠票".equals(obj.getString("priceName")) || "老人免费票".equals(obj.getString("priceName"))) {
                     if ("普通票".equals(obj.getString("priceName"))) {
                         ticketPool = obj.getIntValue("ticketPool");
@@ -593,7 +593,7 @@ public class TicketServiceImpl implements TicketService {
                     //log.info(exchange.getBody());
                     String body = exchange.getBody();
                     JSONObject bodyJson = JSON.parseObject(body);
-                    if(!ObjectUtils.isEmpty(bodyJson) && bodyJson.getIntValue("code") == 550){
+                    if (!ObjectUtils.isEmpty(bodyJson) && (bodyJson.getIntValue("code") == 550 || bodyJson.getIntValue("code") == 503)) {
                         try {
                             Files.delete(Paths.get(sliderImageName));
                             Files.delete(Paths.get(backImageName));
@@ -604,8 +604,8 @@ public class TicketServiceImpl implements TicketService {
                     }
                     //WebSocketServer.sendInfo("余票不足","web");
                     if (!ObjectUtils.isEmpty(bodyJson) && bodyJson.getIntValue("code") == 200) {
-                        log.info("提交订单结果：{}",body);
-                        //doneList.addAll(nameIDMap.values());
+                        log.info("提交订单结果：{}", body);
+                        /*//doneList.addAll(nameIDMap.values());
                         HttpEntity placeOrderEntity = new HttpEntity<>(buildPlaceOrderParam(priceNameCountMap.get("childrenTicket"), useDate, phone, bodyJson.getJSONArray("data").toJavaList(Long.class)), headers);
                         ResponseEntity<String> placeOrderRes = restTemplate.exchange(placeOrderUrl, HttpMethod.POST, placeOrderEntity, String.class);
                         String placeOrderBody = placeOrderRes.getBody();
@@ -619,15 +619,15 @@ public class TicketServiceImpl implements TicketService {
                                 e.printStackTrace();
                             }
                             return;
-                        }
+                        }*/
                         //查询个人订单
-                        headers.set("Referer","https://pcticket.cstm.org.cn/personal/car");
-                        HttpEntity searchEntity=new HttpEntity(headers);
+                        headers.set("Referer", "https://pcticket.cstm.org.cn/personal/car");
+                        HttpEntity searchEntity = new HttpEntity(headers);
                         ResponseEntity<String> searchResEntity = restTemplate.exchange(getShoppingCart, HttpMethod.GET, searchEntity, String.class);
                         String searchResBody = searchResEntity.getBody();
                         JSONObject searchBodyJson = JSON.parseObject(searchResBody);
-                        if(searchBodyJson==null||searchBodyJson.getIntValue("code")!=200){
-                            log.info("查询个人订单失败：{}",searchBodyJson);
+                        if (searchBodyJson == null || searchBodyJson.getIntValue("code") != 200) {
+                            log.info("查询个人订单失败：{}", searchBodyJson);
                             try {
                                 Files.delete(Paths.get(sliderImageName));
                                 Files.delete(Paths.get(backImageName));
@@ -651,13 +651,14 @@ public class TicketServiceImpl implements TicketService {
                                         taskDetailEntity.setChildrenTicket(item.getIntValue("isChildFreeTicket") == 1);
                                         taskDetailEntity.setTicketId(item.getLongValue("id"));
                                         taskDetailEntity.setDone(true);
+                                        taskDetailEntity.setPrice(item.getIntValue("sourcePrice"));
                                         taskDetailEntities.add(taskDetailEntity);
                                     }
                                 });
                             }
                         }
                         taskDetailDao.updateTaskDetailBath(taskDetailEntities);
-                        SendMessageUtil.send(SendMessageUtil.initMsg(ChannelEnum.CSTM.getDesc(), doSnatchInfo.getAccount(),String.join(",",doSnatchInfo.getIdNameMap().values())));
+                        //SendMessageUtil.send(ChannelEnum.CSTM.getDesc(), doSnatchInfo.getAccount(),String.join(",",doSnatchInfo.getIdNameMap().values()));
                         WebSocketServer.sendInfo(socketMsg("抢票成功", JSON.toJSONString(nameIDMap), 0), null);
                     }
                     /*if (!ObjectUtils.isEmpty(bodyJson) && bodyJson.getIntValue("code") == 550) {
@@ -678,7 +679,7 @@ public class TicketServiceImpl implements TicketService {
                 }
             }
         } catch (Exception e) {
-           e.printStackTrace();
+            e.printStackTrace();
         }
     }
 
@@ -699,46 +700,61 @@ public class TicketServiceImpl implements TicketService {
         headers.set("authorization", placeOrderInfo.getAuthorization());
         headers.set("cookie", "SL_G_WPT_TO=zh; SL_GWPT_Show_Hide_tmp=1; SL_wptGlobTipTmp=1");
         headers.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
-        JSONObject param = new JSONObject();
-        /*param.put("childTicketNum", placeOrderInfo.getChildTicketNum());
-        param.put("date", DateUtil.format(placeOrderInfo.getDate(), "yyyy-MM-dd"));
-        param.put("phone", placeOrderInfo.getLoginPhone());
-        param.put("platform", 1);
-        param.put("poolFlag", 1);
-        param.put("realNameFlag", 1);
-        param.put("saleMode", 1);
-        param.put("ticketInfoList", placeOrderInfo.getTicketInfoList());
-        param.put("id", placeOrderInfo.getTicketNum());*/
-        param.put("payType", 0);
-        HttpEntity entity = new HttpEntity<>(param, headers);
-        ResponseEntity<JSONObject> exchange = restTemplate.exchange(placeOrderUrl, HttpMethod.POST, entity, JSONObject.class);
-        log.info("提交订单结果:{}",exchange.getBody());
-        JSONObject placeOrderRes = exchange.getBody();
-        if (!ObjectUtils.isEmpty(placeOrderRes)) {
-            JSONObject orderData = placeOrderRes.getJSONObject("data");
-            String orderNumber = orderData.getString("orderNumber");
-            Integer needChargeCode = orderData.getInteger("needChargeCode");
-            List<TaskDetailEntity> updates=new ArrayList<>();
-            placeOrderInfo.getTaskDetailIds().forEach(o->{
-                TaskDetailEntity taskDetailEntity = new TaskDetailEntity();
-                taskDetailEntity.setId(o);
-                taskDetailEntity.setOrderNumber(orderNumber);
-                taskDetailEntity.setUpdateDate(new Date());
-                taskDetailEntity.setPayment(needChargeCode!=1);
-                updates.add(taskDetailEntity);
-            });
-            taskDetailDao.updateTaskDetailBath(updates);
-            if(needChargeCode!=1){
-                return null;
+        if (ObjectUtils.isEmpty(placeOrderInfo.getOrderId())) {
+            JSONObject placeOrderRes = new JSONObject();
+            JSONObject param = new JSONObject();
+            param.put("childTicketNum", placeOrderInfo.getChildTicketNum());
+            param.put("date", DateUtil.format(placeOrderInfo.getDate(), "yyyy-MM-dd"));
+            param.put("phone", placeOrderInfo.getLoginPhone());
+            param.put("platform", 1);
+            param.put("poolFlag", 1);
+            param.put("realNameFlag", 1);
+            param.put("saleMode", 1);
+            param.put("ticketInfoList", placeOrderInfo.getTicketInfoList());
+            param.put("ticketNum", placeOrderInfo.getTicketInfoList().size());
+            param.put("useTicketType", 1);
+            HttpEntity entity = new HttpEntity<>(param, headers);
+            ResponseEntity<JSONObject> exchange = restTemplate.exchange(placeOrderUrl, HttpMethod.POST, entity, JSONObject.class);
+            log.info("提交订单结果:{}", exchange.getBody());
+            placeOrderRes = exchange.getBody();
+            if (!ObjectUtils.isEmpty(placeOrderRes)) {
+                JSONObject orderData = placeOrderRes.getJSONObject("data");
+                long orderId = orderData.getLongValue("orderId");
+                String orderNumber = orderData.getString("orderNumber");
+                Integer needChargeCode = orderData.getInteger("needChargeCode");
+                List<TaskDetailEntity> updates = new ArrayList<>();
+                placeOrderInfo.getTaskDetailIds().forEach(o -> {
+                    TaskDetailEntity taskDetailEntity = new TaskDetailEntity();
+                    taskDetailEntity.setId(o);
+                    taskDetailEntity.setOrderNumber(orderNumber);
+                    taskDetailEntity.setUpdateDate(new Date());
+                    taskDetailEntity.setOrderId(orderId);
+                    taskDetailEntity.setPayment(needChargeCode != 1);
+                    updates.add(taskDetailEntity);
+                });
+                taskDetailDao.updateTaskDetailBath(updates);
+                if (needChargeCode != 1) {
+                    return null;
+                }
+                JSONObject payParam = new JSONObject();
+                payParam.put("id", orderId);
+                payParam.put("payType", 0);
+                HttpEntity payEntity = new HttpEntity<>(payParam, headers);
+                ResponseEntity<JSONObject> payResEntity = restTemplate.exchange(wxPayForPcUrl, HttpMethod.POST, payEntity, JSONObject.class);
+                JSONObject payRes = payResEntity.getBody();
+                log.info("后去支付url结果:{}", payRes);
+                if (!ObjectUtils.isEmpty(payRes) && payRes.getIntValue("code") == 200) {
+                    return payRes.getString("data");
+                }
             }
-            int orderId = orderData.getIntValue("orderId");
+        }else {
             JSONObject payParam = new JSONObject();
-            payParam.put("id", orderId);
+            payParam.put("id",placeOrderInfo.getOrderId());
             payParam.put("payType", 0);
             HttpEntity payEntity = new HttpEntity<>(payParam, headers);
             ResponseEntity<JSONObject> payResEntity = restTemplate.exchange(wxPayForPcUrl, HttpMethod.POST, payEntity, JSONObject.class);
             JSONObject payRes = payResEntity.getBody();
-            log.info("后去支付url结果:{}",payRes);
+            log.info("后去支付url结果:{}", payRes);
             if (!ObjectUtils.isEmpty(payRes) && payRes.getIntValue("code") == 200) {
                 return payRes.getString("data");
             }
@@ -746,7 +762,7 @@ public class TicketServiceImpl implements TicketService {
         return null;
     }
 
-    private Long getUserId(String auth){
+    private Long getUserId(String auth) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("authority", "pcticket.cstm.org.cn");
@@ -874,7 +890,7 @@ public class TicketServiceImpl implements TicketService {
         return param;
     }
 
-    private JSONObject buildPlaceOrderParam(Integer childTicketNum, String useDate, String phone, List<Long> ticketList){
+    private JSONObject buildPlaceOrderParam(Integer childTicketNum, String useDate, String phone, List<Long> ticketList) {
         JSONObject param = new JSONObject();
         param.put("childTicketNum", childTicketNum);
         param.put("date", useDate);
@@ -883,10 +899,10 @@ public class TicketServiceImpl implements TicketService {
         param.put("poolFlag", 1);
         param.put("realNameFlag", 1);
         param.put("saleMode", 1);
-        JSONArray ticketInfoList=new JSONArray();
+        JSONArray ticketInfoList = new JSONArray();
         for (Long ticketId : ticketList) {
-            JSONObject ticketInfo=new JSONObject();
-            ticketInfo.put("id",ticketId);
+            JSONObject ticketInfo = new JSONObject();
+            ticketInfo.put("id", ticketId);
             ticketInfoList.add(ticketInfo);
         }
         param.put("ticketInfoList", ticketInfoList);

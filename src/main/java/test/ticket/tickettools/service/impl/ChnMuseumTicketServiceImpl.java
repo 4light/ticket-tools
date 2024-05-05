@@ -505,7 +505,7 @@ public class ChnMuseumTicketServiceImpl implements ChnMuseumTicketService {
                 taskEntity.setUpdateDate(new Date());
                 taskDao.updateTask(taskEntity);
                 taskDetailDao.updateByTaskId(doSnatchInfo.getTaskId());
-                SendMessageUtil.send(SendMessageUtil.initMsg(ChannelEnum.CSTM.getDesc(),doSnatchInfo.getAccount(),String.join(",",doSnatchInfo.getIdNameMap().values())));
+                SendMessageUtil.send(ChannelEnum.CSTM.getDesc(),doSnatchInfo.getAccount(),String.join(",",doSnatchInfo.getIdNameMap().values()));
             }
         } catch (Exception e) {
             e.printStackTrace();

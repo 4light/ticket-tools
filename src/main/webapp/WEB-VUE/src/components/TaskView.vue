@@ -2,7 +2,7 @@
   <div>
     <el-form :inline="true" :model="queryParam" style="margin-top: 2em">
       <el-form-item label="渠道">
-        <el-select v-model="queryParam.channel">
+        <el-select v-model="queryParam.channel" clearable>
           <el-option
             v-for="item in channelList"
             :key="item.id"
@@ -30,9 +30,10 @@
       </el-form-item>
     </el-form>
     <div>
+<!--      :span-method="objectSpanMethod"-->
       <el-table
         :data="taskData"
-        :span-method="objectSpanMethod"
+        ref="multipleTable"
         border
         height="80vh"
         style="width: 100%; margin-top: 20px"
@@ -56,6 +57,10 @@
         <el-table-column
           prop="IDCard"
           label="身份证号">
+        </el-table-column>
+        <el-table-column
+          prop="price"
+          label="票价">
         </el-table-column>
         <el-table-column
           prop="useDate"
@@ -124,7 +129,7 @@
       style="height: 50em;overflow: unset"
       width="20%"
     >
-      <div id="qrcodeImg" style="text-align: center"></div>
+      <div id="qrcodeImg" style="text-align: center" v-if="showPayPic"></div>
     </el-dialog>
   </div>
 </template>
@@ -194,6 +199,7 @@ export default {
           "channelName": "故宫"
         }
       ],
+      showPayPic:false
     }
   },
   watch: {
@@ -406,13 +412,18 @@ export default {
         if (currentTaskId == 0) {
           currentTaskId = item.taskId
         }
-        if (item.done !== true) {
+        /*if (item.done !== true) {
           this.$alert("该订单还未抢到票!")
           return;
-        }
+        }*/
         if (item.taskId != currentTaskId) {
-          this.$alert("只能选择同一个手机号下的订单!")
-          return
+          this.$alert("只能选择同一个批次下的订单!")
+          let lastElement = val[val.length-1];
+          this.$refs.multipleTable.toggleRowSelection(lastElement,false);
+          val.pop()
+          this.selectTicket = val
+          console.log(this.selectTicket)
+          break;
         }
       }
     },
@@ -426,6 +437,7 @@ export default {
       })
     },
     pay() {
+      this.showPayPic=false
       this.payUrl=""
       let payParam = {}
       let ticketList = []
@@ -436,9 +448,10 @@ export default {
         payParam.taskId = item.taskId
         payParam.authorization = item.authorization
         payParam.date = item.useDate
-        payParam.loginPhone = item.loginPhone
+        payParam.loginPhone = item.account
         payParam.userName = item.userName
         payParam.IDCard = item.IDCard
+        payParam.orderId=item.orderId
         if (item.childrenTicket == true) {
           childrenCount += 1
         }
@@ -450,7 +463,6 @@ export default {
       payParam.ticketInfoList = ticketList
       payParam.childTicketNum = childrenCount
       payParam.ticketNum = this.selectTicket.length
-      this.showPayDialog = true;
       axios.post("/ticket/pay", payParam).then(res => {
         if (res.data.status != 0) {
           this.$notify.error({
@@ -462,7 +474,9 @@ export default {
           if(res.data.data&&res.data.data!="") {
             this.showPayDialog = true;
             this.payUrl = res.data.data
-            //this.qrcode(this.payUrl)
+            this.showPayDialog = true;
+            this.showPayPic=true
+            this.qrcode(this.payUrl)
           }
         }
       })
