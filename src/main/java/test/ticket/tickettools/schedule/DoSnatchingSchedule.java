@@ -125,6 +125,9 @@ public class DoSnatchingSchedule {
     @Scheduled(cron = "0/1 * 8-17,19-22 * * ?")
     public void doSingleSnatchOtherTime() {
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
+        if (ObjectUtils.isEmpty(allTaskForRun)) {
+            return;
+        }
         // 创建固定大小的线程池，确保线程数和数据量一样
         ExecutorService executor = Executors.newFixedThreadPool(allTaskForRun.size());
         ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) executor;
