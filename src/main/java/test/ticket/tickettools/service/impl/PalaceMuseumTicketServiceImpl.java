@@ -113,6 +113,8 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
             doSnatchInfo.setChannelUserId(userInfoEntity.getChannelUserId());
             doSnatchInfo.setUseDate(unDoneTask.getUseDate());
             doSnatchInfo.setSession(unDoneTask.getSession());
+            doSnatchInfo.setIp(unDoneTask.getIp());
+            doSnatchInfo.setPort(unDoneTask.getPort());
             List<Long> taskDetailIds = new ArrayList<>();
             Map<String, String> idNameMap = new HashMap<>();
             for (TaskDetailEntity detailEntity : taskDetailEntities) {
@@ -138,7 +140,8 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
         JSONArray parkFsyyDetailDTOs = new JSONArray();
         try {
             JSONObject currentParkFsyyDetail=new JSONObject();
-            RestTemplate restTemplate = TemplateUtil.initSSLTemplateWithProxy(doSnatchInfo.getIp(),doSnatchInfo.getPort());
+            //RestTemplate restTemplate = TemplateUtil.initSSLTemplateWithProxy(doSnatchInfo.getIp(),doSnatchInfo.getPort());
+            RestTemplate restTemplate=TemplateUtil.initSSLTemplate();
             HttpHeaders headers=new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             String headerStr = doSnatchInfo.getHeaders();
@@ -153,6 +156,7 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
             HttpEntity entity = new HttpEntity<>(headers);
             //查询当月余票
             Date useDate = doSnatchInfo.getUseDate();
+            String formatUseDate=DateUtils.dateToStr(useDate,"yyyy-MM-dd");
             LocalDate localDate = useDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
             int monthValue = localDate.getMonthValue();
             String month = monthValue > 10 ? String.valueOf(monthValue) : "0" + monthValue;
@@ -217,7 +221,7 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
             }
             headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
             HttpEntity getTicketEntity = new HttpEntity<>(headers);
-            String formatGetTicketGridUrl = String.format(getTicketGridUrl, useDate, useDate);
+            String formatGetTicketGridUrl = String.format(getTicketGridUrl, formatUseDate, formatUseDate);
             JSONObject ticketGridJson = TemplateUtil.getResponse(restTemplate, formatGetTicketGridUrl, HttpMethod.GET, getTicketEntity);
             if (ObjectUtils.isEmpty(ticketGridJson)) {
                 return;
@@ -240,8 +244,8 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
                 JSONObject tickCodeInfo = new JSONObject();
                 tickCodeInfo.put("modelCode", modelCode);
                 tickCodeInfo.put("externalCode", ticketInfo.getString("externalCode"));
-                tickCodeInfo.put("startTime", useDate);
-                tickCodeInfo.put("endTime", useDate);
+                tickCodeInfo.put("startTime", formatUseDate);
+                tickCodeInfo.put("endTime", formatUseDate);
                 if (StrUtil.equals("标准票", nickName)) {
                     typeTicketMap.put("normal", tickCodeInfo);
                 }
@@ -258,7 +262,7 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
                 ticketReserveList.add(tickCodeInfo);
             }
             headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
-            String addTicketUrl=String.format("https://lotswap.dpm.org.cn/lotsapi/merchant/api/merchantParkInfo/add_ticket/query?modelCodes=%s&occDate=%s&merchantId=2655&merchantInfoId=2655",String.join(",",modelCodes),useDate);
+            String addTicketUrl=String.format("https://lotswap.dpm.org.cn/lotsapi/merchant/api/merchantParkInfo/add_ticket/query?modelCodes=%s&occDate=%s&merchantId=2655&merchantInfoId=2655",String.join(",",modelCodes),formatUseDate);
             JSONObject response = TemplateUtil.getResponse(restTemplate, addTicketUrl, HttpMethod.GET, new HttpEntity<>(headers));
             log.info("add_ticket:{}",response);
             headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
@@ -278,7 +282,7 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
                 return;
             }
             //校验用户信息
-            Thread.sleep(2000);
+            Thread.sleep(3000);
             headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
             headers.setContentType(MediaType.APPLICATION_JSON);
             String formatDate = DateUtils.dateToStr(doSnatchInfo.getUseDate(), "yyyy-MM-dd");
