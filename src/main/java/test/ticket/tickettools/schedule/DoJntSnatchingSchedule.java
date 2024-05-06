@@ -29,7 +29,7 @@ public class DoJntSnatchingSchedule {
         jntTicketServiceImpl.initData();
     }
 
-    @Scheduled(cron = "0/15 00-59 22 * * ?")
+    @Scheduled(cron = "0/15 00-59 23 * * ?")
     public void doJntTicketSnatch(){
         List<DoSnatchInfo> doSnatchInfos = jntTicketServiceImpl.getDoSnatchInfos();
         if(ObjectUtils.isEmpty(doSnatchInfos)){
