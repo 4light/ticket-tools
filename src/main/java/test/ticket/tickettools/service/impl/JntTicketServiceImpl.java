@@ -77,22 +77,25 @@ public class JntTicketServiceImpl implements JntTicketService {
 
     @Override
     public void doSnatchingJnt(DoSnatchInfo doSnatchInfo) {
+        JSONObject proxy = ProxyUtil.getProxy();
+        RestTemplate restTemplate=TemplateUtil.initSSLTemplateWithProxy(proxy.getString("ip"), proxy.getInteger("port"));
+        String cookie1 = getCookie2(doSnatchInfo.getAccount(), doSnatchInfo.getPwd(),restTemplate);
         Map<String, JSONObject> sessionMap = new HashMap();
         HttpHeaders headers = new HttpHeaders();
         headers.set("Accept-Encoding", "gzip, deflate, br");
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("Origin", "https://jnt.mfu.com.cn");
+        headers.set("Host", "jnt.mfu.com.cn");
         headers.set("Referer", "https://jnt.mfu.com.cn/page/tg/login");
         headers.set("Sec-Fetch-Mode", "cors");
         headers.set("Sec-Fetch-Site", "same-origin");
         headers.set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36");
         headers.set("sec-ch-ua", "\"Google Chrome\";v=\"123\", \"Not:A-Brand\";v=\"8\", \"Chromium\";v=\"123\"");
         headers.set("sec-ch-ua-platform", "macOS");
-        headers.set("cookie",doSnatchInfo.getAuthorization());
+        headers.set("cookie",cookie1);
         //查询余票
         headers.set("Referer", "https://jnt.mfu.com.cn/page/tg");
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        RestTemplate restTemplate=TemplateUtil.initSSLTemplateWithProxy(doSnatchInfo.getIp(), doSnatchInfo.getPort());
         String queryFormat = MessageFormat.format("fromtype={0}&siteid={1}", "GROUP", "7e97d18d179c4791bab189f8de87ee9d");
         headers.set("Content-Length", String.valueOf(customURLEncode(queryFormat, "utf-8").getBytes(StandardCharsets.UTF_8).length));
         HttpEntity queryEntity = new HttpEntity<>(queryFormat, headers);
@@ -279,7 +282,7 @@ public class JntTicketServiceImpl implements JntTicketService {
     }
 
     private String getCookie(String userName, String pwd, String ip,Integer port) {
-        RestTemplate restTemplate = TemplateUtil.initSSLTemplate();
+        RestTemplate restTemplate = TemplateUtil.initSSLTemplateWithProxy(ip,port);
         if (!ObjectUtils.isEmpty(ip)&&!ObjectUtils.isEmpty(port)) {
             restTemplate = TemplateUtil.initSSLTemplateWithProxy(ip, port);
         }
@@ -322,6 +325,48 @@ public class JntTicketServiceImpl implements JntTicketService {
         return "i18n_redirected=zh;" + cookies.get(0).split(";")[0] + ";Hm_lpvt_2a985e9d9884d17b5ed7589beac18720=" + l + ";Hm_lvt_2a985e9d9884d17b5ed7589beac18720=" + l;
     }
 
+
+    private String getCookie2(String userName, String pwd, RestTemplate restTemplate) {
+
+        HttpHeaders headers = new HttpHeaders();
+        //获取Csrf
+        headers.set("Accept-Encoding", "gzip, deflate, br");
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Origin", "https://jnt.mfu.com.cn");
+        headers.set("Referer", "https://jnt.mfu.com.cn/page/tg/login");
+        headers.set("Sec-Fetch-Mode", "cors");
+        headers.set("Sec-Fetch-Site", "same-origin");
+        headers.set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36");
+        headers.set("sec-ch-ua", "\"Google Chrome\";v=\"123\", \"Not:A-Brand\";v=\"8\", \"Chromium\";v=\"123\"");
+        headers.set("sec-ch-ua-platform", "macOS");
+        HttpEntity getCsrfEntity = new HttpEntity<>(headers);
+        JSONObject getCsrfJson = TemplateUtil.getResponse(restTemplate, getCsrfUrl, HttpMethod.GET, getCsrfEntity);
+        if (ObjectUtils.isEmpty(getCsrfJson)) {
+            log.info("获取CSRF失败");
+            return null;
+        }
+        String csrf_req = getCsrfJson.getString("csrf_req");
+        String csrf_ts = getCsrfJson.getString("csrf_ts");
+        String csrf = DigestUtils.md5Hex(csrf_req + csrf_ts);
+        String bodyFormat = MessageFormat.format("loginid={0}&passwd={1}&csrf_req={2}&csrf_ts={3}&csrf={4}", userName, pwd, csrf_req, csrf_ts, csrf);
+        headers.set("Content-Length", String.valueOf(customURLEncode(bodyFormat, "utf-8").getBytes(StandardCharsets.UTF_8).length));
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        HttpEntity loginEntity = new HttpEntity<>(bodyFormat, headers);
+        ResponseEntity<String> doLogin = restTemplate.exchange(loginUrl, HttpMethod.POST, loginEntity, String.class);
+        HttpHeaders loginHeaders = doLogin.getHeaders();
+        List<String> cookies = loginHeaders.get("set-cookie");
+        List<String> date = loginHeaders.get("Date");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH);
+        LocalDateTime dateTime = LocalDateTime.parse(date.get(0), formatter);
+        LocalDateTime localDateTime = dateTime.plusHours(8);
+        long l = localDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() / 1000;
+        log.info("获取到cookie:{}", cookies.get(0));
+        if(cookies.get(0).contains("UTOKEN")){
+            return getCookie2(userName,pwd,restTemplate);
+        }
+        return "i18n_redirected=zh;" + cookies.get(0).split(";")[0] + ";Hm_lpvt_2a985e9d9884d17b5ed7589beac18720=" + l + ";Hm_lvt_2a985e9d9884d17b5ed7589beac18720=" + l;
+    }
+
     private void check(String captchaType, RestTemplate restTemplate, HttpHeaders headers) {
         //如果需要验证，请求下验证码
         //获取验证码图片
@@ -354,7 +399,7 @@ public class JntTicketServiceImpl implements JntTicketService {
                 getPointBody.put("token", "2J3UHYaDJTbELG55unhlt9JkNLKoLpcY9gsEOvbZ2Uc");
                 getPointBody.put("type", "30100");
                 HttpEntity entity = new HttpEntity<>(getPointBody, getPointHeaders);
-                JSONObject getPointRes = TemplateUtil.getResponse(restTemplate, getPointUrl, HttpMethod.POST, entity);
+                JSONObject getPointRes = TemplateUtil.getResponse(TemplateUtil.initSSLTemplate(), getPointUrl, HttpMethod.POST, entity);
                 if (ObjectUtils.isEmpty(getPointRes) || getPointRes.getIntValue("code") != 10000) {
                     log.info("获取图片坐标失败：{}", getPointRes);
                     return;

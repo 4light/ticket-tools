@@ -175,17 +175,29 @@ export default {
     ok() {
       let regex = /(.+?)\s(\d{18}|\d{17}[xX])/g;
       let list = [];
-
       let match;
-      while ((match = regex.exec(this.userText)) !== null) {
-        let name = match[1];
-        let id = match[2];
-
-        let obj = {
-          userName: name,
-          IDCard: id
-        };
-        list.push(obj);
+      if(this.form.channel!=2) {
+        while ((match = regex.exec(this.userText)) !== null) {
+          let name = match[1];
+          let id = match[2];
+          let obj = {
+            userName: name,
+            IDCard: id
+          };
+          list.push(obj);
+        }
+      }else{
+        match = passportRegex.exec(this.userText)
+        console.log(match)
+        while ((match = passportRegex.exec(this.userText)) !== null) {
+          let name = match[1];
+          let id = match[2];
+          let obj = {
+            userName: name,
+            IDCard: id
+          };
+          list.push(obj);
+        }
       }
       this.userList=this.userList.concat(list)
       this.isAddUser = false
