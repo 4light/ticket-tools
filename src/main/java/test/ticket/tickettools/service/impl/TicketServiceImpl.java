@@ -145,7 +145,6 @@ public class TicketServiceImpl implements TicketService {
         }
         if (ObjectUtils.isEmpty(taskInfo.getId())) {
             taskEntity.setCreateDate(new Date());
-            taskEntity.setAccount(taskInfo.getAccount());
             taskEntity.setAuth(taskInfo.getAuth());
             taskEntity.setUserInfoId(taskInfo.getUserInfoId());
             Long userId = taskInfo.getSource() == 0 && taskInfo.getChannel() == 0 ? getUserId(taskEntity.getAuth()) : taskInfo.getUserId();
@@ -333,6 +332,7 @@ public class TicketServiceImpl implements TicketService {
         LocalDate now = LocalDate.now();
         LocalDate snatchDate = now.plusDays(7L);
         TaskEntity taskEntity = new TaskEntity();
+        taskEntity.setChannel(ChannelEnum.CSTM.getCode());
         taskEntity.setUseDate(DateUtils.localDateToDate(snatchDate));
         List<TaskEntity> taskEntities = taskDao.getUnDoneTasks(taskEntity);
         if (ObjectUtils.isEmpty(taskEntities)) {
@@ -370,6 +370,7 @@ public class TicketServiceImpl implements TicketService {
         List<DoSnatchInfo> result = new ArrayList<>();
         TaskEntity taskEntity = new TaskEntity();
         taskEntity.setUseDate(DateUtils.localDateToDate(LocalDate.now()));
+        taskEntity.setChannel(ChannelEnum.CSTM.getCode());
         List<TaskEntity> allUnDoneTasks = taskDao.getAllUnDoneTasks(taskEntity);
         if (ObjectUtils.isEmpty(allUnDoneTasks)) {
             return result;

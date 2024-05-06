@@ -40,7 +40,6 @@ public class DoSnatchingSchedule {
     private static String searchByOrderNoUrl = "https://pcticket.cstm.org.cn/prod-api/order/OrderInfo/updateSearchByOrderNo";
     private static String updateSearchByOrderNoUrl = "https://pcticket.cstm.org.cn/prod-api/order/OrderInfo/updateSearchByOrderNo";
     private static RestTemplate restTemplate = new RestTemplate();
-    private static RejectedExecutionHandler rejectedExecutionHandler = new ThreadPoolExecutor.CallerRunsPolicy();
 
     @Resource
     TicketService ticketServiceImpl;

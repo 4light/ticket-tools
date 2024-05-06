@@ -4,7 +4,7 @@ import test.ticket.tickettools.domain.bo.DoSnatchInfo;
 
 import java.util.List;
 
-public interface ChnMuseumTicketService {
+public interface PalaceMuseumTicketService {
 
     void test();
 

@@ -6,32 +6,28 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.ObjectUtils;
-import test.ticket.tickettools.config.TaskExecutorConfig;
-import test.ticket.tickettools.dao.TaskDao;
 import test.ticket.tickettools.domain.bo.DoSnatchInfo;
-import test.ticket.tickettools.service.JntTicketService;
+import test.ticket.tickettools.service.PalaceMuseumTicketService;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 
 @Slf4j
 @Configuration
 @EnableScheduling
-public class DoJntSnatchingSchedule {
+public class DoPalaceMuseumSnatchingSchedule {
     @Resource
-    JntTicketService jntTicketServiceImpl;
+    PalaceMuseumTicketService palaceMuseumTicketServiceImpl;
 
-
-    //@Scheduled(cron = "0 26 21 * * ?")
+    @Scheduled(cron = "0 59 19 * * ?")
     public void initData(){
-        jntTicketServiceImpl.initData();
+        palaceMuseumTicketServiceImpl.initData();
     }
 
-    //@Scheduled(cron = "0/15 0-59 21 * * ?")
+    @Scheduled(cron = "0/3 2-30 20 * * ?")
     public void doJntTicketSnatch(){
-        List<DoSnatchInfo> doSnatchInfos = jntTicketServiceImpl.getDoSnatchInfos();
+        List<DoSnatchInfo> doSnatchInfos = palaceMuseumTicketServiceImpl.snatchingTicket();
         if(ObjectUtils.isEmpty(doSnatchInfos)){
             return;
         }
@@ -39,7 +35,7 @@ public class DoJntSnatchingSchedule {
         ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) executor;
         threadPoolExecutor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         for (DoSnatchInfo doSnatchInfo : doSnatchInfos) {
-            executor.execute(() -> jntTicketServiceImpl.doSnatchingJnt(doSnatchInfo));
+            executor.execute(() -> palaceMuseumTicketServiceImpl.doSnatchingTicket(doSnatchInfo));
         }
         // 提交完所有任务后，关闭线程池
         executor.shutdown();

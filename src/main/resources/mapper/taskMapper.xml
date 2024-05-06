@@ -66,6 +66,9 @@
             <if test='useDate!=null'>
                 AND use_date > #{useDate}
             </if>
+            <if test='channel!=null'>
+                AND channel = #{channel}
+            </if>
             and yn =0
         </where>
     </select>

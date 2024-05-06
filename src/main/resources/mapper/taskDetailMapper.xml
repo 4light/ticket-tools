@@ -140,6 +140,21 @@
     <update id="updateByTaskId" parameterType="java.lang.Long">
         update task_detail set done=true where task_id= #{taskId}
     </update>
+    <update id="updateEntityByTaskId" parameterType="test.ticket.tickettools.domain.entity.TaskDetailEntity">
+        update task_detail
+        <set>
+            <if test='done!=null'>
+                done = #{done},
+            </if>
+            <if test='updateDate!=null'>
+                update_date = #{updateDate},
+            </if>
+            <if test='orderNumber!=null'>
+                order_number = #{orderNumber}
+            </if>
+        </set>
+        where task_id= #{taskId}
+    </update>
     <update id="initTaskDetail" parameterType="test.ticket.tickettools.domain.entity.TaskDetailEntity">
         update task_detail
         <set>

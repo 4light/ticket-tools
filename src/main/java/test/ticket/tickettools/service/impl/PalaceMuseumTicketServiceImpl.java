@@ -1,7 +1,5 @@
 package test.ticket.tickettools.service.impl;
 
-import cn.hutool.core.io.FileUtil;
-import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
@@ -12,7 +10,6 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.client.RestTemplate;
@@ -20,18 +17,16 @@ import test.ticket.tickettools.dao.TaskDao;
 import test.ticket.tickettools.dao.TaskDetailDao;
 import test.ticket.tickettools.dao.UserInfoDao;
 import test.ticket.tickettools.domain.bo.DoSnatchInfo;
-import test.ticket.tickettools.domain.bo.ServiceResponse;
 import test.ticket.tickettools.domain.constant.ChannelEnum;
 import test.ticket.tickettools.domain.entity.TaskDetailEntity;
 import test.ticket.tickettools.domain.entity.TaskEntity;
 import test.ticket.tickettools.domain.entity.UserInfoEntity;
-import test.ticket.tickettools.service.ChnMuseumTicketService;
+import test.ticket.tickettools.service.PalaceMuseumTicketService;
 import test.ticket.tickettools.utils.*;
 
 import javax.annotation.Resource;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.time.LocalDate;
@@ -41,7 +36,7 @@ import java.util.*;
 
 @Slf4j
 @Service
-public class ChnMuseumTicketServiceImpl implements ChnMuseumTicketService {
+public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService {
 
     //获取余票信息
     private static final String getReserveListUrl = "https://lotswap.dpm.org.cn/lotsapi/order/api/batchTimeReserveList";
@@ -55,196 +50,8 @@ public class ChnMuseumTicketServiceImpl implements ChnMuseumTicketService {
     @Resource
     UserInfoDao userInfoDao;
 
-    /*private static final String useDate = "2024-05-02";
-    private static final String credentialNo = "13093019901216182X";
-    private static final String nickName = "王静";
-    private static final String userId = "724352769960521728";
-    private static final String phone = "17610773273";
-    private static String mpOpenId;
 
-    private static final Map<String, JSONObject> typeTicketMap = new HashMap();
-    private static final Map<String, JSONObject> modelCodeTicketInfoMap = new HashMap();
-    //记录有票的具体日期
-    private static final JSONArray parkFsyyDetailDTOs = new JSONArray();
-    //请求头JSON
-    private static JSONObject headerJson = new JSONObject();
-    //请求header
-    private static HttpHeaders headers = new HttpHeaders();
-    private static RestTemplate restTemplate;
-    private static JSONObject proxy=new JSONObject();
-
-
-    private static final Map<String, String> iDNameMap = new HashMap() {{
-        put("220281199211070019", "刘东辉");
-        put("220281197007200083", "刘坤");
-        put("370827198710060125", "王琨");
-        put("370921199101150928", "王雪");
-    }};*/
-
-    //@Scheduled(cron = "0/5 34 20 * * ?")
-    //@Scheduled(cron = "0/3 01-30 20 * * ?")
-    /*public void snatchingTicket()  {
-        try {
-            JSONObject currentParkFsyyDetail=new JSONObject();
-            restTemplate = TemplateUtil.initSSLTemplate();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            String headerStr = FileUtil.readString("/Users/devin.zhang/Desktop/record", Charset.defaultCharset());
-            headerJson = JSON.parseObject(headerStr);
-            LocalDate now = LocalDate.now();
-            for (Map.Entry<String, Object> headerEntry : headerJson.entrySet()) {
-                headers.set(headerEntry.getKey(), headerEntry.getValue().toString());
-            }
-            headers.set("Accept-Encoding", "gzip,compress,deflate");
-            headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
-            HttpEntity getUserEntity = new HttpEntity<>(headers);
-            JSONObject getUserJson = getResponse(restTemplate, queryUserInfoUrl, HttpMethod.GET, getUserEntity);
-            if (ObjectUtils.isEmpty(getUserJson)) {
-                return;
-            }
-            mpOpenId = headerJson.getString("mpOpenId");
-            //headers.set("mpOpenId", mpOpenId);
-            HttpEntity entity = new HttpEntity<>(headers);
-            //查询当月余票
-            LocalDate localDate = now.plusDays(7L);
-            int monthValue = now.getMonthValue();
-            if(localDate.getMonthValue()>now.getMonthValue()){
-                monthValue+=1;
-            }
-            String month = now.getMonthValue() > 10 ? String.valueOf(monthValue) : "0" + monthValue;
-            queryImperialPalaceTicketsUrl = String.format(queryImperialPalaceTicketsUrl, now.getYear(), month);
-            JSONObject responseJson = TemplateUtil.getResponse(restTemplate, queryImperialPalaceTicketsUrl, HttpMethod.GET, entity);
-            if (ObjectUtils.isEmpty(responseJson)) {
-                return;
-            }
-            JSONArray data = responseJson.getJSONArray("data");
-            if (ObjectUtils.isEmpty(data)) {
-                log.info("获取到的场次失败");
-                return;
-            }
-            boolean haveTicket = false;
-            outLoop:
-            for (int i = 0; i < data.size(); i++) {
-                JSONObject item = data.getJSONObject(i);
-                if (StrUtil.equals("T", item.getString("saleStatus")) && item.getIntValue("stockNum") == 1) {
-                    if (StrUtil.equals(useDate, item.getString("occDate"))) {
-                        JSONArray parkFsyyDetailDTOS = item.getJSONArray("parkFsyyDetailDTOS");
-                        if (!ObjectUtils.isEmpty(parkFsyyDetailDTOS)) {
-                            for (int j = 0; j < parkFsyyDetailDTOS.size(); j++) {
-                                JSONObject parkFsyyDetailJson = parkFsyyDetailDTOS.getJSONObject(j);
-                                if (parkFsyyDetailJson.getIntValue("stockNum") == 1 && parkFsyyDetailJson.getIntValue("totalNum") == 1) {
-                                    haveTicket = true;
-                                    parkFsyyDetailDTOs.add(parkFsyyDetailJson);
-                                    currentParkFsyyDetail=parkFsyyDetailJson;
-                                    break outLoop;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            //如果没有余票继续查询
-            if (!haveTicket) {
-                log.info("没有余票");
-                return;
-            }
-            headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
-            HttpEntity getTicketEntity = new HttpEntity<>(headers);
-            getTicketGridUrl = String.format(getTicketGridUrl, useDate, useDate);
-            JSONObject ticketGridJson = TemplateUtil.getResponse(restTemplate, getTicketGridUrl, HttpMethod.GET, getTicketEntity);
-            if (ObjectUtils.isEmpty(ticketGridJson)) {
-                return;
-            }
-            JSONArray ticketGridDataArr = ticketGridJson.getJSONArray("data");
-            JSONObject ticketGridItem = ObjectUtils.isEmpty(ticketGridDataArr) ? null : ticketGridDataArr.getJSONObject(0);
-            JSONArray ticketList = ticketGridItem == null ? null : ticketGridItem.getJSONArray("ticketList");
-            JSONArray ticketReserveList = new JSONArray();
-            if (ObjectUtils.isEmpty(ticketList)) {
-                return;
-            }
-            List<String> modelCodes=new ArrayList();
-            for (int i = 0; i < ticketList.size(); i++) {
-                JSONObject ticketInfo = ticketList.getJSONObject(i);
-                String nickName = ticketInfo.getString("nickName");
-                String modelCode = ticketInfo.getString("modelCode");
-                modelCodes.add(modelCode);
-                JSONObject tickCodeInfo = new JSONObject();
-                tickCodeInfo.put("modelCode", modelCode);
-                tickCodeInfo.put("externalCode", ticketInfo.getString("externalCode"));
-                tickCodeInfo.put("startTime", useDate);
-                tickCodeInfo.put("endTime", useDate);
-                if (StrUtil.equals("标准票", nickName)) {
-                    typeTicketMap.put("normal", tickCodeInfo);
-                }
-                if (StrUtil.equals("老年人票", nickName)) {
-                    typeTicketMap.put("old", tickCodeInfo);
-                }
-                if (StrUtil.equals("未成年人免费票", nickName)) {
-                    typeTicketMap.put("free", tickCodeInfo);
-                }
-                if (StrUtil.equals("学生票", nickName)) {
-                    typeTicketMap.put("student", tickCodeInfo);
-                }
-                //ticketInfo.put("parkFsyyDetailDTO", parkFsyyDetailDTO);
-                modelCodeTicketInfoMap.put(modelCode, ticketInfo);
-                ticketReserveList.add(tickCodeInfo);
-            }
-            headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
-            String addTicketUrl=String.format("https://lotswap.dpm.org.cn/lotsapi/merchant/api/merchantParkInfo/add_ticket/query?modelCodes=%s&occDate=%s&merchantId=2655&merchantInfoId=2655",String.join(",",modelCodes),useDate);
-
-            JSONObject response = TemplateUtil.getResponse(restTemplate, addTicketUrl, HttpMethod.GET, new HttpEntity<>(headers));
-            log.info("add_ticket:{}",response);
-            headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
-            String bodyFormat = MessageFormat.format("queryParam={0}&merchantId=2655&merchantInfoId=2655", ticketReserveList);
-            //需要设置content_type application/x-www-form-urlencoded
-            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-            URLEncoder.encode(bodyFormat, "utf-8");
-            headers.set("Content-Length", String.valueOf(customURLEncode(bodyFormat, "utf-8").getBytes(StandardCharsets.UTF_8).length));
-            HttpEntity getReserveListEntity = new HttpEntity<>(bodyFormat, headers);
-            JSONObject reserveListJson = TemplateUtil.getResponse(restTemplate, getReserveListUrl, HttpMethod.POST, getReserveListEntity);
-            if (ObjectUtils.isEmpty(reserveListJson)) {
-                return;
-            }
-            JSONArray reserveList = reserveListJson.getJSONArray("data");
-            if (ObjectUtils.isEmpty(reserveList)) {
-                log.info("批量获取余票数据失败batchTimeReserveList", reserveListJson);
-                return;
-            }
-            //校验用户信息
-            Thread.sleep(2000);
-            headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            JSONObject checkUserBody = buildCheckUserParam();
-            log.info("校验身份信息入参：{}", JSON.toJSONString(checkUserBody));
-            HttpEntity checkUserEntity = new HttpEntity<>(checkUserBody, headers);
-            JSONObject checkUserBodyJson = TemplateUtil.getResponse(restTemplate, checkUserUrl, HttpMethod.POST, checkUserEntity);
-            JSONObject checkUserData = checkUserBodyJson.getJSONObject("data");
-            log.info("身份验证信息:{}", checkUserData);
-            if (!ObjectUtils.isEmpty(checkUserData.getJSONArray("rejectCertAuthList"))) {
-                log.info("身份验证失败:{}", checkUserBodyJson);
-                return;
-            }
-            Thread.sleep(2000);
-            String accessToken = headerJson.getString("access-token");
-            headers.set("Accept-Encoding","gzip,compress,deflate");
-            modelCodeTicketInfoMap.put("parkFsyyDetailDTO", currentParkFsyyDetail);
-            long timestamp = System.currentTimeMillis();
-            String ts = String.valueOf(timestamp).substring(0, 11);
-            headers.set("ts", String.valueOf(timestamp/1000));
-            String signStr = "VDsdxfwljhy#@!94857access-token=" + accessToken + ts + "AAXY";
-            String sign = DigestUtils.md5Hex(signStr);
-            JSONObject jsonObject = buildCreateParam(mpOpenId, buildCheckUserParam());
-            log.info("创建订单入参：{}", jsonObject);
-            headers.setContentLength(JSON.toJSONString(jsonObject).getBytes(StandardCharsets.UTF_8).length);
-            log.info("headers：{}", headers);
-            HttpEntity addTicketQueryEntity = new HttpEntity<>(jsonObject, headers);
-            createUrl = String.format(createUrl, sign, timestamp);
-            JSONObject createRes = TemplateUtil.getResponse(restTemplate, createUrl, HttpMethod.POST, addTicketQueryEntity);
-            log.info("请求结果{}", createRes);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }*/
-    private String getChnMuUserInfoUrl="https://lotswap.dpm.org.cn/lotsapi/leaguer/api/userLeaguer/manage/leaguerInfo?cipherText=0&merchantId=2655&merchantInfoId=2655";
+    private String getPalaceMuUserInfoUrl ="https://lotswap.dpm.org.cn/lotsapi/leaguer/api/userLeaguer/manage/leaguerInfo?cipherText=0&merchantId=2655&merchantInfoId=2655";
 
 
     @Override
@@ -262,7 +69,7 @@ public class ChnMuseumTicketServiceImpl implements ChnMuseumTicketService {
             }
         });
         HttpEntity entity=new HttpEntity(headers);
-        JSONObject response = TemplateUtil.getResponse(TemplateUtil.initSSLTemplate(), getChnMuUserInfoUrl, HttpMethod.GET, entity);
+        JSONObject response = TemplateUtil.getResponse(TemplateUtil.initSSLTemplate(), getPalaceMuUserInfoUrl, HttpMethod.GET, entity);
         if(response==null||response.getIntValue("status")!=200){
             log.info("请求用户信息异常：{}",response);
         }
@@ -288,6 +95,15 @@ public class ChnMuseumTicketServiceImpl implements ChnMuseumTicketService {
         List<TaskEntity> unDoneTasks = taskDao.getUnDoneTasks(taskEntity);
         List<DoSnatchInfo> doSnatchInfoList = new ArrayList<>();
         for (TaskEntity unDoneTask : unDoneTasks) {
+            TaskDetailEntity taskDetailEntity = new TaskDetailEntity();
+            taskDetailEntity.setTaskId(unDoneTask.getId());
+            taskDetailEntity.setDone(false);
+            List<TaskDetailEntity> taskDetailEntities = taskDetailDao.selectByEntity(taskDetailEntity);
+            if(ObjectUtils.isEmpty(taskDetailEntities)){
+                unDoneTask.setDone(true);
+                taskDao.updateTask(unDoneTask);
+                continue;
+            }
             DoSnatchInfo doSnatchInfo = new DoSnatchInfo();
             doSnatchInfo.setTaskId(unDoneTask.getId());
             doSnatchInfo.setUserInfoId(unDoneTask.getUserInfoId());
@@ -297,10 +113,6 @@ public class ChnMuseumTicketServiceImpl implements ChnMuseumTicketService {
             doSnatchInfo.setChannelUserId(userInfoEntity.getChannelUserId());
             doSnatchInfo.setUseDate(unDoneTask.getUseDate());
             doSnatchInfo.setSession(unDoneTask.getSession());
-            TaskDetailEntity taskDetailEntity = new TaskDetailEntity();
-            taskDetailEntity.setTaskId(unDoneTask.getId());
-            taskDetailEntity.setDone(false);
-            List<TaskDetailEntity> taskDetailEntities = taskDetailDao.selectByEntity(taskDetailEntity);
             List<Long> taskDetailIds = new ArrayList<>();
             Map<String, String> idNameMap = new HashMap<>();
             for (TaskDetailEntity detailEntity : taskDetailEntities) {
@@ -337,7 +149,6 @@ public class ChnMuseumTicketServiceImpl implements ChnMuseumTicketService {
             }
             headers.set("Accept-Encoding", "gzip,compress,deflate");
             headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
-
             String mpOpenId = headerJson.getString("mpOpenId");
             HttpEntity entity = new HttpEntity<>(headers);
             //查询当月余票
@@ -504,7 +315,11 @@ public class ChnMuseumTicketServiceImpl implements ChnMuseumTicketService {
                 taskEntity.setDone(true);
                 taskEntity.setUpdateDate(new Date());
                 taskDao.updateTask(taskEntity);
-                taskDetailDao.updateByTaskId(doSnatchInfo.getTaskId());
+                TaskDetailEntity taskDetailEntity=new TaskDetailEntity();
+                taskDetailEntity.setTaskId(doSnatchInfo.getTaskId());
+                taskDetailEntity.setUpdateDate(new Date());
+                taskDetailEntity.setOrderNumber(createRes.getJSONObject("data").getString("orderCode"));
+                taskDetailDao.updateEntityByTaskId(taskDetailEntity);
                 SendMessageUtil.send(ChannelEnum.CSTM.getDesc(),doSnatchInfo.getAccount(),String.join(",",doSnatchInfo.getIdNameMap().values()));
             }
         } catch (Exception e) {
