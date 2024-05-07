@@ -1,5 +1,7 @@
 package test.ticket.tickettools.service.impl;
 
+import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
@@ -27,6 +29,7 @@ import test.ticket.tickettools.utils.*;
 import javax.annotation.Resource;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.time.LocalDate;
@@ -140,11 +143,12 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
         JSONArray parkFsyyDetailDTOs = new JSONArray();
         try {
             JSONObject currentParkFsyyDetail=new JSONObject();
-            //RestTemplate restTemplate = TemplateUtil.initSSLTemplateWithProxy(doSnatchInfo.getIp(),doSnatchInfo.getPort());
-            RestTemplate restTemplate=TemplateUtil.initSSLTemplate();
+            RestTemplate restTemplate = TemplateUtil.initSSLTemplateWithProxy(doSnatchInfo.getIp(),doSnatchInfo.getPort());
+            //RestTemplate restTemplate=TemplateUtil.initSSLTemplate();
             HttpHeaders headers=new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             String headerStr = doSnatchInfo.getHeaders();
+            //String headerStr = FileUtil.readString("/Users/devin.zhang/Desktop/record", Charset.defaultCharset());
             JSONObject headerJson = JSON.parseObject(headerStr);
             LocalDate now = LocalDate.now();
             for (Map.Entry<String, Object> headerEntry : headerJson.entrySet()) {
@@ -161,6 +165,7 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
             int monthValue = localDate.getMonthValue();
             String month = monthValue > 10 ? String.valueOf(monthValue) : "0" + monthValue;
             String formatQueryImperialPalaceTicketsUrl = String.format(queryImperialPalaceTicketsUrl, now.getYear(), month);
+            Thread.sleep(RandomUtil.randomInt(3000,3500));
             JSONObject responseJson = TemplateUtil.getResponse(restTemplate, formatQueryImperialPalaceTicketsUrl, HttpMethod.GET, entity);
             if (ObjectUtils.isEmpty(responseJson)) {
                 return;
@@ -222,6 +227,7 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
             headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
             HttpEntity getTicketEntity = new HttpEntity<>(headers);
             String formatGetTicketGridUrl = String.format(getTicketGridUrl, formatUseDate, formatUseDate);
+            Thread.sleep(RandomUtil.randomInt(3000,3500));
             JSONObject ticketGridJson = TemplateUtil.getResponse(restTemplate, formatGetTicketGridUrl, HttpMethod.GET, getTicketEntity);
             if (ObjectUtils.isEmpty(ticketGridJson)) {
                 return;
@@ -263,6 +269,7 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
             }
             headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
             String addTicketUrl=String.format("https://lotswap.dpm.org.cn/lotsapi/merchant/api/merchantParkInfo/add_ticket/query?modelCodes=%s&occDate=%s&merchantId=2655&merchantInfoId=2655",String.join(",",modelCodes),formatUseDate);
+            Thread.sleep(RandomUtil.randomInt(3000,3500));
             JSONObject response = TemplateUtil.getResponse(restTemplate, addTicketUrl, HttpMethod.GET, new HttpEntity<>(headers));
             log.info("add_ticket:{}",response);
             headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
@@ -272,6 +279,7 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
             URLEncoder.encode(bodyFormat, "utf-8");
             headers.set("Content-Length", String.valueOf(customURLEncode(bodyFormat, "utf-8").getBytes(StandardCharsets.UTF_8).length));
             HttpEntity getReserveListEntity = new HttpEntity<>(bodyFormat, headers);
+            Thread.sleep(RandomUtil.randomInt(2500,3500));
             JSONObject reserveListJson = TemplateUtil.getResponse(restTemplate, getReserveListUrl, HttpMethod.POST, getReserveListEntity);
             if (ObjectUtils.isEmpty(reserveListJson)) {
                 return;
@@ -282,13 +290,13 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
                 return;
             }
             //校验用户信息
-            Thread.sleep(3000);
             headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
             headers.setContentType(MediaType.APPLICATION_JSON);
             String formatDate = DateUtils.dateToStr(doSnatchInfo.getUseDate(), "yyyy-MM-dd");
             JSONObject checkUserBody = buildCheckUserParam(doSnatchInfo.getIdNameMap(),formatDate,typeTicketMap);
             log.info("校验身份信息入参：{}", JSON.toJSONString(checkUserBody));
             HttpEntity checkUserEntity = new HttpEntity<>(checkUserBody, headers);
+            Thread.sleep(RandomUtil.randomInt(3000,3500));
             JSONObject checkUserBodyJson = TemplateUtil.getResponse(restTemplate, checkUserUrl, HttpMethod.POST, checkUserEntity);
             JSONObject checkUserData = checkUserBodyJson.getJSONObject("data");
             log.info("身份验证信息:{}", checkUserData);
@@ -296,7 +304,6 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
                 log.info("身份验证失败:{}", checkUserBodyJson);
                 return;
             }
-            Thread.sleep(2000);
             String accessToken = headerJson.getString("access-token");
             headers.set("Accept-Encoding","gzip,compress,deflate");
             modelCodeTicketInfoMap.put("parkFsyyDetailDTO", currentParkFsyyDetail);
@@ -311,6 +318,7 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
             log.info("headers：{}", headers);
             HttpEntity addTicketQueryEntity = new HttpEntity<>(jsonObject, headers);
             String formatCreateUrl = String.format(createUrl, sign, timestamp);
+            Thread.sleep(RandomUtil.randomInt(3000,3500));
             JSONObject createRes = TemplateUtil.getResponse(restTemplate, formatCreateUrl, HttpMethod.POST, addTicketQueryEntity);
             log.info("请求结果{}", createRes);
             if(createRes.getIntValue("code")==200){
@@ -322,9 +330,10 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
                 TaskDetailEntity taskDetailEntity=new TaskDetailEntity();
                 taskDetailEntity.setTaskId(doSnatchInfo.getTaskId());
                 taskDetailEntity.setUpdateDate(new Date());
+                taskDetailEntity.setDone(true);
                 taskDetailEntity.setOrderNumber(createRes.getJSONObject("data").getString("orderCode"));
                 taskDetailDao.updateEntityByTaskId(taskDetailEntity);
-                SendMessageUtil.send(ChannelEnum.CSTM.getDesc(),doSnatchInfo.getAccount(),String.join(",",doSnatchInfo.getIdNameMap().values()));
+                SendMessageUtil.send(ChannelEnum.LOTS.getDesc(),formatDate,currentParkFsyyDetail.getString("fsTimeName"),doSnatchInfo.getAccount(),String.join(",",doSnatchInfo.getIdNameMap().values()));
             }
         } catch (Exception e) {
             e.printStackTrace();
