@@ -24,12 +24,12 @@ public class DoJntSnatchingSchedule {
     JntTicketService jntTicketServiceImpl;
 
 
-    //@Scheduled(cron = "0 56 20 * * ?")
+    @Scheduled(cron = "0 29 12 * * ?")
     public void initData(){
         jntTicketServiceImpl.initData();
     }
 
-    //@Scheduled(cron = "0/15 00-59 23 * * ?")
+    @Scheduled(cron = "0/2 30-35 12 * * ?")
     public void doJntTicketSnatch(){
         List<DoSnatchInfo> doSnatchInfos = jntTicketServiceImpl.getDoSnatchInfos();
         if(ObjectUtils.isEmpty(doSnatchInfos)){

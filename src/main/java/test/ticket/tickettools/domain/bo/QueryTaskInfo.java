@@ -12,6 +12,7 @@ public class QueryTaskInfo {
     private Date useDate;
     private Boolean done;
     private PageParam page;
+    private Long userInfoId;
 
     public String getAccount() {
         return account;
@@ -76,5 +77,13 @@ public class QueryTaskInfo {
 
     public void setDone(Boolean done) {
         this.done = done;
+    }
+
+    public Long getUserInfoId() {
+        return userInfoId;
+    }
+
+    public void setUserInfoId(Long userInfoId) {
+        this.userInfoId = userInfoId;
     }
 }

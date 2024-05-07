@@ -122,7 +122,7 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
             Map<String, String> idNameMap = new HashMap<>();
             for (TaskDetailEntity detailEntity : taskDetailEntities) {
                 taskDetailIds.add(detailEntity.getId());
-                idNameMap.put(detailEntity.getIDCard(), detailEntity.getUserName());
+                idNameMap.put(detailEntity.getIDCard().trim(), detailEntity.getUserName().trim());
             }
             doSnatchInfo.setTaskDetailIds(taskDetailIds);
             doSnatchInfo.setIdNameMap(idNameMap);
@@ -313,9 +313,7 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
             String signStr = "VDsdxfwljhy#@!94857access-token=" + accessToken + ts + "AAXY";
             String sign = DigestUtils.md5Hex(signStr);
             JSONObject jsonObject = buildCreateParam(mpOpenId, checkUserBody,doSnatchInfo,modelCodeTicketInfoMap);
-            log.info("创建订单入参：{}", jsonObject);
             headers.setContentLength(JSON.toJSONString(jsonObject).getBytes(StandardCharsets.UTF_8).length);
-            log.info("headers：{}", headers);
             HttpEntity addTicketQueryEntity = new HttpEntity<>(jsonObject, headers);
             String formatCreateUrl = String.format(createUrl, sign, timestamp);
             Thread.sleep(RandomUtil.randomInt(3000,3500));

@@ -1,12 +1,12 @@
 <template>
   <div style="height:85vh">
     <el-form ref="form" :model="form" label-width="80px">
-<!--      <el-form-item label="手机号">
-        <el-input v-model="form.loginPhone" style="width: 30%"></el-input>
-      </el-form-item>
-      <el-form-item label="请求头">
-        <el-input v-model="form.auth" type="textarea" style="width: 30%"></el-input>
-      </el-form-item>-->
+      <!--      <el-form-item label="手机号">
+              <el-input v-model="form.loginPhone" style="width: 30%"></el-input>
+            </el-form-item>
+            <el-form-item label="请求头">
+              <el-input v-model="form.auth" type="textarea" style="width: 30%"></el-input>
+            </el-form-item>-->
       <el-form-item label="渠道">
         <el-select v-model="form.channel" @change="changeChannel">
           <el-option
@@ -33,26 +33,26 @@
           </el-option>
         </el-select>
       </el-form-item>
-<!--      <el-form-item label="场馆">
-        <el-select v-model="form.venue">
-          <el-option
-            v-for="item in venueList"
-            :key="item.id"
-            :label="item.venueName"
-            :value="item.id">
-          </el-option>
-        </el-select>
-      </el-form-item>
-      <el-form-item label="场次">
-        <el-select v-model="form.session">
-          <el-option
-            v-for="item in sessionList"
-            :key="item.id"
-            :label="item.sessionName"
-            :value="item.id">
-          </el-option>
-        </el-select>
-      </el-form-item>-->
+      <!--      <el-form-item label="场馆">
+              <el-select v-model="form.venue">
+                <el-option
+                  v-for="item in venueList"
+                  :key="item.id"
+                  :label="item.venueName"
+                  :value="item.id">
+                </el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="场次">
+              <el-select v-model="form.session">
+                <el-option
+                  v-for="item in sessionList"
+                  :key="item.id"
+                  :label="item.sessionName"
+                  :value="item.id">
+                </el-option>
+              </el-select>
+            </el-form-item>-->
       <el-form-item label="使用时间">
         <el-date-picker type="date" placeholder="选择日期" v-model="form.useDate"
                         format="yyyy-MM-dd"></el-date-picker>
@@ -111,18 +111,18 @@ import axios from "axios";
 
 export default {
   name: "TaskEditView",
-  props:{
-    taskInfo:{}
+  props: {
+    taskInfo: {}
   },
   data() {
     return {
       form: {
-        "userId":null,
+        "userId": null,
         "channel": null,
         "venue": 1,
         "session": 23,
-        "userInfoId":null,
-        "source":0
+        "userInfoId": null,
+        "source": 0
       },
       channelList: [
         {
@@ -138,8 +138,8 @@ export default {
           "channelName": "故宫"
         }
       ],
-      userIdList:[],
-      currentUserIdList:[],
+      userIdList: [],
+      currentUserIdList: [],
       venueList: [
         {
           "id": 1,
@@ -156,62 +156,49 @@ export default {
       userText: "",
       userList: [],
       showUserList: false,
-      session:["0","1"]
+      session: ["0", "1"]
     }
   },
   /* watch: {
      'userText': 'getNewData',
    },*/
   methods: {
-    edit(){
-      this.form=this.taskInfo
-      this.userList=this.taskInfo.userList
-      this.showUserList=true
+    edit() {
+      this.form = this.taskInfo
+      this.userList = this.taskInfo.userList
+      this.showUserList = true
     },
     addUser() {
       this.isAddUser = true
       this.userText = ""
     },
     ok() {
-      let regex = /(.+?)\s(\d{18}|\d{17}[xX])/g;
-      let passportRegex=/(.*)\s(.*)/g
+      let regex = /(.+?)\s+(.+)/g;
       let list = [];
       let match;
-      if(this.form.channel!=2) {
-        while ((match = regex.exec(this.userText)) !== null) {
-          let name = match[1];
-          let id = match[2];
-          let obj = {
-            userName: name,
-            IDCard: id
-          };
-          list.push(obj);
-        }
-      }else{
-        while ((match = passportRegex.exec(this.userText)) !== null) {
-          let name = match[1];
-          let id = match[2];
-          let obj = {
-            userName: name,
-            IDCard: id
-          };
-          list.push(obj);
-        }
+      while ((match = regex.exec(this.userText)) !== null) {
+        let name = match[1];
+        let id = match[2];
+        let obj = {
+          userName: name,
+          IDCard: id
+        };
+        list.push(obj);
       }
-      this.userList=this.userList.concat(list)
+      this.userList = this.userList.concat(list)
       this.isAddUser = false
       this.showUserList = true
     },
     onSubmit() {
-      if (this.form.channel==0&&this.userList.length > 15) {
-        this.$alert("最多只能添加15条，请检查","添加失败")
+      if (this.form.channel == 0 && this.userList.length > 15) {
+        this.$alert("最多只能添加15条，请检查", "添加失败")
         return
       }
-      if(this.form.channel==2){
-        if(this.session.length==1){
-          this.form.session=parseInt(this.session[0])
-        }else{
-          this.form.session=null
+      if (this.form.channel == 2) {
+        if (this.session.length == 1) {
+          this.form.session = parseInt(this.session[0])
+        } else {
+          this.form.session = null
         }
       }
       this.form.userList = this.userList
@@ -237,10 +224,10 @@ export default {
     close() {
       this.$emit("close")
     },
-    getUserIdList(){
-      let queryParam={
+    getUserIdList() {
+      let queryParam = {
         userName: '',
-          account: ''
+        account: ''
       }
       axios.post("/ticket/user/list", queryParam).then(res => {
         if (res.data.status != 0) {
@@ -254,14 +241,14 @@ export default {
         }
       })
     },
-    changeChannel(){
-      let newUserIdList=[]
-      for(let o of this.userIdList){
-        if(o.channel==this.form.channel){
+    changeChannel() {
+      let newUserIdList = []
+      for (let o of this.userIdList) {
+        if (o.channel == this.form.channel) {
           newUserIdList.push(o)
         }
       }
-      this.currentUserIdList=newUserIdList
+      this.currentUserIdList = newUserIdList
     }
   }
 }

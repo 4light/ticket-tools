@@ -138,7 +138,7 @@
         where id = #{id}
     </update>
     <update id="updateByTaskId" parameterType="java.lang.Long">
-        update task_detail set done=true where task_id= #{taskId}
+        update task_detail set done=1 where task_id= #{taskId}
     </update>
     <update id="updateEntityByTaskId" parameterType="test.ticket.tickettools.domain.entity.TaskDetailEntity">
         update task_detail

@@ -88,6 +88,9 @@
         <if test='channel!=null'>
             AND channel = #{channel}
         </if>
+        <if test='userInfoId!=null'>
+            AND user_info_id = #{userInfoId}
+        </if>
         and yn =0
         order by id DESC
     </select>

@@ -1,5 +1,6 @@
 package test.ticket.tickettools.service.impl;
 
+import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
@@ -102,7 +103,7 @@ public class JntTicketServiceImpl implements JntTicketService {
             return;
         }
         if (StrUtil.equals(queryRes.getString("code"), "A00013")) {
-            while (true) {
+            for (int i=0;i<5;i++){
                 check(queryRes.getString("captcha_type"), restTemplate, headers);
                 queryRes = TemplateUtil.getResponse(restTemplate, bookingQueryUrl, HttpMethod.POST, queryEntity);
                 if (StrUtil.equals(queryRes.getString("code"), "A00006")) {
@@ -135,7 +136,7 @@ public class JntTicketServiceImpl implements JntTicketService {
         taskEntity.setDone(true);
         for (Map.Entry<String, JSONObject> sessionEntity : sessionMap.entrySet()) {
             try {
-                Thread.sleep(2000);
+                Thread.sleep(RandomUtil.randomInt(2000,3000));
                 log.info("当前session:{}", sessionEntity.getKey());
                 String key = sessionEntity.getKey();
                 JSONObject value = sessionEntity.getValue();
@@ -182,9 +183,9 @@ public class JntTicketServiceImpl implements JntTicketService {
                 JSONObject submitRes = TemplateUtil.getResponse(restTemplate, submitUrl, HttpMethod.POST, submitEntity);
                 log.info("请求结果:{}", submitRes);
                 if (StrUtil.equals(submitRes.getString("code"), "A00006")) {
-                    log.info("id:{}抢票成功，具体时间：{}", doSnatchInfo.getTaskId(),value.getString("summary"));
                     taskDao.updateTask(taskEntity);
                     taskDetailDao.updateByTaskId(doSnatchInfo.getTaskId());
+                    SendMessageUtil.send(ChannelEnum.MFU.getDesc(),formatDate,value.getString("summary"),doSnatchInfo.getAccount(),String.join(",",doSnatchInfo.getIdNameMap().values()));
                     break;
                 }
                 if (StrUtil.equals(submitRes.getString("code"), "A00013")) {
@@ -194,6 +195,7 @@ public class JntTicketServiceImpl implements JntTicketService {
                     if (StrUtil.equals(submitRes.getString("code"), "A00006")) {
                         taskDao.updateTask(taskEntity);
                         taskDetailDao.updateByTaskId(doSnatchInfo.getTaskId());
+                        SendMessageUtil.send(ChannelEnum.MFU.getDesc(),formatDate,value.getString("summary"),doSnatchInfo.getAccount(),String.join(",",doSnatchInfo.getIdNameMap().values()));
                         break;
                     }
                     if(StrUtil.equals("A00004", submitRes.getString("code"))){
@@ -205,6 +207,7 @@ public class JntTicketServiceImpl implements JntTicketService {
                         if (StrUtil.equals(submitRes.getString("code"), "A00006")) {
                             taskDao.updateTask(taskEntity);
                             taskDetailDao.updateByTaskId(doSnatchInfo.getTaskId());
+                            SendMessageUtil.send(ChannelEnum.MFU.getDesc(),formatDate,value.getString("summary"),doSnatchInfo.getAccount(),String.join(",",doSnatchInfo.getIdNameMap().values()));
                             break;
                         }
                     }
@@ -269,7 +272,7 @@ public class JntTicketServiceImpl implements JntTicketService {
             Map<String, String> idNameMap = new HashMap<>();
             for (TaskDetailEntity detailEntity : taskDetailEntities) {
                 taskDetailIds.add(detailEntity.getId());
-                idNameMap.put(detailEntity.getIDCard(), detailEntity.getUserName());
+                idNameMap.put(detailEntity.getIDCard().trim(), detailEntity.getUserName().trim());
             }
             doSnatchInfo.setTaskDetailIds(taskDetailIds);
             doSnatchInfo.setIdNameMap(idNameMap);

@@ -12,7 +12,14 @@
         </el-select>
       </el-form-item>
       <el-form-item label="账号">
-        <el-input v-model="queryParam.account" placeholder="账号" clearable></el-input>
+        <el-select v-model="queryParam.userInfoId" clearable>
+          <el-option
+            v-for="item in userIdList"
+            :key="item.id"
+            :label="item.userName"
+            :value="item.id">
+          </el-option>
+        </el-select>
       </el-form-item>
       <el-form-item label="使用时间">
         <el-date-picker
@@ -30,24 +37,32 @@
       </el-form-item>
     </el-form>
     <div>
-<!--      :span-method="objectSpanMethod"-->
       <el-table
         :data="taskData"
         ref="multipleTable"
         border
         height="80vh"
         style="width: 100%; margin-top: 20px"
+        :span-method="objectSpanMethod"
         @selection-change="handleSelectionChange"
       >
+        <el-table-column
+          prop="taskId"
+          label="任务Id"
+          :width="80"
+        >
+        </el-table-column>
         <el-table-column
           prop="account"
           label="账号">
         </el-table-column>
         <el-table-column
           prop="channel"
-          label="渠道">
+          label="渠道"
+          :width="80"
+        >
           <template slot-scope="{ row }">
-            <div>{{ channelObj[row.channel]}}</div>
+            <div>{{ channelObj[row.channel] }}</div>
           </template>
         </el-table-column>
         <el-table-column
@@ -60,13 +75,16 @@
         </el-table-column>
         <el-table-column
           prop="price"
-          label="票价">
+          label="票价"
+          :width="80"
+        >
         </el-table-column>
         <el-table-column
           prop="useDate"
           label="使用时间">
         </el-table-column>
         <el-table-column
+          :width="80"
           label="抢票结果">
           <template slot-scope="scope">
             <el-link class="el-icon-success" type="success" v-if="scope.row.done" :underline="false"></el-link>
@@ -74,10 +92,13 @@
           </template>
         </el-table-column>
         <el-table-column
+          :width="80"
           label="支付结果">
           <template slot-scope="scope">
-            <el-link class="el-icon-success" type="success" v-if="scope.row.payment&&scope.row.channel==0" :underline="false"></el-link>
-            <el-link icon="el-icon-error" type="danger" v-if="!scope.row.payment&&scope.row.channel==0" :underline="false"></el-link>
+            <el-link class="el-icon-success" type="success" v-if="scope.row.payment&&scope.row.channel==0"
+                     :underline="false"></el-link>
+            <el-link icon="el-icon-error" type="danger" v-if="!scope.row.payment&&scope.row.channel==0"
+                     :underline="false"></el-link>
             <p v-if="scope.row.channel!=0">--</p>
           </template>
         </el-table-column>
@@ -151,6 +172,7 @@ export default {
   },
   mounted() {
     this.onSubmit()
+    this.getUserIdList()
   },
   data() {
     return {
@@ -199,7 +221,8 @@ export default {
           "channelName": "故宫"
         }
       ],
-      showPayPic:false
+      showPayPic: false,
+      userIdList: []
     }
   },
   watch: {
@@ -275,6 +298,23 @@ export default {
         }
       })
     },
+    getUserIdList() {
+      let queryParam = {
+        userName: '',
+        account: ''
+      }
+      axios.post("/ticket/user/list", queryParam).then(res => {
+        if (res.data.status != 0) {
+          this.$notify.error({
+            title: '查询用户列表失败',
+            message: res.data.msg,
+            duration: 2000
+          });
+        } else {
+          this.userIdList = res.data.data
+        }
+      })
+    },
     addTask() {
       this.showDialog = true
       setTimeout(() => {
@@ -340,12 +380,12 @@ export default {
         columnIndex // 将列索引作为判断值
         ) {
         // 通过传递不同的列索引和需要合并的属性名，可以实现不同列的合并（索引0,1 指的是页面上的0,1）
-        case 0:
+        /*case 0:
           return this.mergeCol("account", rowIndex);
         case 1:
-          return this.mergeCol("account", rowIndex);
-        case 9:
-          return this.mergeCol("account", rowIndex)
+          return this.mergeCol("account", rowIndex);*/
+        case 11:
+          return this.mergeCol("taskId", rowIndex)
       }
     },
     handleSizeChange(val) {
@@ -418,8 +458,8 @@ export default {
         }*/
         if (item.taskId != currentTaskId) {
           this.$alert("只能选择同一个批次下的订单!")
-          let lastElement = val[val.length-1];
-          this.$refs.multipleTable.toggleRowSelection(lastElement,false);
+          let lastElement = val[val.length - 1];
+          this.$refs.multipleTable.toggleRowSelection(lastElement, false);
           val.pop()
           this.selectTicket = val
           console.log(this.selectTicket)
@@ -437,8 +477,8 @@ export default {
       })
     },
     pay() {
-      this.showPayPic=false
-      this.payUrl=""
+      this.showPayPic = false
+      this.payUrl = ""
       let payParam = {}
       let ticketList = []
       let taskDetailIds = []
@@ -451,7 +491,7 @@ export default {
         payParam.loginPhone = item.account
         payParam.userName = item.userName
         payParam.IDCard = item.IDCard
-        payParam.orderId=item.orderId
+        payParam.orderId = item.orderId
         if (item.childrenTicket == true) {
           childrenCount += 1
         }
@@ -471,11 +511,11 @@ export default {
             duration: 2000
           });
         } else {
-          if(res.data.data&&res.data.data!="") {
+          if (res.data.data && res.data.data != "") {
             this.showPayDialog = true;
             this.payUrl = res.data.data
             this.showPayDialog = true;
-            this.showPayPic=true
+            this.showPayPic = true
             this.qrcode(this.payUrl)
           }
         }

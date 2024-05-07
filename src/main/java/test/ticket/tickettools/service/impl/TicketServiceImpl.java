@@ -243,6 +243,7 @@ public class TicketServiceImpl implements TicketService {
         query.setChannel(queryTaskInfo.getChannel());
         query.setAccount(queryTaskInfo.getAccount());
         query.setUseDate(queryTaskInfo.getUseDate());
+        query.setUserInfoId(queryTaskInfo.getUserInfoId());
         List<TaskEntity> taskEntities = taskDao.fuzzyQuery(query);
         List<TaskInfoListResponse> list = new ArrayList<>();
         for (TaskEntity taskEntity : taskEntities) {
