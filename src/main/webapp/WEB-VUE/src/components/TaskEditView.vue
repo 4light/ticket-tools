@@ -174,6 +174,7 @@ export default {
     },
     ok() {
       let regex = /(.+?)\s(\d{18}|\d{17}[xX])/g;
+      let passportRegex=/(.*)\s(.*)/g
       let list = [];
       let match;
       if(this.form.channel!=2) {
@@ -187,8 +188,6 @@ export default {
           list.push(obj);
         }
       }else{
-        match = passportRegex.exec(this.userText)
-        console.log(match)
         while ((match = passportRegex.exec(this.userText)) !== null) {
           let name = match[1];
           let id = match[2];
@@ -211,6 +210,8 @@ export default {
       if(this.form.channel==2){
         if(this.session.length==1){
           this.form.session=parseInt(this.session[0])
+        }else{
+          this.form.session=null
         }
       }
       this.form.userList = this.userList
