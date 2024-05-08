@@ -88,13 +88,13 @@ public class UserServiceImpl implements UserService {
         JSONObject data = response.getJSONObject("data");
         UserInfoEntity userInfoEntity=new UserInfoEntity();
         userInfoEntity.setChannel(ChannelEnum.LOTS.getCode());
-        userInfoEntity.setChannelUserId(data.getString("userId"));
         String account = data.getString("mobile") == null ? data.getString("email") : data.getString("mobile");
         userInfoEntity.setAccount(account);
         List<UserInfoEntity> res = userInfoDao.select(userInfoEntity);
         if(res.size()>0){
             //更新
             res.forEach(o->{
+                o.setChannelUserId(data.getString("userId"));
                 o.setHeaders(proxyHeadersStr);
                 o.setUpdateDate(new Date());
                 userInfoDao.insertOrUpdate(o);
