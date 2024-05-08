@@ -257,7 +257,8 @@ public class TicketServiceImpl implements TicketService {
                 taskInfoListResponse.setAccount(ObjectUtils.isEmpty(userInfoEntity) ? null : userInfoEntity.getUserName());
                 taskInfoListResponse.setId(taskDetailEntity.getId());
                 taskInfoListResponse.setAuthorization(taskEntity.getAuth());
-                taskInfoListResponse.setAccount(taskEntity.getAccount());
+                //使用名字好区分
+                taskInfoListResponse.setAccount(userInfoEntity.getUserName());
                 taskInfoListResponse.setUseDate(taskEntity.getUseDate());
                 taskInfoListResponse.setUserName(taskDetailEntity.getUserName());
                 taskInfoListResponse.setIDCard(taskDetailEntity.getIDCard());

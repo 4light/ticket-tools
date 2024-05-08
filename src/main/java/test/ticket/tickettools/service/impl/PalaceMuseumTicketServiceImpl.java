@@ -316,7 +316,7 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
             headers.setContentLength(JSON.toJSONString(jsonObject).getBytes(StandardCharsets.UTF_8).length);
             HttpEntity addTicketQueryEntity = new HttpEntity<>(jsonObject, headers);
             String formatCreateUrl = String.format(createUrl, sign, timestamp);
-            Thread.sleep(RandomUtil.randomInt(3000,3500));
+            Thread.sleep(RandomUtil.randomInt(2000,3500));
             JSONObject createRes = TemplateUtil.getResponse(restTemplate, formatCreateUrl, HttpMethod.POST, addTicketQueryEntity);
             log.info("请求结果{}", createRes);
             if(createRes.getIntValue("code")==200){
@@ -347,17 +347,22 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
         for (Map.Entry<String, String> nameIDMapEntry : iDNameMap.entrySet()) {
             String idCard = nameIDMapEntry.getKey();
             String name = nameIDMapEntry.getValue();
+            //如果是护照之类的直接添加到成人
+            if(idCard.length()<17){
+                normal = buildItem(normal, idCard, name, "normal",typeTicketMap,true);
+                continue;
+            }
             Integer age = GetAgeForIdCardUtil.getAge(idCard);
             if (age >= 0 && age < 18) {
-                free = buildItem(free, idCard, name, "free",typeTicketMap);
+                free = buildItem(free, idCard, name, "free",typeTicketMap,false);
                 continue;
             }
             if (age >= 60) {
-                old = buildItem(old, idCard, name, "old",typeTicketMap);
+                old = buildItem(old, idCard, name, "old",typeTicketMap,false);
                 continue;
             }
             //学生后续优化
-            normal = buildItem(normal, idCard, name, "normal",typeTicketMap);
+            normal = buildItem(normal, idCard, name, "normal",typeTicketMap,false);
         }
         List ticketVerificationDTOS = new ArrayList();
         if (!ObjectUtils.isEmpty(normal)) {
@@ -378,17 +383,17 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
         return param;
     }
 
-    private JSONObject buildItem(JSONObject item, String idCard, String name, String type,Map<String, JSONObject> typeTicketMap) {
+    private JSONObject buildItem(JSONObject item, String idCard, String name, String type,Map<String, JSONObject> typeTicketMap,boolean isPassport) {
         if (item.get("certAuthDTOS") == null) {
             item.put("certAuthDTOS", Arrays.asList(new HashMap() {{
-                put("cardType", 0);
+                put("cardType", isPassport?2:0);
                 put("certNo", idCard);
                 put("name", name);
             }}));
         } else {
             List certAuthDTOS = item.getJSONArray("certAuthDTOS").toJavaList(Object.class);
             JSONObject certAuthDTO = new JSONObject();
-            certAuthDTO.put("cardType", 0);
+            certAuthDTO.put("cardType", isPassport?2:0);
             certAuthDTO.put("certNo", idCard);
             certAuthDTO.put("name", name);
             certAuthDTOS.add(certAuthDTO);
@@ -407,13 +412,14 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
 
     private JSONObject buildCreateParam(String openId, JSONObject checkParam,DoSnatchInfo doSnatchInfo,Map<String, JSONObject> modelCodeTicketInfoMap) {
         JSONObject param = new JSONObject();
+        Map<String, String> buyerMap = getBuyerMap(doSnatchInfo.getIdNameMap());
         param.put("buyer", new HashMap<String, Object>() {{
             put("id", doSnatchInfo.getChannelUserId());
             put("openId", openId);
             put("mobile", doSnatchInfo.getAccount());
-            put("credentialNo", getBuyerMap(doSnatchInfo.getIdNameMap()).get("idCard"));
+            put("credentialNo", buyerMap.get("idCard"));
             put("credentialType", "0");
-            put("nickName", getBuyerMap(doSnatchInfo.getIdNameMap()).get("name"));
+            put("nickName", buyerMap.get("name"));
         }});
         String dateStr = DateUtils.dateToStr(doSnatchInfo.getUseDate(), "yyyy-MM-dd");
         param.put("couponCode", "");
@@ -441,7 +447,7 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
                 JSONObject certAuthDTO = certAuthDTOS.getJSONObject(j);
                 certAuthList.add(new HashMap<String, Object>() {{
                     put("realName", certAuthDTO.getString("name"));
-                    put("certType", 0);
+                    put("certType", certAuthDTO.getIntValue("certType"));
                     put("certNo", certAuthDTO.getString("certNo"));
                 }});
             }
@@ -467,6 +473,11 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
         for (Map.Entry<String, String> nameIDMapEntry : iDNameMap.entrySet()) {
             String idCard = nameIDMapEntry.getKey();
             String name = nameIDMapEntry.getValue();
+            if(idCard.length()<17){
+                normalMap.put("name",name);
+                normalMap.put("idCard",idCard);
+                break;
+            }
             Integer age = GetAgeForIdCardUtil.getAge(idCard);
             if(!ObjectUtils.isEmpty(age)){
                 if(age>18&&age<60){
