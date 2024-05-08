@@ -91,7 +91,6 @@ public class UserServiceImpl implements UserService {
         userInfoEntity.setChannelUserId(data.getString("userId"));
         String account = data.getString("mobile") == null ? data.getString("email") : data.getString("mobile");
         userInfoEntity.setAccount(account);
-        userInfoEntity.setUserName(account);
         List<UserInfoEntity> res = userInfoDao.select(userInfoEntity);
         if(res.size()>0){
             //更新
