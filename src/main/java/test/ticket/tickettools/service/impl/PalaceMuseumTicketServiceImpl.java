@@ -168,6 +168,7 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
             Thread.sleep(RandomUtil.randomInt(3000,3500));
             JSONObject responseJson = TemplateUtil.getResponse(restTemplate, formatQueryImperialPalaceTicketsUrl, HttpMethod.GET, entity);
             if (ObjectUtils.isEmpty(responseJson)) {
+                log.info("responseJson:{}",responseJson);
                 return;
             }
             JSONArray data = responseJson.getJSONArray("data");
