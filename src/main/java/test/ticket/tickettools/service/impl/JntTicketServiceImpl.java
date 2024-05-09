@@ -301,7 +301,16 @@ public class JntTicketServiceImpl implements JntTicketService {
         JSONObject getCsrfJson = TemplateUtil.getResponse(restTemplate, getCsrfUrl, HttpMethod.GET, getCsrfEntity);
         if (ObjectUtils.isEmpty(getCsrfJson)) {
             log.info("获取CSRF失败");
-            return null;
+            //重试5次
+            for (int i = 0; i < 5; i++) {
+                getCsrfJson=TemplateUtil.getResponse(restTemplate, getCsrfUrl, HttpMethod.GET, getCsrfEntity);
+                if(!ObjectUtils.isEmpty(getCsrfJson)&&StrUtil.equals("A00006",getCsrfJson.getString("code"))){
+                    break;
+                }
+            }
+            if(ObjectUtils.isEmpty(getCsrfJson)){
+                return null;
+            }
         }
         String csrf_req = getCsrfJson.getString("csrf_req");
         String csrf_ts = getCsrfJson.getString("csrf_ts");
