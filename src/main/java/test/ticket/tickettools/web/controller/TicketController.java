@@ -9,6 +9,7 @@ import test.ticket.tickettools.domain.bo.*;
 import test.ticket.tickettools.domain.entity.UserInfoEntity;
 import test.ticket.tickettools.domain.entity.TaskDetailEntity;
 import test.ticket.tickettools.service.LoginService;
+import test.ticket.tickettools.service.PalaceMuseumTicketService;
 import test.ticket.tickettools.service.TicketService;
 import test.ticket.tickettools.service.WebSocketServer;
 
@@ -24,6 +25,8 @@ public class TicketController {
 
     @Resource
     TicketService ticketServiceImpl;
+    @Resource
+    PalaceMuseumTicketService palaceMuseumTicketServiceImpl;
 
     @PostMapping(value = "/user")
     public ServiceResponse<PageableResponse<TaskInfoListResponse>> getUser(@RequestBody QueryTaskInfo queryTaskInfo) {
@@ -113,10 +116,7 @@ public class TicketController {
 
     @GetMapping(value = "/test")
     public void sss(){
-        JSONObject res=new JSONObject();
-        res.put("title","测试");
-        res.put("msg","233223");
-        res.put("time",0);
-        WebSocketServer.sendInfo(JSON.toJSONString(res), "web");
+        List<DoSnatchInfo> doSnatchInfoList = palaceMuseumTicketServiceImpl.snatchingTicket();
+        doSnatchInfoList.forEach(o->palaceMuseumTicketServiceImpl.doSnatchingTicket(o));
     }
 }
