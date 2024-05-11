@@ -235,44 +235,48 @@ public class JntTicketServiceImpl implements JntTicketService {
         ExecutorService executor = Executors.newFixedThreadPool(unDoneTasks.size());
         ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) executor;
         threadPoolExecutor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
-        for (TaskEntity unDoneTask : unDoneTasks) {
-            executor.execute(() -> {
-                if(unDoneTask.getUpdateDate()!=null&&unDoneTask.getIp()!=null&&unDoneTask.getPort()!=null){
-                    return;
+        try {
+            for (TaskEntity unDoneTask : unDoneTasks) {
+                executor.execute(() -> {
+                    if (unDoneTask.getUpdateDate() != null && unDoneTask.getIp() != null && unDoneTask.getPort() != null) {
+                        return;
+                    }
+                    JSONObject proxy = ProxyUtil.getProxy();
+                    unDoneTask.setIp(proxy.getString("ip"));
+                    unDoneTask.setPort(proxy.getInteger("port"));
+                    UserInfoEntity userInfoEntity = new UserInfoEntity();
+                    if (ObjectUtils.isEmpty(unDoneTask.getUserInfoId())) {
+                        UserInfoEntity userInfo = new UserInfoEntity();
+                        userInfo.setChannel(ChannelEnum.MFU.getCode());
+                        userInfo.setStatus(false);
+                        List<UserInfoEntity> select = userInfoDao.select(userInfo);
+                        userInfoEntity = select.get((int) (select.size() * Math.random()));
+                    } else {
+                        userInfoEntity = userInfoDao.selectById(unDoneTask.getUserInfoId());
+                    }
+                    unDoneTask.setUserInfoId(userInfoEntity.getId());
+                    unDoneTask.setAccount(userInfoEntity.getAccount());
+                    unDoneTask.setPwd(userInfoEntity.getPwd());
+                    //获取cookie
+                    String cookie = getCookie(userInfoEntity.getAccount(), userInfoEntity.getPwd(), proxy.getString("ip"), proxy.getInteger("port"));
+                    if (ObjectUtils.isEmpty(cookie)) {
+                        return;
+                    }
+                    unDoneTask.setAuth(cookie);
+                    unDoneTask.setUpdateDate(new Date());
+                    taskDao.updateTask(unDoneTask);
+                });
+                // 提交完所有任务后，关闭线程池
+                executor.shutdown();
+                // 等待所有任务执行完毕
+                try {
+                    executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
-                JSONObject proxy = ProxyUtil.getProxy();
-                unDoneTask.setIp(proxy.getString("ip"));
-                unDoneTask.setPort(proxy.getInteger("port"));
-                UserInfoEntity userInfoEntity = new UserInfoEntity();
-                if (ObjectUtils.isEmpty(unDoneTask.getUserInfoId())) {
-                    UserInfoEntity userInfo = new UserInfoEntity();
-                    userInfo.setChannel(ChannelEnum.MFU.getCode());
-                    userInfo.setStatus(false);
-                    List<UserInfoEntity> select = userInfoDao.select(userInfo);
-                    userInfoEntity = select.get((int) (select.size() * Math.random()));
-                } else {
-                    userInfoEntity = userInfoDao.selectById(unDoneTask.getUserInfoId());
-                }
-                unDoneTask.setUserInfoId(userInfoEntity.getId());
-                unDoneTask.setAccount(userInfoEntity.getAccount());
-                unDoneTask.setPwd(userInfoEntity.getPwd());
-                //获取cookie
-                String cookie = getCookie(userInfoEntity.getAccount(), userInfoEntity.getPwd(), proxy.getString("ip"), proxy.getInteger("port"));
-                if(ObjectUtils.isEmpty(cookie)){
-                    return;
-                }
-                unDoneTask.setAuth(cookie);
-                unDoneTask.setUpdateDate(new Date());
-                taskDao.updateTask(unDoneTask);
-            });
-            // 提交完所有任务后，关闭线程池
-            executor.shutdown();
-            // 等待所有任务执行完毕
-            try {
-                executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
             }
+        }catch (Exception e){
+            e.printStackTrace();
         }
     }
 
