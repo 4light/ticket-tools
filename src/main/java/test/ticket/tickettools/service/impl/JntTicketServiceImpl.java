@@ -5,6 +5,7 @@ import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import javafx.beans.binding.ObjectExpression;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.http.*;
@@ -35,6 +36,10 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 
 @Slf4j
@@ -224,27 +229,50 @@ public class JntTicketServiceImpl implements JntTicketService {
         TaskEntity taskEntity = new TaskEntity();
         taskEntity.setChannel(ChannelEnum.MFU.getCode());
         List<TaskEntity> unDoneTasks = taskDao.getUnDoneTasks(taskEntity);
+        if(ObjectUtils.isEmpty(unDoneTasks)){
+            return;
+        }
+        ExecutorService executor = Executors.newFixedThreadPool(unDoneTasks.size());
+        ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) executor;
+        threadPoolExecutor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         for (TaskEntity unDoneTask : unDoneTasks) {
-            JSONObject proxy = ProxyUtil.getProxy();
-            unDoneTask.setIp(proxy.getString("ip"));
-            unDoneTask.setPort(proxy.getInteger("port"));
-            UserInfoEntity userInfoEntity=new UserInfoEntity();
-            if (ObjectUtils.isEmpty(unDoneTask.getUserInfoId())) {
-                UserInfoEntity userInfo = new UserInfoEntity();
-                userInfo.setChannel(ChannelEnum.MFU.getCode());
-                userInfo.setStatus(false);
-                List<UserInfoEntity> select = userInfoDao.select(userInfo);
-                userInfoEntity = select.get((int) (select.size()*Math.random()));
-            } else {
-                userInfoEntity = userInfoDao.selectById(unDoneTask.getUserInfoId());
+            executor.execute(() -> {
+                if(unDoneTask.getUpdateDate()!=null&&unDoneTask.getIp()!=null&&unDoneTask.getPort()!=null){
+                    return;
+                }
+                JSONObject proxy = ProxyUtil.getProxy();
+                unDoneTask.setIp(proxy.getString("ip"));
+                unDoneTask.setPort(proxy.getInteger("port"));
+                UserInfoEntity userInfoEntity = new UserInfoEntity();
+                if (ObjectUtils.isEmpty(unDoneTask.getUserInfoId())) {
+                    UserInfoEntity userInfo = new UserInfoEntity();
+                    userInfo.setChannel(ChannelEnum.MFU.getCode());
+                    userInfo.setStatus(false);
+                    List<UserInfoEntity> select = userInfoDao.select(userInfo);
+                    userInfoEntity = select.get((int) (select.size() * Math.random()));
+                } else {
+                    userInfoEntity = userInfoDao.selectById(unDoneTask.getUserInfoId());
+                }
+                unDoneTask.setUserInfoId(userInfoEntity.getId());
+                unDoneTask.setAccount(userInfoEntity.getAccount());
+                unDoneTask.setPwd(userInfoEntity.getPwd());
+                //获取cookie
+                String cookie = getCookie(userInfoEntity.getAccount(), userInfoEntity.getPwd(), proxy.getString("ip"), proxy.getInteger("port"));
+                if(ObjectUtils.isEmpty(cookie)){
+                    return;
+                }
+                unDoneTask.setAuth(cookie);
+                unDoneTask.setUpdateDate(new Date());
+                taskDao.updateTask(unDoneTask);
+            });
+            // 提交完所有任务后，关闭线程池
+            executor.shutdown();
+            // 等待所有任务执行完毕
+            try {
+                executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
-            unDoneTask.setUserInfoId(userInfoEntity.getId());
-            unDoneTask.setAccount(userInfoEntity.getAccount());
-            unDoneTask.setPwd(userInfoEntity.getPwd());
-            //获取cookie
-            String cookie = getCookie(userInfoEntity.getAccount(), userInfoEntity.getPwd(), proxy.getString("ip"), proxy.getInteger("port"));
-            unDoneTask.setAuth(cookie);
-            taskDao.updateTask(unDoneTask);
         }
     }
 
@@ -302,22 +330,7 @@ public class JntTicketServiceImpl implements JntTicketService {
         JSONObject getCsrfJson = TemplateUtil.getResponse(restTemplate, getCsrfUrl, HttpMethod.GET, getCsrfEntity);
         if (ObjectUtils.isEmpty(getCsrfJson)) {
             log.info("重试获取CSRF");
-            //重试10次
-            for (int i = 0; i < 10; i++) {
-                try {
-                    Thread.sleep(RandomUtil.randomInt(1000,2000));
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                getCsrfJson=TemplateUtil.getResponse(restTemplate, getCsrfUrl, HttpMethod.GET, getCsrfEntity);
-                if(!ObjectUtils.isEmpty(getCsrfJson)&&StrUtil.equals("A00006",getCsrfJson.getString("code"))){
-                    break;
-                }
-            }
-            if(ObjectUtils.isEmpty(getCsrfJson)){
-                log.info("获取CSRF失败：{}",getCsrfEntity);
-                return null;
-            }
+            return null;
         }
         String csrf_req = getCsrfJson.getString("csrf_req");
         String csrf_ts = getCsrfJson.getString("csrf_ts");

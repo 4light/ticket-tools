@@ -114,6 +114,9 @@
             <artifactId>commons-codec</artifactId>
             <version>1.11</version>
         </dependency>
+        <!-- 添加 JSEncrypt 库依赖 -->
+        <!-- https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk18on -->
+
     </dependencies>
 
     <profiles>

@@ -169,10 +169,12 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
             String formatQueryImperialPalaceTicketsUrl = String.format(queryImperialPalaceTicketsUrl, now.getYear(), month);
             Thread.sleep(RandomUtil.randomInt(3000,3500));
             JSONObject responseJson = TemplateUtil.getResponse(restTemplate, formatQueryImperialPalaceTicketsUrl, HttpMethod.GET, entity);
-            if (ObjectUtils.isEmpty(responseJson)) {
+            if (ObjectUtils.isEmpty(responseJson)||responseJson.getIntValue("code")!=200) {
                 log.info("responseJson:{}",responseJson);
                 return;
             }
+            String decCalendarTicketsStr = EncDecUtil.decData(responseJson.getString("privateKey"), responseJson.getString("data"));
+            responseJson=JSON.parseObject(decCalendarTicketsStr);
             JSONArray data = responseJson.getJSONArray("data");
             if (ObjectUtils.isEmpty(data)) {
                 log.info("获取到的场次失败");
@@ -284,9 +286,11 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
             HttpEntity getReserveListEntity = new HttpEntity<>(bodyFormat, headers);
             Thread.sleep(RandomUtil.randomInt(2500,3500));
             JSONObject reserveListJson = TemplateUtil.getResponse(restTemplate, getReserveListUrl, HttpMethod.POST, getReserveListEntity);
-            if (ObjectUtils.isEmpty(reserveListJson)) {
+            if (ObjectUtils.isEmpty(reserveListJson)||reserveListJson.getIntValue("code")!=200) {
                 return;
             }
+            String decReserveListStr = EncDecUtil.decData(responseJson.getString("privateKey"), responseJson.getString("data"));
+            reserveListJson=JSON.parseObject(decReserveListStr);
             JSONArray reserveList = reserveListJson.getJSONArray("data");
             if (ObjectUtils.isEmpty(reserveList)) {
                 log.info("批量获取余票数据失败batchTimeReserveList", reserveListJson);

@@ -1,20 +1,23 @@
-18:03:42.361 [restartedMain] INFO  t.t.t.TicketToolsApplication - [logStarting,55] - Starting TicketToolsApplication on devinzhangdeMBP.lan with PID 65580 (/Users/devin.zhang/IdeaProjects/ticket-tools/target/classes started by devin.zhang in /Users/devin.zhang/IdeaProjects/ticket-tools)
-18:03:42.366 [restartedMain] INFO  t.t.t.TicketToolsApplication - [logStartupProfileInfo,655] - The following profiles are active: prod
-18:03:44.014 [restartedMain] INFO  o.a.c.h.Http11NioProtocol - [log,173] - Initializing ProtocolHandler ["http-nio-8082"]
-18:03:44.016 [restartedMain] INFO  o.a.c.c.StandardService - [log,173] - Starting service [Tomcat]
-18:03:44.016 [restartedMain] INFO  o.a.c.c.StandardEngine - [log,173] - Starting Servlet engine: [Apache Tomcat/9.0.36]
-18:03:44.134 [restartedMain] INFO  o.a.c.c.C.[.[.[/] - [log,173] - Initializing Spring embedded WebApplicationContext
-18:03:45.458 [restartedMain] INFO  o.a.c.h.Http11NioProtocol - [log,173] - Starting ProtocolHandler ["http-nio-8082"]
-18:03:45.519 [restartedMain] INFO  t.t.t.TicketToolsApplication - [logStarted,61] - Started TicketToolsApplication in 3.831 seconds (JVM running for 4.822)
-18:03:46.148 [scheduling-1] INFO  c.a.d.p.DruidDataSource - [init,995] - {dataSource-1} inited
-19:20:23.034 [SpringContextShutdownHook] INFO  c.a.d.p.DruidDataSource - [close,2073] - {dataSource-1} closing ...
-19:20:23.053 [SpringContextShutdownHook] INFO  c.a.d.p.DruidDataSource - [close,2146] - {dataSource-1} closed
-19:20:34.892 [restartedMain] INFO  t.t.t.TicketToolsApplication - [logStarting,55] - Starting TicketToolsApplication on devinzhangdeMBP.lan with PID 72264 (/Users/devin.zhang/IdeaProjects/ticket-tools/target/classes started by devin.zhang in /Users/devin.zhang/IdeaProjects/ticket-tools)
-19:20:34.895 [restartedMain] INFO  t.t.t.TicketToolsApplication - [logStartupProfileInfo,655] - The following profiles are active: prod
-19:20:36.201 [restartedMain] INFO  o.a.c.h.Http11NioProtocol - [log,173] - Initializing ProtocolHandler ["http-nio-8082"]
-19:20:36.202 [restartedMain] INFO  o.a.c.c.StandardService - [log,173] - Starting service [Tomcat]
-19:20:36.203 [restartedMain] INFO  o.a.c.c.StandardEngine - [log,173] - Starting Servlet engine: [Apache Tomcat/9.0.36]
-19:20:36.330 [restartedMain] INFO  o.a.c.c.C.[.[.[/] - [log,173] - Initializing Spring embedded WebApplicationContext
-19:20:37.281 [restartedMain] INFO  o.a.c.h.Http11NioProtocol - [log,173] - Starting ProtocolHandler ["http-nio-8082"]
-19:20:37.315 [restartedMain] INFO  t.t.t.TicketToolsApplication - [logStarted,61] - Started TicketToolsApplication in 2.924 seconds (JVM running for 3.839)
-19:20:38.244 [scheduling-1] INFO  c.a.d.p.DruidDataSource - [init,995] - {dataSource-1} inited
+12:05:52.903 [restartedMain] INFO  t.t.t.TicketToolsApplication - [logStarting,55] - Starting TicketToolsApplication on devinzhangdeMacBook-Pro.local with PID 67856 (/Users/devin.zhang/IdeaProjects/ticket-tools/target/classes started by devin.zhang in /Users/devin.zhang/IdeaProjects/ticket-tools)
+12:05:52.911 [restartedMain] INFO  t.t.t.TicketToolsApplication - [logStartupProfileInfo,655] - The following profiles are active: prod
+12:05:54.807 [restartedMain] INFO  o.a.c.h.Http11NioProtocol - [log,173] - Initializing ProtocolHandler ["http-nio-8082"]
+12:05:54.808 [restartedMain] INFO  o.a.c.c.StandardService - [log,173] - Starting service [Tomcat]
+12:05:54.808 [restartedMain] INFO  o.a.c.c.StandardEngine - [log,173] - Starting Servlet engine: [Apache Tomcat/9.0.36]
+12:05:55.018 [restartedMain] INFO  o.a.c.c.C.[.[.[/] - [log,173] - Initializing Spring embedded WebApplicationContext
+12:05:56.769 [restartedMain] INFO  o.a.c.h.Http11NioProtocol - [log,173] - Starting ProtocolHandler ["http-nio-8082"]
+12:05:56.820 [restartedMain] INFO  t.t.t.TicketToolsApplication - [logStarted,61] - Started TicketToolsApplication in 4.61 seconds (JVM running for 6.205)
+12:05:57.294 [scheduling-1] INFO  c.a.d.p.DruidDataSource - [init,995] - {dataSource-1} inited
+12:06:09.257 [SpringContextShutdownHook] INFO  c.a.d.p.DruidDataSource - [close,2073] - {dataSource-1} closing ...
+12:06:09.263 [SpringContextShutdownHook] INFO  c.a.d.p.DruidDataSource - [close,2146] - {dataSource-1} closed
+12:31:24.477 [restartedMain] INFO  t.t.t.TicketToolsApplication - [logStarting,55] - Starting TicketToolsApplication on devinzhangdeMacBook-Pro.local with PID 70192 (/Users/devin.zhang/IdeaProjects/ticket-tools/target/classes started by devin.zhang in /Users/devin.zhang/IdeaProjects/ticket-tools)
+12:31:24.481 [restartedMain] INFO  t.t.t.TicketToolsApplication - [logStartupProfileInfo,655] - The following profiles are active: prod
+12:31:25.873 [restartedMain] INFO  o.a.c.h.Http11NioProtocol - [log,173] - Initializing ProtocolHandler ["http-nio-8082"]
+12:31:25.874 [restartedMain] INFO  o.a.c.c.StandardService - [log,173] - Starting service [Tomcat]
+12:31:25.875 [restartedMain] INFO  o.a.c.c.StandardEngine - [log,173] - Starting Servlet engine: [Apache Tomcat/9.0.36]
+12:31:25.984 [restartedMain] INFO  o.a.c.c.C.[.[.[/] - [log,173] - Initializing Spring embedded WebApplicationContext
+12:31:27.146 [restartedMain] INFO  o.a.c.h.Http11NioProtocol - [log,173] - Starting ProtocolHandler ["http-nio-8082"]
+12:31:27.200 [restartedMain] INFO  t.t.t.TicketToolsApplication - [logStarted,61] - Started TicketToolsApplication in 3.232 seconds (JVM running for 4.413)
+12:31:28.214 [scheduling-1] INFO  c.a.d.p.DruidDataSource - [init,995] - {dataSource-1} inited
+12:31:29.501 [pool-1-thread-1] INFO  t.t.t.s.i.JntTicketServiceImpl - [getCookie,304] - 重试获取CSRF
+12:31:45.178 [SpringContextShutdownHook] INFO  c.a.d.p.DruidDataSource - [close,2073] - {dataSource-1} closing ...
+12:31:45.184 [SpringContextShutdownHook] INFO  c.a.d.p.DruidDataSource - [close,2146] - {dataSource-1} closed
