@@ -1,11 +1,11 @@
 package test.ticket.tickettools.utils;
 
+import org.apache.commons.codec.binary.Hex;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import javax.xml.bind.DatatypeConverter;
 import java.security.*;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
@@ -44,7 +44,7 @@ public class EncDecUtil {
             byte[] encryptedDataBytes = Base64.getDecoder().decode(pKey);
             byte[] decryptedDataBytes = cipher.doFinal(encryptedDataBytes);
             String decryptedData = new String(decryptedDataBytes);
-            byte[] w = DatatypeConverter.parseHexBinary(encData);
+            byte[] w = Hex.decodeHex(encData.toCharArray());
             String k = Base64.getEncoder().encodeToString(w);
 
             // Decrypt
