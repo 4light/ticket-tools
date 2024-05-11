@@ -175,8 +175,7 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
                 return;
             }
             String decCalendarTicketsStr = EncDecUtil.decData(responseJson.getString("privateKey"), responseJson.getString("data"));
-            responseJson=JSON.parseObject(decCalendarTicketsStr);
-            JSONArray data = responseJson.getJSONArray("data");
+            JSONArray data = JSON.parseArray(decCalendarTicketsStr);
             if (ObjectUtils.isEmpty(data)) {
                 log.info("获取到的场次失败");
                 return;
@@ -291,8 +290,7 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
                 return;
             }
             String decReserveListStr = EncDecUtil.decData(responseJson.getString("privateKey"), responseJson.getString("data"));
-            reserveListJson=JSON.parseObject(decReserveListStr);
-            JSONArray reserveList = reserveListJson.getJSONArray("data");
+            JSONArray reserveList = JSON.parseArray(decReserveListStr);
             if (ObjectUtils.isEmpty(reserveList)) {
                 log.info("批量获取余票数据失败batchTimeReserveList", reserveListJson);
                 return;
