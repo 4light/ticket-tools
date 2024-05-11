@@ -170,7 +170,8 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
             Thread.sleep(RandomUtil.randomInt(3000,3500));
             JSONObject responseJson = TemplateUtil.getResponse(restTemplate, formatQueryImperialPalaceTicketsUrl, HttpMethod.GET, entity);
             if (ObjectUtils.isEmpty(responseJson)||responseJson.getIntValue("code")!=200) {
-                log.info("responseJson:{}",responseJson);
+                String decCalendarTicketsStr = EncDecUtil.decData(responseJson.getString("privateKey"), responseJson.getString("data"));
+                log.info("responseJson:{}",decCalendarTicketsStr);
                 return;
             }
             String decCalendarTicketsStr = EncDecUtil.decData(responseJson.getString("privateKey"), responseJson.getString("data"));
