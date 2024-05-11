@@ -116,6 +116,11 @@
         </dependency>
         <!-- 添加 JSEncrypt 库依赖 -->
         <!-- https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk18on -->
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk18on</artifactId>
+            <version>1.78</version>
+        </dependency>
 
     </dependencies>
 
