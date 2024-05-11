@@ -15,7 +15,6 @@ import test.ticket.tickettools.dao.TaskDao;
 import test.ticket.tickettools.dao.TaskDetailDao;
 import test.ticket.tickettools.dao.UserInfoDao;
 import test.ticket.tickettools.domain.bo.DoSnatchInfo;
-import test.ticket.tickettools.domain.bo.TaskInfo;
 import test.ticket.tickettools.domain.constant.ChannelEnum;
 import test.ticket.tickettools.domain.entity.TaskDetailEntity;
 import test.ticket.tickettools.domain.entity.TaskEntity;
@@ -33,9 +32,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -78,6 +75,10 @@ public class JntTicketServiceImpl implements JntTicketService {
 
     @Override
     public void doSnatchingJnt(DoSnatchInfo doSnatchInfo) {
+        String authorization = doSnatchInfo.getAuthorization();
+        if(ObjectUtils.isEmpty(authorization)){
+            authorization= getCookie(doSnatchInfo.getAccount(), doSnatchInfo.getPwd(), doSnatchInfo.getIp(), doSnatchInfo.getPort());
+        }
         Map<String, JSONObject> sessionMap = new HashMap();
         HttpHeaders headers = new HttpHeaders();
         headers.set("Accept-Encoding", "gzip, deflate, br");
@@ -89,7 +90,7 @@ public class JntTicketServiceImpl implements JntTicketService {
         headers.set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36");
         headers.set("sec-ch-ua", "\"Google Chrome\";v=\"123\", \"Not:A-Brand\";v=\"8\", \"Chromium\";v=\"123\"");
         headers.set("sec-ch-ua-platform", "macOS");
-        headers.set("cookie",doSnatchInfo.getAuthorization());
+        headers.set("cookie",authorization);
         //查询余票
         headers.set("Referer", "https://jnt.mfu.com.cn/page/tg");
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -99,7 +100,7 @@ public class JntTicketServiceImpl implements JntTicketService {
         HttpEntity queryEntity = new HttpEntity<>(queryFormat, headers);
         JSONObject queryRes = TemplateUtil.getResponse(restTemplate, bookingQueryUrl, HttpMethod.POST, queryEntity);
         if (ObjectUtils.isEmpty(queryRes)) {
-            log.info("查询余票数据失败");
+            log.info("查询余票数据失败:{}",queryRes);
             return;
         }
         if (StrUtil.equals(queryRes.getString("code"), "A00013")) {
@@ -300,15 +301,21 @@ public class JntTicketServiceImpl implements JntTicketService {
         HttpEntity getCsrfEntity = new HttpEntity<>(headers);
         JSONObject getCsrfJson = TemplateUtil.getResponse(restTemplate, getCsrfUrl, HttpMethod.GET, getCsrfEntity);
         if (ObjectUtils.isEmpty(getCsrfJson)) {
-            log.info("获取CSRF失败");
-            //重试5次
-            for (int i = 0; i < 5; i++) {
+            log.info("重试获取CSRF");
+            //重试10次
+            for (int i = 0; i < 10; i++) {
+                try {
+                    Thread.sleep(RandomUtil.randomInt(1000,2000));
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 getCsrfJson=TemplateUtil.getResponse(restTemplate, getCsrfUrl, HttpMethod.GET, getCsrfEntity);
                 if(!ObjectUtils.isEmpty(getCsrfJson)&&StrUtil.equals("A00006",getCsrfJson.getString("code"))){
                     break;
                 }
             }
             if(ObjectUtils.isEmpty(getCsrfJson)){
+                log.info("获取CSRF失败：{}",getCsrfEntity);
                 return null;
             }
         }
@@ -326,7 +333,6 @@ public class JntTicketServiceImpl implements JntTicketService {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH);
         LocalDateTime dateTime = LocalDateTime.parse(date.get(0), formatter);
         LocalDateTime localDateTime = dateTime.plusHours(8);
-        long l = localDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() / 1000;
         log.info("获取到cookie:{}", cookies.get(0));
         if(cookies.get(0).contains("UTOKEN")){
             return getCookie(userName,pwd,ip,port);
@@ -383,7 +389,7 @@ public class JntTicketServiceImpl implements JntTicketService {
                     posList.add(item);
                 }
                 log.info("文字点选验证码坐标:{}", posList);
-                pointJson = AESUtil.doAES(JSON.toJSONString(posList), secretKey);
+                pointJson = EncDecUtil.doAES(JSON.toJSONString(posList), secretKey);
             } else {
                 //请求滑块验证码
                 String uuid = UUID.randomUUID().toString();
@@ -397,7 +403,7 @@ public class JntTicketServiceImpl implements JntTicketService {
                 coordinate.put("x", point);
                 coordinate.put("y", 5);
                 log.info("滑块验证码坐标:{}", coordinate);
-                pointJson = AESUtil.doAES(JSON.toJSONString(coordinate), secretKey);
+                pointJson = EncDecUtil.doAES(JSON.toJSONString(coordinate), secretKey);
                 try {
                     Files.delete(Paths.get(backImageName));
                     Files.delete(Paths.get(sliderImageName));

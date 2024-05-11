@@ -35,7 +35,7 @@ import test.ticket.tickettools.domain.entity.TaskDetailEntity;
 import test.ticket.tickettools.domain.entity.TaskEntity;
 import test.ticket.tickettools.service.TicketService;
 import test.ticket.tickettools.service.WebSocketServer;
-import test.ticket.tickettools.utils.AESUtil;
+import test.ticket.tickettools.utils.EncDecUtil;
 import test.ticket.tickettools.utils.DateUtils;
 import test.ticket.tickettools.utils.ImageUtils;
 
@@ -590,7 +590,7 @@ public class TicketServiceImpl implements TicketService {
                     JSONObject param = new JSONObject();
                     param.put("x", x);
                     param.put("y", 5);
-                    String point = AESUtil.doAES(JSON.toJSONString(param), secretKey);
+                    String point = EncDecUtil.doAES(JSON.toJSONString(param), secretKey);
                     HttpEntity shoppingCartUrlEntity = new HttpEntity<>(buildParam(token, priceNameCountMap.get("childrenTicket"), point, doSnatchInfo.getSession(), useDate, priceId, childrenPriceId, discountPriceId, olderPriceId, phone, nameIDMap), headers);
                     ResponseEntity<String> exchange = restTemplate.exchange(shoppingCartUrl, HttpMethod.POST, shoppingCartUrlEntity, String.class);
                     //log.info(exchange.getBody());
