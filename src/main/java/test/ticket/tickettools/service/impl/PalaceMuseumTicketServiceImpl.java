@@ -87,6 +87,9 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
         taskEntity.setChannel(ChannelEnum.LOTS.getCode());
         List<TaskEntity> unDoneTasks = taskDao.getUnDoneTasks(taskEntity);
         for (TaskEntity unDoneTask : unDoneTasks) {
+            if(!ObjectUtils.isEmpty(unDoneTask.getIp())&&!ObjectUtils.isEmpty(unDoneTask.getPort())){
+                return;
+            }
             JSONObject proxy = ProxyUtil.getProxy();
             unDoneTask.setIp(proxy.getString("ip"));
             unDoneTask.setPort(proxy.getInteger("port"));

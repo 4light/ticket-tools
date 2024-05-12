@@ -20,7 +20,7 @@ public class DoPalaceMuseumSnatchingSchedule {
     @Resource
     PalaceMuseumTicketService palaceMuseumTicketServiceImpl;
 
-    @Scheduled(cron = "0 59 19 * * ?")
+    @Scheduled(cron = "0/5 59 19 * * ?")
     public void initData(){
         palaceMuseumTicketServiceImpl.initData();
     }

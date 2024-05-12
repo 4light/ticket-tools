@@ -10,9 +10,12 @@ import test.ticket.tickettools.config.TaskExecutorConfig;
 import test.ticket.tickettools.dao.TaskDao;
 import test.ticket.tickettools.domain.bo.DoSnatchInfo;
 import test.ticket.tickettools.service.JntTicketService;
+import test.ticket.tickettools.utils.DateUtils;
 
 import javax.annotation.Resource;
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -24,7 +27,7 @@ public class DoJntSnatchingSchedule {
     JntTicketService jntTicketServiceImpl;
 
 
-    @Scheduled(cron = "0/5 0-55 22 * * ?")
+    @Scheduled(cron = "0/2 28-29 12 * * ?")
     public void initData(){
         jntTicketServiceImpl.initData();
     }
@@ -50,4 +53,5 @@ public class DoJntSnatchingSchedule {
             e.printStackTrace();
         }
     }
+
 }
