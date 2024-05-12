@@ -176,9 +176,11 @@ public class JntTicketServiceImpl implements JntTicketService {
                     break;
                 }
                 if(StrUtil.equals("A00004", checkIdResCode)){
-                    String cookie = getCookie(doSnatchInfo.getAccount(), doSnatchInfo.getPwd(), doSnatchInfo.getIp(), doSnatchInfo.getPort());
-                    headers.set("cookie",cookie);
-                    continue;
+                    TaskEntity updateTaskEntity=new TaskEntity();
+                    updateTaskEntity.setId(doSnatchInfo.getTaskId());
+                    updateTaskEntity.setUserInfoId(doSnatchInfo.getUserInfoId());
+                    updateData(updateTaskEntity);
+                    break;
                 }
                 //提交订单
                 String submitBodyFormat = MessageFormat.format("usertype=tg&eventssessionid={0}&bookingdata={1}", key, customURLEncode(buildParam(doSnatchInfo.getIdNameMap()).toJSONString(), "utf-8"));
@@ -237,43 +239,50 @@ public class JntTicketServiceImpl implements JntTicketService {
         try {
             for (TaskEntity unDoneTask : unDoneTasks) {
                 executor.execute(() -> {
-                    if (unDoneTask.getUpdateDate() != null && unDoneTask.getIp() != null && unDoneTask.getPort() != null) {
+                    if (!ObjectUtils.isEmpty(unDoneTask.getUpdateDate()) && !ObjectUtils.isEmpty(unDoneTask.getIp()) && !ObjectUtils.isEmpty(unDoneTask.getPort())) {
                         return;
                     }
-                    JSONObject proxy = ProxyUtil.getProxy();
-                    unDoneTask.setIp(proxy.getString("ip"));
-                    unDoneTask.setPort(proxy.getInteger("port"));
-                    UserInfoEntity userInfoEntity = new UserInfoEntity();
-                    if (ObjectUtils.isEmpty(unDoneTask.getUserInfoId())) {
-                        UserInfoEntity userInfo = new UserInfoEntity();
-                        userInfo.setChannel(ChannelEnum.MFU.getCode());
-                        userInfo.setStatus(false);
-                        List<UserInfoEntity> select = userInfoDao.select(userInfo);
-                        userInfoEntity = select.get((int) (select.size() * Math.random()));
-                    } else {
-                        userInfoEntity = userInfoDao.selectById(unDoneTask.getUserInfoId());
-                    }
-                    unDoneTask.setUserInfoId(userInfoEntity.getId());
-                    unDoneTask.setAccount(userInfoEntity.getAccount());
-                    unDoneTask.setPwd(userInfoEntity.getPwd());
-                    //获取cookie
-                    String cookie = getCookie(userInfoEntity.getAccount(), userInfoEntity.getPwd(), proxy.getString("ip"), proxy.getInteger("port"));
-                    if (ObjectUtils.isEmpty(cookie)) {
-                        return;
-                    }
-                    unDoneTask.setAuth(cookie);
-                    unDoneTask.setUpdateDate(new Date());
-                    taskDao.updateTask(unDoneTask);
+                    updateData(unDoneTask);
                 });
-                // 提交完所有任务后，关闭线程池
-                executor.shutdown();
-                // 等待所有任务执行完毕
-                try {
-                    executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
             }
+            // 提交完所有任务后，关闭线程池
+            executor.shutdown();
+            // 等待所有任务执行完毕
+            try {
+                executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+    private void updateData(TaskEntity unDoneTask){
+        try {
+            JSONObject proxy = ProxyUtil.getProxy();
+            unDoneTask.setIp(proxy.getString("ip"));
+            unDoneTask.setPort(proxy.getInteger("port"));
+            UserInfoEntity userInfoEntity;
+            if (ObjectUtils.isEmpty(unDoneTask.getUserInfoId())) {
+                UserInfoEntity userInfo = new UserInfoEntity();
+                userInfo.setChannel(ChannelEnum.MFU.getCode());
+                userInfo.setStatus(false);
+                List<UserInfoEntity> select = userInfoDao.select(userInfo);
+                userInfoEntity = select.get((int) (select.size() * Math.random()));
+            } else {
+                userInfoEntity = userInfoDao.selectById(unDoneTask.getUserInfoId());
+            }
+            unDoneTask.setUserInfoId(userInfoEntity.getId());
+            unDoneTask.setAccount(userInfoEntity.getAccount());
+            unDoneTask.setPwd(userInfoEntity.getPwd());
+            //获取cookie
+            String cookie = getCookie(userInfoEntity.getAccount(), userInfoEntity.getPwd(), proxy.getString("ip"), proxy.getInteger("port"));
+            if (ObjectUtils.isEmpty(cookie)) {
+                return;
+            }
+            unDoneTask.setAuth(cookie);
+            unDoneTask.setUpdateDate(new Date());
+            taskDao.updateTask(unDoneTask);
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -332,7 +341,7 @@ public class JntTicketServiceImpl implements JntTicketService {
         HttpEntity getCsrfEntity = new HttpEntity<>(headers);
         JSONObject getCsrfJson = TemplateUtil.getResponse(restTemplate, getCsrfUrl, HttpMethod.GET, getCsrfEntity);
         if (ObjectUtils.isEmpty(getCsrfJson)) {
-            log.info("重试获取CSRF");
+            log.info("获取CSRF失败");
             return null;
         }
         String csrf_req = getCsrfJson.getString("csrf_req");
@@ -345,10 +354,6 @@ public class JntTicketServiceImpl implements JntTicketService {
         ResponseEntity<String> doLogin = restTemplate.exchange(loginUrl, HttpMethod.POST, loginEntity, String.class);
         HttpHeaders loginHeaders = doLogin.getHeaders();
         List<String> cookies = loginHeaders.get("set-cookie");
-        List<String> date = loginHeaders.get("Date");
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH);
-        LocalDateTime dateTime = LocalDateTime.parse(date.get(0), formatter);
-        LocalDateTime localDateTime = dateTime.plusHours(8);
         log.info("获取到cookie:{}", cookies.get(0));
         if(cookies.get(0).contains("UTOKEN")){
             return getCookie(userName,pwd,ip,port);

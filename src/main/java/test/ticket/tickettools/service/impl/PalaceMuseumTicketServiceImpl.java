@@ -169,9 +169,8 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
             String formatQueryImperialPalaceTicketsUrl = String.format(queryImperialPalaceTicketsUrl, now.getYear(), month);
             Thread.sleep(RandomUtil.randomInt(3000,3500));
             JSONObject responseJson = TemplateUtil.getResponse(restTemplate, formatQueryImperialPalaceTicketsUrl, HttpMethod.GET, entity);
-            if (ObjectUtils.isEmpty(responseJson)||responseJson.getIntValue("code")!=200) {
-                String decCalendarTicketsStr = EncDecUtil.decData(responseJson.getString("privateKey"), responseJson.getString("data"));
-                log.info("responseJson:{}",decCalendarTicketsStr);
+            if (ObjectUtils.isEmpty(responseJson)||responseJson.getIntValue("status")!=200) {
+                log.info("responseJson:{}",responseJson);
                 return;
             }
             String decCalendarTicketsStr = EncDecUtil.decData(responseJson.getString("privateKey"), responseJson.getString("data"));
@@ -286,7 +285,7 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
             HttpEntity getReserveListEntity = new HttpEntity<>(bodyFormat, headers);
             Thread.sleep(RandomUtil.randomInt(2500,3500));
             JSONObject reserveListJson = TemplateUtil.getResponse(restTemplate, getReserveListUrl, HttpMethod.POST, getReserveListEntity);
-            if (ObjectUtils.isEmpty(reserveListJson)||reserveListJson.getIntValue("code")!=200) {
+            if (ObjectUtils.isEmpty(reserveListJson)||reserveListJson.getIntValue("status")!=200) {
                 return;
             }
             String decReserveListStr = EncDecUtil.decData(responseJson.getString("privateKey"), responseJson.getString("data"));
