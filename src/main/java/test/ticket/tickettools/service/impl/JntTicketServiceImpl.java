@@ -133,14 +133,11 @@ public class JntTicketServiceImpl implements JntTicketService {
                     String code = response.getString("code");
                     if (!StrUtil.equals("A00006", code)&&!StrUtil.equals("A00004", code)) {
                         log.info("姓名-{}校验不通过:{}", name, response);
-                        return;
-                    }
-                    if(StrUtil.equals("A00004", code)){
                         TaskEntity updateTaskEntity=new TaskEntity();
                         updateTaskEntity.setId(doSnatchInfo.getTaskId());
                         updateTaskEntity.setUserInfoId(doSnatchInfo.getUserInfoId());
                         updateData(updateTaskEntity);
-                        break;
+                        return;
                     }
                 }
                 String idNums = String.join(",", currentIdNameMap.keySet());
