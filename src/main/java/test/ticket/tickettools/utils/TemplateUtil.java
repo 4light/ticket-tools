@@ -58,8 +58,8 @@ public class TemplateUtil {
         }
         RequestConfig requestConfig = RequestConfig.custom()
                 .setSocketTimeout(10000)
-                .setConnectTimeout(5000)
-                .setConnectionRequestTimeout(5000)
+                .setConnectTimeout(10000)
+                .setConnectionRequestTimeout(10000)
                 .setCircularRedirectsAllowed(true)
                 .setExpectContinueEnabled(false)
                 .setProxy(new HttpHost(proxyHost, proxyPort))

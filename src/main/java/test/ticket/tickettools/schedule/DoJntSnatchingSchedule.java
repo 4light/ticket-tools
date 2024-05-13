@@ -29,7 +29,11 @@ public class DoJntSnatchingSchedule {
 
     @Scheduled(cron = "0/2 28-29 12 * * ?")
     public void initData(){
-        jntTicketServiceImpl.initData();
+        try {
+            jntTicketServiceImpl.initData();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     @Scheduled(cron = "0/2 30-35 12 * * ?")
