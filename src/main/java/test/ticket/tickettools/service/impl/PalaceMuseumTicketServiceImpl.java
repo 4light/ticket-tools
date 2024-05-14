@@ -48,6 +48,7 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
     //校验成员信息
     private static final String checkUserUrl = "https://lotswap.dpm.org.cn/dubboApi/trade-core/tradeCreateService/ticketVerificationCheck";
 
+    private static Map<Long,Object> runTaskCache=new HashMap<>();
     @Resource
     TaskDao taskDao;
     @Resource
@@ -138,6 +139,12 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
 
     @Override
     public void doSnatchingTicket(DoSnatchInfo doSnatchInfo) {
+        Long taskId = doSnatchInfo.getTaskId();
+        if(runTaskCache.containsKey(taskId)){
+            return;
+        }else{
+            runTaskCache.put(taskId,true);
+        }
         //查询余票
         String queryImperialPalaceTicketsUrl = "https://lotswap.dpm.org.cn/lotsapi/merchant/api/fsyy/calendar?parkId=11324&year=%s&month=%s&merchantId=2655&merchantInfoId=2655";
         //获取门票种类
@@ -149,11 +156,9 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
         try {
             JSONObject currentParkFsyyDetail=new JSONObject();
             RestTemplate restTemplate = TemplateUtil.initSSLTemplateWithProxy(doSnatchInfo.getIp(),doSnatchInfo.getPort());
-            //RestTemplate restTemplate=TemplateUtil.initSSLTemplate();
             HttpHeaders headers=new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             String headerStr = doSnatchInfo.getHeaders();
-            //String headerStr = FileUtil.readString("/Users/devin.zhang/Desktop/record", Charset.defaultCharset());
             JSONObject headerJson = JSON.parseObject(headerStr);
             LocalDate now = LocalDate.now();
             for (Map.Entry<String, Object> headerEntry : headerJson.entrySet()) {
@@ -170,16 +175,18 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
             int monthValue = localDate.getMonthValue();
             String month = monthValue > 10 ? String.valueOf(monthValue) : "0" + monthValue;
             String formatQueryImperialPalaceTicketsUrl = String.format(queryImperialPalaceTicketsUrl, now.getYear(), month);
-            Thread.sleep(RandomUtil.randomInt(2000,6000));
+            Thread.sleep(RandomUtil.randomInt(3000,3500));
             JSONObject responseJson = TemplateUtil.getResponse(restTemplate, formatQueryImperialPalaceTicketsUrl, HttpMethod.GET, entity);
             if (ObjectUtils.isEmpty(responseJson)||responseJson.getIntValue("status")!=200) {
                 log.info("responseJson:{}",responseJson);
+                runTaskCache.remove(taskId);
                 return;
             }
             String decCalendarTicketsStr = EncDecUtil.decData(responseJson.getString("privateKey"), responseJson.getString("data"));
             JSONArray data = JSON.parseArray(decCalendarTicketsStr);
             if (ObjectUtils.isEmpty(data)) {
                 log.info("获取到的场次失败");
+                runTaskCache.remove(taskId);
                 return;
             }
             boolean haveTicket = false;
@@ -229,14 +236,16 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
             //如果没有余票继续查询
             if (!haveTicket) {
                 log.info("没有余票");
+                runTaskCache.remove(taskId);
                 return;
             }
             headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
             HttpEntity getTicketEntity = new HttpEntity<>(headers);
             String formatGetTicketGridUrl = String.format(getTicketGridUrl, formatUseDate, formatUseDate);
-            Thread.sleep(RandomUtil.randomInt(2000,6000));
+            Thread.sleep(RandomUtil.randomInt(3000,3500));
             JSONObject ticketGridJson = TemplateUtil.getResponse(restTemplate, formatGetTicketGridUrl, HttpMethod.GET, getTicketEntity);
             if (ObjectUtils.isEmpty(ticketGridJson)) {
+                runTaskCache.remove(taskId);
                 return;
             }
             JSONArray ticketGridDataArr = ticketGridJson.getJSONArray("data");
@@ -244,6 +253,7 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
             JSONArray ticketList = ticketGridItem == null ? null : ticketGridItem.getJSONArray("ticketList");
             JSONArray ticketReserveList = new JSONArray();
             if (ObjectUtils.isEmpty(ticketList)) {
+                runTaskCache.remove(taskId);
                 return;
             }
             Map<String, JSONObject> typeTicketMap = new HashMap();
@@ -276,7 +286,7 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
             }
             headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
             String addTicketUrl=String.format("https://lotswap.dpm.org.cn/lotsapi/merchant/api/merchantParkInfo/add_ticket/query?modelCodes=%s&occDate=%s&merchantId=2655&merchantInfoId=2655",String.join(",",modelCodes),formatUseDate);
-            Thread.sleep(RandomUtil.randomInt(2000,6000));
+            Thread.sleep(RandomUtil.randomInt(1000,3500));
             JSONObject response = TemplateUtil.getResponse(restTemplate, addTicketUrl, HttpMethod.GET, new HttpEntity<>(headers));
             log.info("add_ticket:{}",response);
             headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
@@ -286,15 +296,17 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
             URLEncoder.encode(bodyFormat, "utf-8");
             headers.set("Content-Length", String.valueOf(customURLEncode(bodyFormat, "utf-8").getBytes(StandardCharsets.UTF_8).length));
             HttpEntity getReserveListEntity = new HttpEntity<>(bodyFormat, headers);
-            Thread.sleep(RandomUtil.randomInt(2000,6000));
+            Thread.sleep(RandomUtil.randomInt(1000,3500));
             JSONObject reserveListJson = TemplateUtil.getResponse(restTemplate, getReserveListUrl, HttpMethod.POST, getReserveListEntity);
             if (ObjectUtils.isEmpty(reserveListJson)||reserveListJson.getIntValue("status")!=200) {
+                runTaskCache.remove(taskId);
                 return;
             }
             String decReserveListStr = EncDecUtil.decData(responseJson.getString("privateKey"), responseJson.getString("data"));
             JSONArray reserveList = JSON.parseArray(decReserveListStr);
             if (ObjectUtils.isEmpty(reserveList)) {
                 log.info("批量获取余票数据失败batchTimeReserveList", reserveListJson);
+                runTaskCache.remove(taskId);
                 return;
             }
             //校验用户信息
@@ -304,12 +316,13 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
             JSONObject checkUserBody = buildCheckUserParam(doSnatchInfo.getIdNameMap(),formatDate,typeTicketMap);
             log.info("校验身份信息入参：{}", JSON.toJSONString(checkUserBody));
             HttpEntity checkUserEntity = new HttpEntity<>(checkUserBody, headers);
-            Thread.sleep(RandomUtil.randomInt(2000,6000));
+            Thread.sleep(RandomUtil.randomInt(3000,5000));
             JSONObject checkUserBodyJson = TemplateUtil.getResponse(restTemplate, checkUserUrl, HttpMethod.POST, checkUserEntity);
             JSONObject checkUserData = checkUserBodyJson.getJSONObject("data");
             log.info("身份验证信息:{}", checkUserData);
             if (!ObjectUtils.isEmpty(checkUserData.getJSONArray("rejectCertAuthList"))) {
                 log.info("身份验证失败:{}", checkUserBodyJson);
+                runTaskCache.remove(taskId);
                 return;
             }
             String accessToken = headerJson.getString("access-token");
@@ -324,18 +337,10 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
             headers.setContentLength(JSON.toJSONString(jsonObject).getBytes(StandardCharsets.UTF_8).length);
             HttpEntity addTicketQueryEntity = new HttpEntity<>(jsonObject, headers);
             String formatCreateUrl = String.format(createUrl, sign, timestamp);
-            Thread.sleep(RandomUtil.randomInt(2000,6000));
+            Thread.sleep(RandomUtil.randomInt(2000,3500));
             log.info("提交订单入参：{}", JSON.toJSONString(jsonObject));
             JSONObject createRes = TemplateUtil.getResponse(restTemplate, formatCreateUrl, HttpMethod.POST, addTicketQueryEntity);
             log.info("请求结果{}", createRes);
-            if(ObjectUtils.isEmpty(createRes)){
-                JSONObject proxy = ProxyUtil.getProxy();
-                TaskEntity taskEntity=new TaskEntity();
-                taskEntity.setId(doSnatchInfo.getTaskId());
-                taskEntity.setIp(proxy.getString("ip"));
-                taskEntity.setPort(proxy.getInteger("port"));
-                taskDao.updateTask(taskEntity);
-            }
             if(createRes.getIntValue("code")==200){
                 TaskEntity taskEntity=new TaskEntity();
                 taskEntity.setId(doSnatchInfo.getTaskId());
@@ -350,6 +355,7 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
                 taskDetailDao.updateEntityByTaskId(taskDetailEntity);
                 SendMessageUtil.send(ChannelEnum.LOTS.getDesc(),formatDate,currentParkFsyyDetail.getString("fsTimeName"),doSnatchInfo.getAccount(),String.join(",",doSnatchInfo.getIdNameMap().values()));
             }
+            runTaskCache.remove(taskId);
         } catch (Exception e) {
             e.printStackTrace();
         }

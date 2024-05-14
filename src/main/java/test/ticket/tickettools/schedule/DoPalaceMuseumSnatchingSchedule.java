@@ -11,7 +11,8 @@ import test.ticket.tickettools.service.PalaceMuseumTicketService;
 
 import javax.annotation.Resource;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ThreadPoolExecutor;
 
 @Slf4j
 @Configuration
@@ -20,30 +21,27 @@ public class DoPalaceMuseumSnatchingSchedule {
     @Resource
     PalaceMuseumTicketService palaceMuseumTicketServiceImpl;
 
-    @Scheduled(cron = "0/5 59 19 * * ?")
-    public void initData(){
+    @Scheduled(cron = "0/8 59 19 * * ?")
+    public void initData() {
         palaceMuseumTicketServiceImpl.initData();
     }
 
     @Scheduled(cron = "0/1 2-30 20 * * ?")
-    public void doJntTicketSnatch(){
+    public void doPalaceMuseumTicketSnatch() {
+        ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
+        pool.setThreadNamePrefix("palaceMuseumProcessor-");
+        pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());//拒绝策略
         List<DoSnatchInfo> doSnatchInfos = palaceMuseumTicketServiceImpl.snatchingTicket();
-        if(ObjectUtils.isEmpty(doSnatchInfos)){
+        if (ObjectUtils.isEmpty(doSnatchInfos)) {
             return;
         }
-        ExecutorService executor = Executors.newFixedThreadPool(doSnatchInfos.size());
-        ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) executor;
-        threadPoolExecutor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        int size = doSnatchInfos.size();
+        pool.setMaxPoolSize(size);
+        pool.setCorePoolSize(size);
+        pool.setQueueCapacity(size);
+        pool.initialize();
         for (DoSnatchInfo doSnatchInfo : doSnatchInfos) {
-            executor.execute(() -> palaceMuseumTicketServiceImpl.doSnatchingTicket(doSnatchInfo));
-        }
-        // 提交完所有任务后，关闭线程池
-        executor.shutdown();
-        // 等待所有任务执行完毕
-        try {
-            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            CompletableFuture.runAsync(() -> palaceMuseumTicketServiceImpl.doSnatchingTicket(doSnatchInfo), pool);
         }
     }
 }
