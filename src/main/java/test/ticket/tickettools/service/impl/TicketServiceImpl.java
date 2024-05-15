@@ -271,6 +271,7 @@ public class TicketServiceImpl implements TicketService {
                 taskInfoListResponse.setChannel(taskEntity.getChannel());
                 taskInfoListResponse.setOrderId(taskDetailEntity.getOrderId());
                 taskInfoListResponse.setPrice(taskDetailEntity.getPrice());
+                taskInfoListResponse.setUserInfoId(taskEntity.getUserInfoId());
                 list.add(taskInfoListResponse);
             }
         }
@@ -288,6 +289,7 @@ public class TicketServiceImpl implements TicketService {
         taskInfo.setUseDate(taskEntity.getUseDate());
         taskInfo.setSession(taskEntity.getSession());
         taskInfo.setVenue(taskEntity.getVenue());
+        taskInfo.setUserInfoId(taskEntity.getUserInfoId());
         taskInfo.setUserList(taskDetailDao.selectByTaskId(taskId));
         return ServiceResponse.createBySuccess(taskInfo);
     }

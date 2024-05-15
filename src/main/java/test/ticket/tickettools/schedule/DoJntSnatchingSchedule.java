@@ -27,7 +27,7 @@ public class DoJntSnatchingSchedule {
     JntTicketService jntTicketServiceImpl;
 
 
-    @Scheduled(cron = "0/2 28-59 12 * * ?")
+    @Scheduled(cron = "0/2 28-29 12 * * ?")
     public void initData(){
         try {
             jntTicketServiceImpl.initData();

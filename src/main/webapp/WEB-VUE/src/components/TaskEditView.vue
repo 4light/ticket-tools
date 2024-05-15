@@ -238,6 +238,7 @@ export default {
           });
         } else {
           this.userIdList = res.data.data
+          this.changeChannel()
         }
       })
     },

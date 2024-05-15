@@ -106,7 +106,7 @@
           prop="updateDate"
           label="过期时间">
           <template slot-scope="scope">
-            {{ addDate(scope.row.updateDate) }}
+            {{ addDate(scope.row) }}
           </template>
         </el-table-column>
         <el-table-column
@@ -405,6 +405,8 @@ export default {
         this.taskInfo = res.data.data
         this.showDialog = true
         setTimeout(() => {
+          this.$refs.taskEditView.getUserIdList();
+          this.$refs.taskEditView.changeChannel();
           this.$refs.taskEditView.edit();
         }, 200)
       })
@@ -548,12 +550,20 @@ export default {
         }
       })
     },
-    addDate(nowDate) {
+    addDate(row) {
+      let nowDate=row.updateDate
       if (!nowDate) {
         return
       }
       let current = new Date(nowDate)
-      let newDate = current.setMinutes(current.getMinutes() + 15)
+      let newDate
+      console.log(row.channel)
+      if(row.channel==2){
+        newDate = current.setMinutes(current.getMinutes() + 30)
+      }
+      if(row.channel==0){
+        newDate = current.setMinutes(current.getMinutes() + 15)
+      }
       let rd = new Date(newDate);
       let y = rd.getFullYear();
       let M = rd.getMonth() + 1;
@@ -567,7 +577,10 @@ export default {
       if (d < 10) {
         d = "0" + d;
       }
-      return (y + "-" + M + "-" + d + " " + H + ":" + m + ":" + s)
+      if(row.channel!=1){
+        return (y + "-" + M + "-" + d + " " + H + ":" + m + ":" + s)
+      }
+      return ""
     }
   }
 }
