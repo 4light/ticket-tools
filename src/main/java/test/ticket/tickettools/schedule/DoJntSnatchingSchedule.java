@@ -36,7 +36,7 @@ public class DoJntSnatchingSchedule {
         }
     }
 
-    @Scheduled(cron = "0/2 10-55 19 * * ?")
+    @Scheduled(cron = "0/2 30-35 12 * * ?")
     public void doJntTicketSnatch(){
         ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
         pool.setThreadNamePrefix("jntProcessor-");
