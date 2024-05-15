@@ -172,13 +172,14 @@ public class TicketServiceImpl implements TicketService {
             }
         } else {
             taskEntity.setUpdateDate(new Date());
-            Long userId = taskInfo.getSource() == 0 ? getUserId(taskEntity.getAuth()) : taskInfo.getUserId();
-            if (ObjectUtils.isEmpty(userId)) {
+            Long userId = taskInfo.getSource()!=null&&taskInfo.getSource() == 0 ? getUserId(taskEntity.getAuth()) : taskInfo.getUserId();
+            if (taskInfo.getSource()!=null&&ObjectUtils.isEmpty(userId)) {
                 return ServiceResponse.createByErrorMessage("获取用户Id失败");
             }
             taskEntity.setAccount(userInfoEntity.getAccount());
             taskEntity.setPwd(userInfoEntity.getPwd());
             taskEntity.setUserId(userId);
+            taskEntity.setUserInfoId(userInfoId);
             Integer insert = taskDao.updateTask(taskEntity);
             if (insert > 0) {
                 List<TaskDetailEntity> all = taskDetailDao.selectByTaskId(taskEntity.getId());

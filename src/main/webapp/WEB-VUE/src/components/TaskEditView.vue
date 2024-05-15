@@ -99,7 +99,7 @@
         </div>
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" @click="onSubmit" round style="margin-left: 31vw">创建</el-button>
+        <el-button type="primary" @click="onSubmit" round style="margin-left: 31vw">保存</el-button>
         <el-button type="warning" @click="close" round>取消</el-button>
       </el-form-item>
     </el-form>
