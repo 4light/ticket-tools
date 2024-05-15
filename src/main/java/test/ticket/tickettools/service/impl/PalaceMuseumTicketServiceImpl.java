@@ -287,8 +287,7 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
             headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
             String addTicketUrl=String.format("https://lotswap.dpm.org.cn/lotsapi/merchant/api/merchantParkInfo/add_ticket/query?modelCodes=%s&occDate=%s&merchantId=2655&merchantInfoId=2655",String.join(",",modelCodes),formatUseDate);
             Thread.sleep(RandomUtil.randomInt(1000,3500));
-            JSONObject response = TemplateUtil.getResponse(restTemplate, addTicketUrl, HttpMethod.GET, new HttpEntity<>(headers));
-            log.info("add_ticket:{}",response);
+            TemplateUtil.getResponse(restTemplate, addTicketUrl, HttpMethod.GET, new HttpEntity<>(headers));
             headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
             String bodyFormat = MessageFormat.format("queryParam={0}&merchantId=2655&merchantInfoId=2655", ticketReserveList);
             //需要设置content_type application/x-www-form-urlencoded
@@ -337,7 +336,7 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
             headers.setContentLength(JSON.toJSONString(jsonObject).getBytes(StandardCharsets.UTF_8).length);
             HttpEntity addTicketQueryEntity = new HttpEntity<>(jsonObject, headers);
             String formatCreateUrl = String.format(createUrl, sign, timestamp);
-            Thread.sleep(RandomUtil.randomInt(2000,3500));
+            Thread.sleep(RandomUtil.randomInt(3000,5000));
             log.info("提交订单入参：{}", JSON.toJSONString(jsonObject));
             JSONObject createRes = TemplateUtil.getResponse(restTemplate, formatCreateUrl, HttpMethod.POST, addTicketQueryEntity);
             log.info("请求结果{}", createRes);
