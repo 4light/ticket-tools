@@ -175,7 +175,7 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
             int monthValue = localDate.getMonthValue();
             String month = monthValue > 10 ? String.valueOf(monthValue) : "0" + monthValue;
             String formatQueryImperialPalaceTicketsUrl = String.format(queryImperialPalaceTicketsUrl, now.getYear(), month);
-            Thread.sleep(RandomUtil.randomInt(3000,3500));
+            Thread.sleep(RandomUtil.randomInt(2000,5000));
             JSONObject responseJson = TemplateUtil.getResponse(restTemplate, formatQueryImperialPalaceTicketsUrl, HttpMethod.GET, entity);
             if (ObjectUtils.isEmpty(responseJson)||responseJson.getIntValue("status")!=200) {
                 log.info("responseJson:{}",responseJson);
@@ -357,7 +357,8 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
             }
             runTaskCache.remove(taskId);
         } catch (Exception e) {
-            e.printStackTrace();
+            runTaskCache.remove(doSnatchInfo.getTaskId());
+            log.info("doPalaceMuseumTicket异常:{}",e);
         }
     }
 

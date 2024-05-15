@@ -27,7 +27,7 @@ public class DoJntSnatchingSchedule {
     JntTicketService jntTicketServiceImpl;
 
 
-    @Scheduled(cron = "0/2 28-29 12 * * ?")
+    @Scheduled(cron = "0/2 28-59 12 * * ?")
     public void initData(){
         try {
             jntTicketServiceImpl.initData();
@@ -36,25 +36,22 @@ public class DoJntSnatchingSchedule {
         }
     }
 
-    @Scheduled(cron = "0/2 30-35 12 * * ?")
+    @Scheduled(cron = "0/2 10-55 19 * * ?")
     public void doJntTicketSnatch(){
+        ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
+        pool.setThreadNamePrefix("jntProcessor-");
+        pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());//拒绝策略
         List<DoSnatchInfo> doSnatchInfos = jntTicketServiceImpl.getDoSnatchInfos();
         if(ObjectUtils.isEmpty(doSnatchInfos)){
             return;
         }
-        ExecutorService executor = Executors.newFixedThreadPool(doSnatchInfos.size());
-        ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) executor;
-        threadPoolExecutor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        int size = doSnatchInfos.size();
+        pool.setMaxPoolSize(size);
+        pool.setCorePoolSize(size);
+        pool.setQueueCapacity(size);
+        pool.initialize();
         for (DoSnatchInfo doSnatchInfo : doSnatchInfos) {
-            executor.execute(() -> jntTicketServiceImpl.doSnatchingJnt(doSnatchInfo));
-        }
-        // 提交完所有任务后，关闭线程池
-        executor.shutdown();
-        // 等待所有任务执行完毕
-        try {
-            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            CompletableFuture.runAsync(() -> jntTicketServiceImpl.doSnatchingJnt(doSnatchInfo),pool);
         }
     }
 

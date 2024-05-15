@@ -51,25 +51,21 @@ public class DoSnatchingSchedule {
      */
     @Scheduled(cron = "0/1 0-30 18 * * ?")
     public void doSnatching() {
+        ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
+        pool.setThreadNamePrefix("doSnatchingProcessor-");
+        pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());//拒绝策略
         Map<String, DoSnatchInfo> taskForRun = ticketServiceImpl.getTaskForRun();
         if (ObjectUtils.isEmpty(taskForRun)) {
             return;
         }
-        ExecutorService executor = Executors.newFixedThreadPool(taskForRun.size());
-        ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) executor;
-        threadPoolExecutor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        int size = taskForRun.size();
+        pool.setMaxPoolSize(size);
+        pool.setCorePoolSize(size);
+        pool.setQueueCapacity(size);
         for (Map.Entry<String, DoSnatchInfo> entity : taskForRun.entrySet()) {
-            executor.execute(() -> {
+            CompletableFuture.runAsync(() -> {
                 ticketServiceImpl.snatchingTicket(entity.getValue());
-            });
-        }
-        // 提交完所有任务后，关闭线程池
-        executor.shutdown();
-        // 等待所有任务执行完毕
-        try {
-            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            },pool);
         }
     }
 
@@ -78,72 +74,56 @@ public class DoSnatchingSchedule {
      */
     @Scheduled(cron = "0/1 0-30 18 * * ?")
     public void doSnatchingExcludeTarget() {
+        ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
+        pool.setThreadNamePrefix("singleDoSnatchingProcessor-");
+        pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());//拒绝策略
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
         if (ObjectUtils.isEmpty(allTaskForRun)) {
             return;
         }
-        ExecutorService executor = Executors.newFixedThreadPool(allTaskForRun.size());
-        ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) executor;
-        threadPoolExecutor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        int size = allTaskForRun.size();
+        pool.setMaxPoolSize(size);
+        pool.setCorePoolSize(size);
+        pool.setQueueCapacity(size);
         for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
-            executor.execute(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo));
-        }
-        // 提交完所有任务后，关闭线程池
-        executor.shutdown();
-        // 等待所有任务执行完毕
-        try {
-            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo),pool);
         }
     }
 
     @Scheduled(cron = "0/1 31-59 18 * * ?")
     public void doSingleSnatch() {
+        ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
+        pool.setThreadNamePrefix("singleDoSnatchingProcessor-");
+        pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());//拒绝策略
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
         if (ObjectUtils.isEmpty(allTaskForRun)) {
             return;
         }
-        ExecutorService executor = Executors.newFixedThreadPool(allTaskForRun.size());
-        ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) executor;
-        threadPoolExecutor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        int size = allTaskForRun.size();
+        pool.setMaxPoolSize(size);
+        pool.setCorePoolSize(size);
+        pool.setQueueCapacity(size);
         for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
-            //CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo),pool);
-            executor.execute(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo));
-        }
-        // 提交完所有任务后，关闭线程池
-        executor.shutdown();
-        // 等待所有任务执行完毕
-        try {
-            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo),pool);
         }
     }
 
     @Scheduled(cron = "0/1 * 8-17,19-22 * * ?")
     public void doSingleSnatchOtherTime() {
+        ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
+        pool.setThreadNamePrefix("singleDoSnatchingProcessor-");
+        pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());//拒绝策略
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
         if (ObjectUtils.isEmpty(allTaskForRun)) {
             return;
         }
-        // 创建固定大小的线程池，确保线程数和数据量一样
-        ExecutorService executor = Executors.newFixedThreadPool(allTaskForRun.size());
-        ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) executor;
-        threadPoolExecutor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        int size = allTaskForRun.size();
+        pool.setMaxPoolSize(size);
+        pool.setCorePoolSize(size);
+        pool.setQueueCapacity(size);
         for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
-            //CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo), pool);
-            executor.execute(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo));
+            CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo), pool);
         }
-        // 提交完所有任务后，关闭线程池
-        executor.shutdown();
-        // 等待所有任务执行完毕
-        try {
-            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
     }
 
     //@Scheduled(cron = "* 0/1 * * * ?")

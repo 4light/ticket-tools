@@ -60,6 +60,8 @@ public class JntTicketServiceImpl implements JntTicketService {
     //校验身份证号
     private static String checkIdUrl = "https://jnt.mfu.com.cn/ajax?ugi=bookingorder&action=checkBookingUserV2&bundleid=com.maiget.tickets&moduleid=6f77be86038c47269f1e00f7ddee9af4";
 
+    private static Map<Long,Object> runTaskCache=new HashMap<>();
+
     private static HttpHeaders globalHeaders = new HttpHeaders();
 
     static {
@@ -94,6 +96,7 @@ public class JntTicketServiceImpl implements JntTicketService {
         if(ObjectUtils.isEmpty(authorization)){
             authorization= getCookie(doSnatchInfo.getAccount(), doSnatchInfo.getPwd(), doSnatchInfo.getIp(), doSnatchInfo.getPort());
             if(ObjectUtils.isEmpty(authorization)){
+                runTaskCache.remove(doSnatchInfo.getTaskId());
                 return;
             }
         }
@@ -105,6 +108,7 @@ public class JntTicketServiceImpl implements JntTicketService {
         Map<String, JSONObject> sessionMap =querySessionInfo(globalHeaders,restTemplate,formatDate);
         if(ObjectUtils.isEmpty(sessionMap)){
             log.info("获取场馆信息:{}",sessionMap);
+            runTaskCache.remove(doSnatchInfo.getTaskId());
             return;
         }
         //查询余票信息
@@ -137,6 +141,7 @@ public class JntTicketServiceImpl implements JntTicketService {
                         updateTaskEntity.setId(doSnatchInfo.getTaskId());
                         updateTaskEntity.setUserInfoId(doSnatchInfo.getUserInfoId());
                         updateData(updateTaskEntity);
+                        runTaskCache.remove(doSnatchInfo.getTaskId());
                         return;
                     }
                 }
@@ -180,6 +185,7 @@ public class JntTicketServiceImpl implements JntTicketService {
                     if(StrUtil.equals("A00004", submitRes.getString("code"))){
                         String cookie = getCookie(doSnatchInfo.getAccount(), doSnatchInfo.getPwd(), doSnatchInfo.getIp(), doSnatchInfo.getPort());
                         if(ObjectUtils.isEmpty(cookie)){
+                            runTaskCache.remove(doSnatchInfo.getTaskId());
                             return;
                         }
                         globalHeaders.set("cookie",cookie);
@@ -195,9 +201,11 @@ public class JntTicketServiceImpl implements JntTicketService {
                     }
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                runTaskCache.remove(doSnatchInfo.getTaskId());
+                log.info("doSnatchingJnt出错了:{}",e);
             }
         }
+        runTaskCache.remove(doSnatchInfo.getTaskId());
     }
 
     @Override
@@ -244,7 +252,7 @@ public class JntTicketServiceImpl implements JntTicketService {
             Date useDate = unDoneTask.getUseDate();
             querySessionInfo(globalHeaders,TemplateUtil.initSSLTemplateWithProxy(proxy.getString("ip"),proxy.getInteger("port")),DateUtils.dateToStr(useDate,"yyyy-MM-dd"));
         }catch (Exception e){
-            e.printStackTrace();
+            log.info("updateData出错了:{}",e);
         }
     }
 
@@ -365,6 +373,7 @@ public class JntTicketServiceImpl implements JntTicketService {
             }
         }catch (Exception e){
             e.printStackTrace();
+            log.info("获取cookie异常:{}",e);
         }
         return null;
     }

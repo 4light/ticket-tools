@@ -35,9 +35,7 @@ import test.ticket.tickettools.domain.entity.TaskDetailEntity;
 import test.ticket.tickettools.domain.entity.TaskEntity;
 import test.ticket.tickettools.service.TicketService;
 import test.ticket.tickettools.service.WebSocketServer;
-import test.ticket.tickettools.utils.EncDecUtil;
-import test.ticket.tickettools.utils.DateUtils;
-import test.ticket.tickettools.utils.ImageUtils;
+import test.ticket.tickettools.utils.*;
 
 import javax.annotation.Resource;
 import java.io.File;
@@ -72,10 +70,10 @@ public class TicketServiceImpl implements TicketService {
     //提交订单
     private static String placeOrderUrl = "https://pcticket.cstm.org.cn/prod-api/config/orderRule/placeOrder";
     private static String wxPayForPcUrl = "https://pcticket.cstm.org.cn/prod-api/order/OrderInfo/wxPayForPc";
-    //-------------------------------毛纪--------------------------
-    private static String mfuQueryUserInfoPath = "/ajax?ugi=tg/account&action=logininfo&bundleid=com.maiget.tickets&moduleid=6f77be86038c47269f1e00f7ddee9af4";
 
     private static List<String> doneList = new ArrayList<>();
+    private static Map<Long,Object> runTaskCache=new HashMap<>();
+
 
     private static CloseableHttpClient httpClient = HttpClientBuilder.create()
             .setMaxConnTotal(100) // 设置最大连接数
@@ -139,6 +137,9 @@ public class TicketServiceImpl implements TicketService {
         BeanUtils.copyProperties(taskInfo, taskEntity);
         Long userInfoId = taskInfo.getUserInfoId();
         UserInfoEntity userInfoEntity = userInfoDao.selectById(userInfoId);
+        if(ObjectUtils.isEmpty(userInfoEntity)||userInfoEntity.getStatus()){
+            return ServiceResponse.createByErrorMessage("账号未授权不能创建任务");
+        }
         if (userInfoEntity != null) {
             taskEntity.setAccount(userInfoEntity.getAccount());
             taskEntity.setPwd(userInfoEntity.getPwd());
@@ -258,7 +259,7 @@ public class TicketServiceImpl implements TicketService {
                 taskInfoListResponse.setId(taskDetailEntity.getId());
                 taskInfoListResponse.setAuthorization(taskEntity.getAuth());
                 //使用名字好区分
-                taskInfoListResponse.setAccount(userInfoEntity.getUserName());
+                taskInfoListResponse.setAccount(userInfoEntity==null?null:userInfoEntity.getUserName());
                 taskInfoListResponse.setUseDate(taskEntity.getUseDate());
                 taskInfoListResponse.setUserName(taskDetailEntity.getUserName());
                 taskInfoListResponse.setIDCard(taskDetailEntity.getIDCard());
@@ -419,6 +420,12 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     public void snatchingTicket(DoSnatchInfo doSnatchInfo) {
+        Long taskId = doSnatchInfo.getTaskId();
+        if(runTaskCache.containsKey(taskId)){
+            return;
+        }else{
+            runTaskCache.put(taskId,true);
+        }
         String getHallUrl = "https://pcticket.cstm.org.cn/prod-api/pool/ingore/getHall?saleMode=1&openPerson=1&queryDate=%s";
         Map<String, String> nameIDMap = doSnatchInfo.getIdNameMap();
         String useDate = DateUtil.format(doSnatchInfo.getUseDate(), "yyyy-MM-dd hh:mm:ss");
@@ -445,6 +452,7 @@ public class TicketServiceImpl implements TicketService {
             //获取成人票和儿童票
             JSONArray getPriceByScheduleData = getPriceByScheduleJson == null ? null : getPriceByScheduleJson.getJSONArray("data");
             if (ObjectUtils.isEmpty(getPriceByScheduleData)) {
+                runTaskCache.remove(taskId);
                 return;
             }
             JSONArray priceTicketPoolVOS = new JSONArray();
@@ -597,6 +605,7 @@ public class TicketServiceImpl implements TicketService {
                     String body = exchange.getBody();
                     JSONObject bodyJson = JSON.parseObject(body);
                     if (!ObjectUtils.isEmpty(bodyJson) && (bodyJson.getIntValue("code") == 550 || bodyJson.getIntValue("code") == 503)) {
+                        runTaskCache.remove(taskId);
                         try {
                             Files.delete(Paths.get(sliderImageName));
                             Files.delete(Paths.get(backImageName));
@@ -631,6 +640,7 @@ public class TicketServiceImpl implements TicketService {
                         JSONObject searchBodyJson = JSON.parseObject(searchResBody);
                         if (searchBodyJson == null || searchBodyJson.getIntValue("code") != 200) {
                             log.info("查询个人订单失败：{}", searchBodyJson);
+                            runTaskCache.remove(taskId);
                             try {
                                 Files.delete(Paths.get(sliderImageName));
                                 Files.delete(Paths.get(backImageName));
@@ -661,7 +671,7 @@ public class TicketServiceImpl implements TicketService {
                             }
                         }
                         taskDetailDao.updateTaskDetailBath(taskDetailEntities);
-                        //SendMessageUtil.send(ChannelEnum.CSTM.getDesc(), doSnatchInfo.getAccount(),String.join(",",doSnatchInfo.getIdNameMap().values()));
+                        SendMessageUtil.send(ChannelEnum.CSTM.getDesc(),DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"),"主场馆",doSnatchInfo.getAccount(),String.join(",",doSnatchInfo.getIdNameMap().values()));
                         WebSocketServer.sendInfo(socketMsg("抢票成功", JSON.toJSONString(nameIDMap), 0), null);
                     }
                     /*if (!ObjectUtils.isEmpty(bodyJson) && bodyJson.getIntValue("code") == 550) {
@@ -673,6 +683,7 @@ public class TicketServiceImpl implements TicketService {
                             });
                         }
                     }*/
+                    runTaskCache.remove(taskId);
                     try {
                         Files.delete(Paths.get(sliderImageName));
                         Files.delete(Paths.get(backImageName));
@@ -682,7 +693,8 @@ public class TicketServiceImpl implements TicketService {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            runTaskCache.remove(taskId);
+            log.info("科技馆抢票异常:{}",e);
         }
     }
 
