@@ -33,7 +33,7 @@
       <el-form-item>
         <el-button type="primary" @click="onSubmit" size="small" round>查询</el-button>
         <el-button type="primary" @click="addTask" size="small" round>新建任务</el-button>
-        <el-button type="primary" @click="getMsg" size="small" round>查询验证码</el-button>
+<!--        <el-button type="primary" @click="getMsg" size="small" round>查询验证码</el-button>-->
       </el-form-item>
     </el-form>
     <div>

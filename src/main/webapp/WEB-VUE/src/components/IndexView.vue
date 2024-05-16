@@ -1,8 +1,8 @@
 <template>
   <el-tabs :tab-position="tabPosition" class="tabStyle">
-    <el-tab-pane label="用户管理">
+<!--    <el-tab-pane label="用户管理">
       <userView></userView>
-    </el-tab-pane>
+    </el-tab-pane>-->
     <el-tab-pane label="任务管理">
       <taskView></taskView>
     </el-tab-pane>
