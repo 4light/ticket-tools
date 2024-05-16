@@ -51,13 +51,13 @@ public class DoSnatchingSchedule {
      */
     @Scheduled(cron = "0/1 0-30 18 * * ?")
     public void doSnatching() {
-        ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
-        pool.setThreadNamePrefix("doSnatchingProcessor-");
-        pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());//拒绝策略
         Map<String, DoSnatchInfo> taskForRun = ticketServiceImpl.getTaskForRun();
         if (ObjectUtils.isEmpty(taskForRun)) {
             return;
         }
+        ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
+        pool.setThreadNamePrefix("doSnatchingProcessor-");
+        pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());//拒绝策略
         int size = taskForRun.size();
         pool.setMaxPoolSize(size);
         pool.setCorePoolSize(size);
@@ -74,13 +74,13 @@ public class DoSnatchingSchedule {
      */
     @Scheduled(cron = "0/1 0-30 18 * * ?")
     public void doSnatchingExcludeTarget() {
-        ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
-        pool.setThreadNamePrefix("singleDoSnatchingProcessor-");
-        pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());//拒绝策略
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
         if (ObjectUtils.isEmpty(allTaskForRun)) {
             return;
         }
+        ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
+        pool.setThreadNamePrefix("singleDoSnatchingProcessor-");
+        pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());//拒绝策略
         int size = allTaskForRun.size();
         pool.setMaxPoolSize(size);
         pool.setCorePoolSize(size);
@@ -92,13 +92,13 @@ public class DoSnatchingSchedule {
 
     @Scheduled(cron = "0/1 31-59 18 * * ?")
     public void doSingleSnatch() {
-        ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
-        pool.setThreadNamePrefix("singleDoSnatchingProcessor-");
-        pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());//拒绝策略
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
         if (ObjectUtils.isEmpty(allTaskForRun)) {
             return;
         }
+        ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
+        pool.setThreadNamePrefix("singleDoSnatchingProcessor-");
+        pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());//拒绝策略
         int size = allTaskForRun.size();
         pool.setMaxPoolSize(size);
         pool.setCorePoolSize(size);
@@ -110,13 +110,13 @@ public class DoSnatchingSchedule {
 
     @Scheduled(cron = "0/1 * 8-17,19-22 * * ?")
     public void doSingleSnatchOtherTime() {
-        ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
-        pool.setThreadNamePrefix("singleDoSnatchingProcessor-");
-        pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());//拒绝策略
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
         if (ObjectUtils.isEmpty(allTaskForRun)) {
             return;
         }
+        ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
+        pool.setThreadNamePrefix("singleDoSnatchingProcessor-");
+        pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());//拒绝策略
         int size = allTaskForRun.size();
         pool.setMaxPoolSize(size);
         pool.setCorePoolSize(size);

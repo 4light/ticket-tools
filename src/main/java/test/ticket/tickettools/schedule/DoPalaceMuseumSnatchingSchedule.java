@@ -28,13 +28,13 @@ public class DoPalaceMuseumSnatchingSchedule {
 
     @Scheduled(cron = "0/1 2-30 20 * * ?")
     public void doPalaceMuseumTicketSnatch() {
-        ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
-        pool.setThreadNamePrefix("palaceMuseumProcessor-");
-        pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());//拒绝策略
         List<DoSnatchInfo> doSnatchInfos = palaceMuseumTicketServiceImpl.snatchingTicket();
         if (ObjectUtils.isEmpty(doSnatchInfos)) {
             return;
         }
+        ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
+        pool.setThreadNamePrefix("palaceMuseumProcessor-");
+        pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());//拒绝策略
         int size = doSnatchInfos.size();
         pool.setMaxPoolSize(size);
         pool.setCorePoolSize(size);

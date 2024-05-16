@@ -38,13 +38,13 @@ public class DoJntSnatchingSchedule {
 
     @Scheduled(cron = "0/2 30-35 12 * * ?")
     public void doJntTicketSnatch(){
-        ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
-        pool.setThreadNamePrefix("jntProcessor-");
-        pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());//拒绝策略
         List<DoSnatchInfo> doSnatchInfos = jntTicketServiceImpl.getDoSnatchInfos();
         if(ObjectUtils.isEmpty(doSnatchInfos)){
             return;
         }
+        ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
+        pool.setThreadNamePrefix("jntProcessor-");
+        pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());//拒绝策略
         int size = doSnatchInfos.size();
         pool.setMaxPoolSize(size);
         pool.setCorePoolSize(size);
