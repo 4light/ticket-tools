@@ -25,11 +25,11 @@
     <insert id="insert" parameterType="test.ticket.tickettools.domain.entity.UserInfoEntity">
         insert into user_info (id, user_name, phone_num, channel,
                                channel_user_id, account, create_date,
-                               update_date)
+                               update_date,status)
         values (#{id,jdbcType=BIGINT}, #{userName,jdbcType=VARCHAR}, #{phoneNum,jdbcType=VARCHAR},
                 #{channel,jdbcType=INTEGER},
                 #{channelUserId,jdbcType=VARCHAR}, #{account,jdbcType=VARCHAR}, #{createDate,jdbcType=TIMESTAMP},
-                #{updateDate,jdbcType=TIMESTAMP})
+                #{updateDate,jdbcType=TIMESTAMP},#{status,jdbcType=BIT})
     </insert>
     <insert id="insertOrUpdate" parameterType="test.ticket.tickettools.domain.entity.UserInfoEntity">
         insert into user_info (id, user_name, phone_num, channel,

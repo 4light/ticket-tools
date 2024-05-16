@@ -155,8 +155,8 @@ public class PalaceMuseumTicketServiceImpl implements PalaceMuseumTicketService 
         JSONArray parkFsyyDetailDTOs = new JSONArray();
         try {
             JSONObject currentParkFsyyDetail=new JSONObject();
-            // RestTemplate restTemplate= TemplateUtil.initSSLTemplateWithProxy(doSnatchInfo.getIp(),doSnatchInfo.getPort());
-            RestTemplate restTemplate=TemplateUtil.initSSLTemplate();
+            RestTemplate restTemplate= TemplateUtil.initSSLTemplateWithProxy(doSnatchInfo.getIp(),doSnatchInfo.getPort());
+            //RestTemplate restTemplate=TemplateUtil.initSSLTemplate();
             HttpHeaders headers=new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             String headerStr = doSnatchInfo.getHeaders();

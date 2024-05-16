@@ -53,6 +53,7 @@ public class UserServiceImpl implements UserService {
         userInfo.setUserName(userInfoRequest.getUserName());
         userInfo.setAccount(userInfoRequest.getAccount());
         userInfo.setPwd(userInfoRequest.getPwd());
+        userInfo.setStatus(false);
         Integer insert = userInfoDao.insert(userInfo);
         if(insert==null){
             return ServiceResponse.createByErrorMessage("插入数据失败");
@@ -124,6 +125,9 @@ public class UserServiceImpl implements UserService {
     @Override
     public ServiceResponse updateUser(UserInfoEntity userInfoEntity) {
         userInfoEntity.setUpdateDate(new Date());
+        if(ObjectUtils.isEmpty(userInfoEntity.getId())){
+            userInfoEntity.setStatus(false);
+        }
         Integer integer = userInfoDao.insertOrUpdate(userInfoEntity);
         if(integer==null){
             return ServiceResponse.createByErrorMessage("更新数据失败");
