@@ -106,7 +106,7 @@ public class JntTicketServiceImpl implements JntTicketService {
         HttpEntity queryEntity = new HttpEntity<>(queryFormat, headers);
         JSONObject queryRes = TemplateUtil.getResponse(restTemplate, bookingQueryUrl, HttpMethod.POST, queryEntity);
         if (ObjectUtils.isEmpty(queryRes)) {
-            log.info("查询余票数据失败:{}",queryRes);
+            log.info("账号{}查询余票数据失败:{}",doSnatchInfo.getAccount(),queryRes);
             return;
         }
         if (StrUtil.equals(queryRes.getString("code"), "A00013")) {
@@ -187,7 +187,7 @@ public class JntTicketServiceImpl implements JntTicketService {
                 HttpEntity submitEntity = new HttpEntity<>(submitBodyFormat, headers);
                 Thread.sleep(RandomUtil.randomInt(1000,3000));
                 JSONObject submitRes = TemplateUtil.getResponse(restTemplate, submitUrl, HttpMethod.POST, submitEntity);
-                log.info("请求结果:{}", submitRes);
+                log.info("账号{}提单请求结果:{}", doSnatchInfo.getAccount(),submitRes);
                 if (StrUtil.equals(submitRes.getString("code"), "A00006")) {
                     taskDao.updateTask(taskEntity);
                     taskDetailDao.updateByTaskId(doSnatchInfo.getTaskId());
@@ -197,7 +197,7 @@ public class JntTicketServiceImpl implements JntTicketService {
                 if (StrUtil.equals(submitRes.getString("code"), "A00013")) {
                     check(submitRes.getString("captcha_type"), restTemplate, headers);
                     submitRes = TemplateUtil.getResponse(restTemplate, submitUrl, HttpMethod.POST, submitEntity);
-                    log.info("请求结果:{}", submitRes);
+                    log.info("账号{}提单请求结果:{}", doSnatchInfo.getAccount(),submitRes);
                     if (StrUtil.equals(submitRes.getString("code"), "A00006")) {
                         taskDao.updateTask(taskEntity);
                         taskDetailDao.updateByTaskId(doSnatchInfo.getTaskId());
@@ -213,7 +213,7 @@ public class JntTicketServiceImpl implements JntTicketService {
                         headers.set("cookie",cookie);
                         submitEntity = new HttpEntity<>(submitBodyFormat, headers);
                         submitRes = TemplateUtil.getResponse(restTemplate, submitUrl, HttpMethod.POST, submitEntity);
-                        log.info("请求结果:{}", submitRes);
+                        log.info("账号{}提单请求结果:{}", doSnatchInfo.getAccount(),submitRes);
                         if (StrUtil.equals(submitRes.getString("code"), "A00006")) {
                             taskDao.updateTask(taskEntity);
                             taskDetailDao.updateByTaskId(doSnatchInfo.getTaskId());
@@ -224,7 +224,7 @@ public class JntTicketServiceImpl implements JntTicketService {
                 }
             } catch (Exception e) {
                 runTaskCache.remove(doSnatchInfo.getTaskId());
-                log.info("doSnatchingJnt出错了:{}",e);
+                log.info("账号{}doSnatchingJnt出错了:{}",doSnatchInfo.getAccount(),e);
             }
         }
         runTaskCache.remove(doSnatchInfo.getTaskId());
