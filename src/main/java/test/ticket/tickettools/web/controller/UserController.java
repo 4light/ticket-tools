@@ -4,7 +4,7 @@ package test.ticket.tickettools.web.controller;
 import org.springframework.web.bind.annotation.*;
 import test.ticket.tickettools.domain.bo.*;
 import test.ticket.tickettools.domain.entity.UserInfoEntity;
-import test.ticket.tickettools.service.PalaceMuseumTicketService;
+import test.ticket.tickettools.service.DoSnatchTicketService;
 import test.ticket.tickettools.service.UserService;
 
 import javax.annotation.Resource;
@@ -15,8 +15,6 @@ public class UserController {
 
     @Resource
     UserService userServiceImpl;
-    @Resource
-    PalaceMuseumTicketService palaceMuseumTicketServiceImpl;
 
 
 
@@ -51,9 +49,4 @@ public class UserController {
         return ServiceResponse.createBySuccess();
     }
 
-    @GetMapping(value = "/test/init")
-    public ServiceResponse init() {
-        palaceMuseumTicketServiceImpl.test();
-        return ServiceResponse.createBySuccess();
-    }
 }

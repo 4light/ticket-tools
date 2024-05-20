@@ -14,7 +14,7 @@ headers = {
 class HttpRecord:
 
     def request(self, flow: mitmproxy.http.HTTPFlow):
-        if flow.request.pretty_url.startswith("https://lotswap"):
+        if flow.request.pretty_url.startswith("https://lotswap") or flow.request.pretty_url.startswith("https://wxmini.chnmuseum"):
             httpRecord["url"] = flow.request.url.replace("'", "\"")
             for key in flow.request.headers.keys():
                 headerRecord[key] = flow.request.headers[key]

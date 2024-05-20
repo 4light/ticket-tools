@@ -11,33 +11,29 @@ import test.ticket.tickettools.service.DoSnatchTicketService;
 
 import javax.annotation.Resource;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ThreadPoolExecutor;
 
 @Slf4j
 @Configuration
 @EnableScheduling
-public class DoJntSnatchingSchedule {
+public class DoChnMuseumSnatchingSchedule {
     @Resource
-    DoSnatchTicketService jntTicketServiceImpl;
+    DoSnatchTicketService chnMuseumTicketServiceImpl;
 
-
-    @Scheduled(cron = "0/2 28-29 12 * * ?")
-    public void initData(){
-        try {
-            jntTicketServiceImpl.initData();
-        }catch (Exception e){
-            e.printStackTrace();
-        }
+    @Scheduled(cron = "0/8 26 21 * * ?")
+    public void initData() {
+        chnMuseumTicketServiceImpl.initData();
     }
 
-    @Scheduled(cron = "0/2 30-35 12 * * ?")
-    public void doJntTicketSnatch(){
-        List<DoSnatchInfo> doSnatchInfos = jntTicketServiceImpl.getDoSnatchInfos();
-        if(ObjectUtils.isEmpty(doSnatchInfos)){
+    @Scheduled(cron = "0/1 27-59 21 * * ?")
+    public void doPalaceMuseumTicketSnatch() {
+        List<DoSnatchInfo> doSnatchInfos = chnMuseumTicketServiceImpl.getDoSnatchInfos();
+        if (ObjectUtils.isEmpty(doSnatchInfos)) {
             return;
         }
         ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
-        pool.setThreadNamePrefix("jntProcessor-");
+        pool.setThreadNamePrefix("chnMuseumProcessor-");
         pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());//拒绝策略
         int size = doSnatchInfos.size();
         pool.setMaxPoolSize(size);
@@ -45,8 +41,7 @@ public class DoJntSnatchingSchedule {
         pool.setQueueCapacity(size);
         pool.initialize();
         for (DoSnatchInfo doSnatchInfo : doSnatchInfos) {
-            CompletableFuture.runAsync(() -> jntTicketServiceImpl.doSnatchingTicket(doSnatchInfo),pool);
+            CompletableFuture.runAsync(() -> chnMuseumTicketServiceImpl.doSnatchingTicket(doSnatchInfo), pool);
         }
     }
-
 }

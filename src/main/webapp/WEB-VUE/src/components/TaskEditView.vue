@@ -23,6 +23,14 @@
           <el-checkbox label="1">下午</el-checkbox>
         </el-checkbox-group>
       </el-form-item>
+      <el-form-item label="场次" v-if="form.channel==3">
+        <el-checkbox-group v-model="checkedSession"
+                           :min="0"
+                           :max="1"
+        >
+          <el-checkbox v-for="(session,index) in chnMuSessions" :label="index" :key="index">{{session}}</el-checkbox>
+        </el-checkbox-group>
+      </el-form-item>
       <el-form-item label="账号">
         <el-select v-model="form.userInfoId">
           <el-option
@@ -136,6 +144,10 @@ export default {
         {
           "id": 2,
           "channelName": "故宫"
+        },
+        {
+          "id": 3,
+          "channelName": "国博"
         }
       ],
       userIdList: [],
@@ -156,7 +168,9 @@ export default {
       userText: "",
       userList: [],
       showUserList: false,
-      session: ["0", "1"]
+      session: ["0", "1"],
+      checkedSession:[],
+      chnMuSessions:["09:00-11:00","11:00-13:30","13:30-16:00"]
     }
   },
   /* watch: {
@@ -164,6 +178,16 @@ export default {
    },*/
   methods: {
     edit() {
+      if(this.taskInfo.channel==2){
+        let currentSession=[]
+        currentSession.push(this.taskInfo.session.toString())
+        this.session=currentSession
+      }
+      if(this.taskInfo.channel==3){
+        let currentSession=[]
+        currentSession.push(this.taskInfo.session)
+        this.checkedSession=currentSession
+      }
       this.form = this.taskInfo
       this.userList = this.taskInfo.userList
       this.showUserList = true
@@ -190,6 +214,7 @@ export default {
       this.showUserList = true
     },
     onSubmit() {
+      console.log(this.checkedSession)
       if (this.form.channel == 0 && this.userList.length > 15) {
         this.$alert("最多只能添加15条，请检查", "添加失败")
         return
@@ -199,6 +224,13 @@ export default {
           this.form.session = parseInt(this.session[0])
         } else {
           this.form.session = null
+        }
+      }
+      if(this.form.channel == 3){
+        if(this.checkedSession.length>0){
+          this.form.session=this.checkedSession[0]
+        }else{
+          this.form.session=null
         }
       }
       this.form.userList = this.userList

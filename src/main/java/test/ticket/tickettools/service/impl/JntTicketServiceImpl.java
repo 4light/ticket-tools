@@ -20,7 +20,7 @@ import test.ticket.tickettools.domain.constant.ChannelEnum;
 import test.ticket.tickettools.domain.entity.TaskDetailEntity;
 import test.ticket.tickettools.domain.entity.TaskEntity;
 import test.ticket.tickettools.domain.entity.UserInfoEntity;
-import test.ticket.tickettools.service.JntTicketService;
+import test.ticket.tickettools.service.DoSnatchTicketService;
 import test.ticket.tickettools.utils.*;
 
 import javax.annotation.Resource;
@@ -39,7 +39,7 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
-public class JntTicketServiceImpl implements JntTicketService {
+public class JntTicketServiceImpl implements DoSnatchTicketService {
 
     //获取csrf
     private static String getCsrfUrl = "https://jnt.mfu.com.cn/ajax?ugi=tg/account&action=forminit&bundleid=com.maiget.tickets&moduleid=6f77be86038c47269f1e00f7ddee9af4";
@@ -74,7 +74,7 @@ public class JntTicketServiceImpl implements JntTicketService {
     UserInfoDao userInfoDao;
 
     @Override
-    public void doSnatchingJnt(DoSnatchInfo doSnatchInfo) {
+    public void doSnatchingTicket(DoSnatchInfo doSnatchInfo) {
         Long taskId = doSnatchInfo.getTaskId();
         if(runTaskCache.containsKey(taskId)){
             return;
@@ -100,7 +100,7 @@ public class JntTicketServiceImpl implements JntTicketService {
         //查询余票
         headers.set("Referer", "https://jnt.mfu.com.cn/page/tg");
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        RestTemplate restTemplate=TemplateUtil.initSSLTemplateWithProxy(doSnatchInfo.getIp(), doSnatchInfo.getPort());
+        RestTemplate restTemplate=ObjectUtils.isEmpty(doSnatchInfo.getIp())?TemplateUtil.initSSLTemplate():TemplateUtil.initSSLTemplateWithProxy(doSnatchInfo.getIp(), doSnatchInfo.getPort());
         String queryFormat = MessageFormat.format("fromtype={0}&siteid={1}", "GROUP", "7e97d18d179c4791bab189f8de87ee9d");
         headers.set("Content-Length", String.valueOf(customURLEncode(queryFormat, "utf-8").getBytes(StandardCharsets.UTF_8).length));
         HttpEntity queryEntity = new HttpEntity<>(queryFormat, headers);

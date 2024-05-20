@@ -33,7 +33,7 @@
       <el-form-item>
         <el-button type="primary" @click="onSubmit" size="small" round>查询</el-button>
         <el-button type="primary" @click="addTask" size="small" round>新建任务</el-button>
-<!--        <el-button type="primary" @click="getMsg" size="small" round>查询验证码</el-button>-->
+        <!--        <el-button type="primary" @click="getMsg" size="small" round>查询验证码</el-button>-->
       </el-form-item>
     </el-form>
     <div>
@@ -205,7 +205,8 @@ export default {
       channelObj: {
         "0": "科技馆",
         "1": "毛纪",
-        "2": "故宫"
+        "2": "故宫",
+        "3": "国博",
       },
       channelList: [
         {
@@ -219,6 +220,10 @@ export default {
         {
           "id": 2,
           "channelName": "故宫"
+        },
+        {
+          "id": 3,
+          "channelName": "国博"
         }
       ],
       showPayPic: false,
@@ -551,17 +556,17 @@ export default {
       })
     },
     addDate(row) {
-      let nowDate=row.updateDate
-      if (!nowDate) {
+      let nowDate = row.updateDate
+      if (!nowDate || row.channel == 3) {
         return
       }
       let current = new Date(nowDate)
       let newDate
       console.log(row.channel)
-      if(row.channel==2){
+      if (row.channel == 2) {
         newDate = current.setMinutes(current.getMinutes() + 30)
       }
-      if(row.channel==0){
+      if (row.channel == 0) {
         newDate = current.setMinutes(current.getMinutes() + 15)
       }
       let rd = new Date(newDate);
@@ -577,7 +582,7 @@ export default {
       if (d < 10) {
         d = "0" + d;
       }
-      if(row.channel!=1){
+      if (row.channel != 1) {
         return (y + "-" + M + "-" + d + " " + H + ":" + m + ":" + s)
       }
       return ""

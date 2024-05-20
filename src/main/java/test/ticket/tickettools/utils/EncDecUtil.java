@@ -1,11 +1,15 @@
 package test.ticket.tickettools.utils;
 
+import cn.hutool.crypto.digest.MD5;
+import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.codec.binary.Hex;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.security.*;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
@@ -62,5 +66,22 @@ public class EncDecUtil {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static void main(String[] args) {
+        JSONObject point=new JSONObject();
+        point.put("x",79.5);
+        point.put("y",76.5);
+        JSONObject e=new JSONObject();
+        e.put("pointVOS",point);
+        JSONObject o=new JSONObject();
+        o.put("pointJson",e);
+        o.put("token","3f3b5a04b9f345bcb8e6f721e8ba0a3e-10030463-1715165549484");
+        o.put("key","6kI6ZZ53en0uwKbu");
+        String ayrKJRXPO3nR5Abc = doAES(point.toJSONString(), "APbRTdoFjtRxORhQ");
+        String ayrKJRXPO3nR5Abc1 = doAES("9795000:1716209472000:2024/05/21:1:1:2", "AyrKJRXPO3nR5Abc");
+        String i="QZOutputJson={\"s\":\"o\",\"t\":1715165536,\"ip\":\"115.171.60.187\",\"pos\":\"---\",\"rand\":\"iol7jgQc48xCmBOOsA_thA==\"}";
+        System.out.println(i.split("\"")[9]);
+        System.out.println(ayrKJRXPO3nR5Abc1);
     }
 }

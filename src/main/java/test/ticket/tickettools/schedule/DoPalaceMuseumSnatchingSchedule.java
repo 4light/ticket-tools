@@ -7,7 +7,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.ObjectUtils;
 import test.ticket.tickettools.domain.bo.DoSnatchInfo;
-import test.ticket.tickettools.service.PalaceMuseumTicketService;
+import test.ticket.tickettools.service.DoSnatchTicketService;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -19,16 +19,16 @@ import java.util.concurrent.ThreadPoolExecutor;
 @EnableScheduling
 public class DoPalaceMuseumSnatchingSchedule {
     @Resource
-    PalaceMuseumTicketService palaceMuseumTicketServiceImpl;
+    DoSnatchTicketService palaceMuseumTicketServiceImpl;
 
-    @Scheduled(cron = "0/8 59 19 * * ?")
+    @Scheduled(cron = "0/8 0-59 22 * * ?")
     public void initData() {
         palaceMuseumTicketServiceImpl.initData();
     }
 
-    @Scheduled(cron = "0/1 2-30 20 * * ?")
+    @Scheduled(cron = "0/1 30-40 20 * * ?")
     public void doPalaceMuseumTicketSnatch() {
-        List<DoSnatchInfo> doSnatchInfos = palaceMuseumTicketServiceImpl.snatchingTicket();
+        List<DoSnatchInfo> doSnatchInfos = palaceMuseumTicketServiceImpl.getDoSnatchInfos();
         if (ObjectUtils.isEmpty(doSnatchInfos)) {
             return;
         }

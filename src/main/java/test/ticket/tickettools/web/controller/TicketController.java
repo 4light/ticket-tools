@@ -8,10 +8,7 @@ import test.ticket.tickettools.dao.TaskDetailDao;
 import test.ticket.tickettools.domain.bo.*;
 import test.ticket.tickettools.domain.entity.UserInfoEntity;
 import test.ticket.tickettools.domain.entity.TaskDetailEntity;
-import test.ticket.tickettools.service.LoginService;
-import test.ticket.tickettools.service.PalaceMuseumTicketService;
-import test.ticket.tickettools.service.TicketService;
-import test.ticket.tickettools.service.WebSocketServer;
+import test.ticket.tickettools.service.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -26,7 +23,7 @@ public class TicketController {
     @Resource
     TicketService ticketServiceImpl;
     @Resource
-    PalaceMuseumTicketService palaceMuseumTicketServiceImpl;
+    DoSnatchTicketService palaceMuseumTicketServiceImpl;
 
     @PostMapping(value = "/user")
     public ServiceResponse<PageableResponse<TaskInfoListResponse>> getUser(@RequestBody QueryTaskInfo queryTaskInfo) {
@@ -116,7 +113,7 @@ public class TicketController {
 
     @GetMapping(value = "/test")
     public void sss(){
-        List<DoSnatchInfo> doSnatchInfoList = palaceMuseumTicketServiceImpl.snatchingTicket();
+        List<DoSnatchInfo> doSnatchInfoList = palaceMuseumTicketServiceImpl.getDoSnatchInfos();
         doSnatchInfoList.forEach(o->palaceMuseumTicketServiceImpl.doSnatchingTicket(o));
     }
 }

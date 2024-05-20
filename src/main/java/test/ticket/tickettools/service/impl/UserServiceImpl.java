@@ -23,7 +23,6 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 @Slf4j
@@ -32,7 +31,8 @@ public class UserServiceImpl implements UserService {
 
     @Resource
     UserInfoDao userInfoDao;
-    private String getChnMuUserInfoUrl="https://lotswap.dpm.org.cn/lotsapi/leaguer/api/userLeaguer/manage/leaguerInfo?cipherText=0&merchantId=2655&merchantInfoId=2655";
+    private String getPlaceMuUserInfoUrl ="https://lotswap.dpm.org.cn/lotsapi/leaguer/api/userLeaguer/manage/leaguerInfo?cipherText=0&merchantId=2655&merchantInfoId=2655";
+    private String getChnMuUserInfoUrl ="https://uu.chnmuseum.cn/prod-api/getUserInfoToIndividual2Mini?p=wxmini";
     private static List<String> accessTokenList=new ArrayList<>();
     @Override
     public ServiceResponse queryUser(UserInfoRequest userInfoRequest) {
@@ -63,11 +63,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ServiceResponse addProxyUser(ProxyUserInfoRequest proxyUserInfoRequest) {
-        //故宫获取用户信息
+        //获取用户信息
         HttpHeaders headers=new HttpHeaders();
         String proxyHeadersStr = proxyUserInfoRequest.getHeaders();
         JSONObject proxyHeadersJson = JSON.parseObject(proxyHeadersStr);
-        if(accessTokenList.contains(proxyHeadersJson.getString("access-token"))){
+        String access = proxyHeadersJson.getString("access-token");
+        if(accessTokenList.contains(access)){
             log.info("存在相同的accessToken直接返回");
             return ServiceResponse.createBySuccess();
         }
@@ -80,22 +81,45 @@ public class UserServiceImpl implements UserService {
             }
         });
         HttpEntity entity=new HttpEntity(headers);
-        JSONObject response = TemplateUtil.getResponse(TemplateUtil.initSSLTemplate(), getChnMuUserInfoUrl, HttpMethod.GET, entity);
-        if(response==null||response.getIntValue("status")!=200){
-            log.info("请求用户信息异常：{}",response);
-            return ServiceResponse.createByErrorMessage("获取用户信息异常");
+        String url = proxyUserInfoRequest.getUrl();
+        UserInfoEntity userInfoEntity = new UserInfoEntity();
+        JSONObject data=new JSONObject();
+        //故宫的
+        if(url.contains("lotswap")) {
+            JSONObject response = TemplateUtil.getResponse(TemplateUtil.initSSLTemplate(), getPlaceMuUserInfoUrl, HttpMethod.GET, entity);
+            if (response == null || response.getIntValue("status") != 200) {
+                log.info("请求用户信息异常：{}", response);
+                accessTokenList.remove(access);
+                return ServiceResponse.createByErrorMessage("获取用户信息异常");
+            }
+            log.info("获取到的用户信息:{}", response);
+            data = response.getJSONObject("data");
+            userInfoEntity.setChannel(ChannelEnum.LOTS.getCode());
+            String account = data.getString("mobile") == null ? data.getString("email") : data.getString("mobile");
+            userInfoEntity.setAccount(account);
         }
-        log.info("获取到的用户信息:{}",response);
-        JSONObject data = response.getJSONObject("data");
-        UserInfoEntity userInfoEntity=new UserInfoEntity();
-        userInfoEntity.setChannel(ChannelEnum.LOTS.getCode());
-        String account = data.getString("mobile") == null ? data.getString("email") : data.getString("mobile");
-        userInfoEntity.setAccount(account);
+        //国博的
+        if(url.contains("chnmuseum")){
+            headers.set("Host","uu.chnmuseum.cn");
+            HttpEntity chnMuEntity=new HttpEntity(headers);
+            JSONObject response = TemplateUtil.getResponse(TemplateUtil.initSSLTemplate(), getChnMuUserInfoUrl, HttpMethod.GET, chnMuEntity);
+            if (response == null || response.getIntValue("code") != 200) {
+                accessTokenList.remove(access);
+                log.info("请求用户信息异常：{}", response);
+                return ServiceResponse.createByErrorMessage("获取用户信息异常");
+            }
+            log.info("获取到的用户信息:{}", response);
+            data = response.getJSONObject("user");
+            userInfoEntity.setChannel(ChannelEnum.CHNMU.getCode());
+            String account = data.getString("phoneNumber") == null ? data.getString("email") : data.getString("phoneNumber");
+            userInfoEntity.setAccount(account);
+        }
         List<UserInfoEntity> res = userInfoDao.select(userInfoEntity);
         if(res.size()>0){
             //更新
+            JSONObject finalData = data;
             res.forEach(o->{
-                o.setChannelUserId(data.getString("userId"));
+                o.setChannelUserId(finalData.getString("userId"));
                 o.setHeaders(proxyHeadersStr);
                 o.setUpdateDate(new Date());
                 userInfoDao.insertOrUpdate(o);
@@ -103,7 +127,7 @@ public class UserServiceImpl implements UserService {
             return ServiceResponse.createBySuccess();
         }else {
             userInfoEntity.setHeaders(proxyHeadersStr);
-            //先用来存储openId
+            //先用来存储openId,如果openId没有存国博的
             userInfoEntity.setExt(data.getString("openId"));
             Integer insert = userInfoDao.insert(userInfoEntity);
             if (insert != 0) {

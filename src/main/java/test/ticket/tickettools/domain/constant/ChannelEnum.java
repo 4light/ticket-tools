@@ -6,7 +6,8 @@ import java.util.Map;
 public enum ChannelEnum {
     CSTM(0,"科技馆","https://pcticket.cstm.org.cn"),
     MFU(1,"毛纪","https://jnt.mfu.com.cn"),
-    LOTS(2,"故宫","https://lotswap.dpm.org.cn");
+    LOTS(2,"故宫","https://lotswap.dpm.org.cn"),
+    CHNMU(3,"国博","https://wxmini.chnmuseum.cn");
 
     Integer code;
     String desc;

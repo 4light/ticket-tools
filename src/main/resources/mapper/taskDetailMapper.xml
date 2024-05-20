@@ -150,7 +150,10 @@
                 update_date = #{updateDate},
             </if>
             <if test='orderNumber!=null'>
-                order_number = #{orderNumber}
+                order_number = #{orderNumber},
+            </if>
+            <if test='orderId!=null'>
+                order_id = #{orderId}
             </if>
         </set>
         where task_id= #{taskId}

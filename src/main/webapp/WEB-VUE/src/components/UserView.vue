@@ -125,12 +125,17 @@ export default {
         {
           "id": 2,
           "channelName": "故宫"
+        },
+        {
+          "id": 3,
+          "channelName": "国博"
         }
       ],
       channelObj: {
         "0": "科技馆",
         "1": "毛纪",
-        "2": "故宫"
+        "2": "故宫",
+        "3": "国博"
       },
       userData: [],
       page: {

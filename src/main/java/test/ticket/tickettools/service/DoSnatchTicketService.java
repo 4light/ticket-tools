@@ -4,13 +4,11 @@ import test.ticket.tickettools.domain.bo.DoSnatchInfo;
 
 import java.util.List;
 
-public interface PalaceMuseumTicketService {
-
-    void test();
+public interface DoSnatchTicketService {
 
     void initData();
     //获取抢票数据
-    List<DoSnatchInfo> snatchingTicket();
+    List<DoSnatchInfo> getDoSnatchInfos();
     //执行抢票任务
     void doSnatchingTicket(DoSnatchInfo doSnatchInfo);
 }
