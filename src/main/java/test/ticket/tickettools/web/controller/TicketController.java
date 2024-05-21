@@ -16,6 +16,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import static jdk.nashorn.internal.runtime.regexp.joni.Config.log;
+
 @RestController
 @RequestMapping("/ticket")
 public class TicketController {
@@ -76,13 +78,13 @@ public class TicketController {
                     String[] fromArr = entity.split("=");
                     if(fromArr.length>=2){
                         String phone=fromArr[1];
-                        param.setPhoneNum(phone.startsWith("+86")?phone.substring(3):phone);
+                        param.setAccount(phone.startsWith("+86")?phone.substring(3):phone);
                     }
                 }
                 if(entity.contains("content")){
                     String[] contentArr = entity.split("=");
                     if(contentArr.length>=2){
-                        param.setAccount(contentArr[1]);
+                        param.setExt(contentArr[1]);
                     }
                 }
                 if(entity.contains("date")){
@@ -93,7 +95,7 @@ public class TicketController {
                 }
             }
         }
-        param.setCreateDate(new Date());
+        param.setUpdateDate(new Date());
         return ticketServiceImpl.addPhoneInfo(param);
     }
 

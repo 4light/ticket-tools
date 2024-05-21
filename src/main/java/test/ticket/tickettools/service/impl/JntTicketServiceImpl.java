@@ -231,7 +231,7 @@ public class JntTicketServiceImpl implements DoSnatchTicketService {
     }
 
     @Override
-    public void initData() {
+    public void initData(TaskEntity entity) {
         TaskEntity taskEntity = new TaskEntity();
         taskEntity.setChannel(ChannelEnum.MFU.getCode());
         List<TaskEntity> unDoneTasks = taskDao.getUnDoneTasks(taskEntity);
@@ -268,6 +268,10 @@ public class JntTicketServiceImpl implements DoSnatchTicketService {
         }
     }
 
+    @Override
+    public List<TaskEntity> getAllUndoneTask() {
+        return null;
+    }
 
     @Override
     public List<DoSnatchInfo> getDoSnatchInfos() {

@@ -21,6 +21,7 @@ import test.ticket.tickettools.dao.TaskDao;
 import test.ticket.tickettools.dao.TaskDetailDao;
 import test.ticket.tickettools.dao.UserInfoDao;
 import test.ticket.tickettools.domain.bo.DoSnatchInfo;
+import test.ticket.tickettools.domain.bo.TaskInfo;
 import test.ticket.tickettools.domain.constant.ChannelEnum;
 import test.ticket.tickettools.domain.entity.TaskDetailEntity;
 import test.ticket.tickettools.domain.entity.TaskEntity;
@@ -37,6 +38,7 @@ import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 @Slf4j
@@ -64,74 +66,77 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
 
 
     @Override
-    public void initData() {
+    public void initData(TaskEntity unDoneTask) {
         try {
             HttpHeaders headers = new HttpHeaders();
-            TaskEntity taskEntity = new TaskEntity();
-            taskEntity.setChannel(ChannelEnum.LOTS.getCode());
-            List<TaskEntity> unDoneTasks = taskDao.getUnDoneTasks(taskEntity);
-            for (TaskEntity unDoneTask : unDoneTasks) {
-                if (!ObjectUtils.isEmpty(unDoneTask.getIp()) && !ObjectUtils.isEmpty(unDoneTask.getPort())) {
-                    return;
+            if (!ObjectUtils.isEmpty(unDoneTask.getIp()) && !ObjectUtils.isEmpty(unDoneTask.getPort())) {
+                return;
+            }
+            JSONObject proxy = ProxyUtil.getProxy();
+            unDoneTask.setIp(proxy.getString("ip"));
+            unDoneTask.setPort(proxy.getInteger("port"));
+            taskDao.updateTask(unDoneTask);
+            UserInfoEntity userInfoEntity = userInfoDao.selectById(unDoneTask.getUserInfoId());
+            String headerStr = userInfoEntity.getHeaders();
+            JSONObject headerJson = JSON.parseObject(headerStr);
+            for (Map.Entry<String, Object> headerEntry : headerJson.entrySet()) {
+                headers.set(headerEntry.getKey(), headerEntry.getValue().toString());
+            }
+            headers.set("Accept-Encoding", "gzip,compress,deflate");
+            headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            Integer integer = taskDao.updateTask(unDoneTask);
+            if (integer > 0) {
+                RestTemplate restTemplate = TemplateUtil.initSSLTemplateWithProxy(proxy.getString("ip"), proxy.getInteger("port"));
+                HttpEntity getUsersEntity = new HttpEntity<>(headers);
+                JSONObject getUsersRes = TemplateUtil.getResponse(restTemplate, getUsersUrl, HttpMethod.GET, getUsersEntity);
+                if (ObjectUtils.isEmpty(getUsersRes) && StrUtil.equals("success", getUsersRes.getString("message"))) {
+                    log.info("获取常用成员失败:{}", getUsersRes);
                 }
-                JSONObject proxy = ProxyUtil.getProxy();
-                unDoneTask.setIp(proxy.getString("ip"));
-                unDoneTask.setPort(proxy.getInteger("port"));
-                taskDao.updateTask(unDoneTask);
-                UserInfoEntity userInfoEntity = userInfoDao.selectById(unDoneTask.getUserInfoId());
-                String headerStr = userInfoEntity.getHeaders();
-                JSONObject headerJson = JSON.parseObject(headerStr);
-                for (Map.Entry<String, Object> headerEntry : headerJson.entrySet()) {
-                    headers.set(headerEntry.getKey(), headerEntry.getValue().toString());
-                }
-                headers.set("Accept-Encoding", "gzip,compress,deflate");
-                headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
-                headers.setContentType(MediaType.APPLICATION_JSON);
-                Integer integer = taskDao.updateTask(unDoneTask);
-                if (integer > 0) {
-                    RestTemplate restTemplate = TemplateUtil.initSSLTemplateWithProxy(proxy.getString("ip"), proxy.getInteger("port"));
-                    HttpEntity getUsersEntity = new HttpEntity<>(headers);
-                    JSONObject getUsersRes = TemplateUtil.getResponse(restTemplate, getUsersUrl, HttpMethod.GET, getUsersEntity);
-                    if (ObjectUtils.isEmpty(getUsersRes) && StrUtil.equals("success", getUsersRes.getString("message"))) {
-                        log.info("获取常用成员失败:{}", getUsersRes);
-                    }
-                    JSONArray userList = getUsersRes.getJSONArray("data");
-                    headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-                    if (!ObjectUtils.isEmpty(userList)) {
-                        String delUserBody = "merchantId=2655&merchantInfoId=2655";
-                        headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
-                        headers.set("Content-Length", String.valueOf(customURLEncode(delUserBody, "utf-8").getBytes(StandardCharsets.UTF_8).length));
-                        HttpEntity delUserEntity = new HttpEntity<>(delUserBody, headers);
-                        for (int i = 0; i < userList.size(); i++) {
-                            JSONObject user = userList.getJSONObject(i);
-                            String id = user.getString("id");
-                            Thread.sleep(RandomUtil.randomInt(2000, 5000));
-                            JSONObject response = TemplateUtil.getResponse(restTemplate, delUserUrl + id, HttpMethod.DELETE, delUserEntity);
-                            log.info("删除成员结果:{}", response);
-                            if (ObjectUtils.isEmpty(response) && StrUtil.equals("success", response.getString("message"))) {
-                                log.info("删除成员失败:{}", response);
-                            }
-                        }
-                    }
-
-                    List<TaskDetailEntity> taskDetailEntities = taskDetailDao.selectByTaskId(unDoneTask.getId());
-                    for (TaskDetailEntity taskDetailEntity : taskDetailEntities) {
-                        headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
-                        String bodyFormat = MessageFormat.format("id=&name={0}&idCard={1}&type=0&cipherText=0", URLEncoder.encode(taskDetailEntity.getUserName(), "utf-8"), taskDetailEntity.getIDCard());
-                        headers.set("Content-Length", String.valueOf(customURLEncode(bodyFormat, "utf-8").getBytes(StandardCharsets.UTF_8).length));
-                        HttpEntity addUserEntity = new HttpEntity<>(bodyFormat, headers);
-                        Thread.sleep(RandomUtil.randomInt(2000, 4000));
-                        JSONObject response = TemplateUtil.getResponse(restTemplate, addUserUrl, HttpMethod.POST, addUserEntity);
-                        log.info("添加成员结果:{}", response);
+                JSONArray userList = getUsersRes.getJSONArray("data");
+                headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+                if (!ObjectUtils.isEmpty(userList)) {
+                    String delUserBody = "merchantId=2655&merchantInfoId=2655";
+                    headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
+                    headers.set("Content-Length", String.valueOf(customURLEncode(delUserBody, "utf-8").getBytes(StandardCharsets.UTF_8).length));
+                    HttpEntity delUserEntity = new HttpEntity<>(delUserBody, headers);
+                    for (int i = 0; i < userList.size(); i++) {
+                        JSONObject user = userList.getJSONObject(i);
+                        String id = user.getString("id");
+                        Thread.sleep(RandomUtil.randomInt(2000, 5000));
+                        JSONObject response = TemplateUtil.getResponse(restTemplate, delUserUrl + id, HttpMethod.DELETE, delUserEntity);
+                        log.info("删除成员结果:{}", response);
                         if (ObjectUtils.isEmpty(response) && StrUtil.equals("success", response.getString("message"))) {
-                            log.info("添加成员失败:{}", response);
+                            log.info("删除成员失败:{}", response);
                         }
+                    }
+                }
+
+                List<TaskDetailEntity> taskDetailEntities = taskDetailDao.selectByTaskId(unDoneTask.getId());
+                for (TaskDetailEntity taskDetailEntity : taskDetailEntities) {
+                    headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
+                    String bodyFormat = MessageFormat.format("id=&name={0}&idCard={1}&type=0&cipherText=0", URLEncoder.encode(taskDetailEntity.getUserName(), "utf-8"), taskDetailEntity.getIDCard());
+                    headers.set("Content-Length", String.valueOf(customURLEncode(bodyFormat, "utf-8").getBytes(StandardCharsets.UTF_8).length));
+                    HttpEntity addUserEntity = new HttpEntity<>(bodyFormat, headers);
+                    Thread.sleep(RandomUtil.randomInt(2000, 4000));
+                    JSONObject response = TemplateUtil.getResponse(restTemplate, addUserUrl, HttpMethod.POST, addUserEntity);
+                    log.info("添加成员结果:{}", response);
+                    if (ObjectUtils.isEmpty(response) && StrUtil.equals("success", response.getString("message"))) {
+                        log.info("添加成员失败:{}", response);
                     }
                 }
             }
         } catch (Exception e) {
             log.info("初始化故宫数据失败:{}", e);
         }
+    }
+
+    @Override
+    public List<TaskEntity> getAllUndoneTask() {
+        TaskEntity taskEntity = new TaskEntity();
+        taskEntity.setChannel(ChannelEnum.LOTS.getCode());
+        List<TaskEntity> unDoneTasks = taskDao.getUnDoneTasks(taskEntity);
+        return unDoneTasks;
     }
 
     @Override
@@ -192,7 +197,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
         JSONArray parkFsyyDetailDTOs = new JSONArray();
         try {
             JSONObject currentParkFsyyDetail = new JSONObject();
-            RestTemplate restTemplate = ObjectUtils.isEmpty(doSnatchInfo.getIp())?TemplateUtil.initSSLTemplate():TemplateUtil.initSSLTemplateWithProxy(doSnatchInfo.getIp(), doSnatchInfo.getPort());
+            RestTemplate restTemplate = ObjectUtils.isEmpty(doSnatchInfo.getIp()) ? TemplateUtil.initSSLTemplate() : TemplateUtil.initSSLTemplateWithProxy(doSnatchInfo.getIp(), doSnatchInfo.getPort());
             //RestTemplate restTemplate=TemplateUtil.initSSLTemplate();
             HttpHeaders headers = new HttpHeaders();
             String headerStr = doSnatchInfo.getHeaders();

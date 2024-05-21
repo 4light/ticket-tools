@@ -7,6 +7,16 @@
       <el-form-item label="账号">
         <el-input v-model="queryParam.account" placeholder="账号" clearable></el-input>
       </el-form-item>
+      <el-form-item label="渠道">
+        <el-select v-model="queryParam.channel" clearable>
+          <el-option
+            v-for="item in channelList"
+            :key="item.id"
+            :label="item.channelName"
+            :value="item.id">
+          </el-option>
+        </el-select>
+      </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="queryUser" size="small" round>查询</el-button>
         <el-button type="primary" @click="addUser" size="small" round>新建用户</el-button>

@@ -29,7 +29,7 @@ public class ProxyUtil {
                 RestTemplate restTemplate = TemplateUtil.initSSLTemplate();
                 HttpHeaders proxyHeaders = new HttpHeaders();
                 proxyHeaders.setContentType(MediaType.APPLICATION_JSON);
-                JSONObject response = TemplateUtil.getResponse(restTemplate, "http://webapi.http.zhimacangku.com/getip?neek=d1fa042275328b9a&num=1&type=2&time=2&pro=0&city=0&yys=0&port=11&pack=0&ts=1&ys=0&cs=1&lb=1&sb=&pb=45&mr=3&regions=110000,130000,120000,210000,370000,140000,410000&username=chukou01&spec=1", HttpMethod.GET, new HttpEntity<>(proxyHeaders));
+                JSONObject response = TemplateUtil.getResponse(restTemplate, "http://webapi.http.zhimacangku.com/getip?neek=d1fa042275328b9a&num=1&type=2&time=1&pro=0&city=0&yys=0&port=11&pack=0&ts=1&ys=0&cs=1&lb=1&sb=&pb=45&mr=3&regions=110000,120000,130000&username=chukou01&spec=1", HttpMethod.GET, new HttpEntity<>(proxyHeaders));
                 if (response.getIntValue("code") != 0) {
                     System.out.println("获取代理异常:{}" + JSON.toJSONString(response));
                     //添加白名单

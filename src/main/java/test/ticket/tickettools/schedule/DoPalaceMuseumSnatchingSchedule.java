@@ -7,6 +7,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.ObjectUtils;
 import test.ticket.tickettools.domain.bo.DoSnatchInfo;
+import test.ticket.tickettools.domain.entity.TaskEntity;
 import test.ticket.tickettools.service.DoSnatchTicketService;
 
 import javax.annotation.Resource;
@@ -21,12 +22,12 @@ public class DoPalaceMuseumSnatchingSchedule {
     @Resource
     DoSnatchTicketService palaceMuseumTicketServiceImpl;
 
-    @Scheduled(cron = "0/8 0-59 22 * * ?")
+    @Scheduled(cron = "0/8 01 20 * * ?")
     public void initData() {
-        palaceMuseumTicketServiceImpl.initData();
+        palaceMuseumTicketServiceImpl.initData(null);
     }
 
-    @Scheduled(cron = "0/1 30-40 20 * * ?")
+    @Scheduled(cron = "0/1 02-40 20 * * ?")
     public void doPalaceMuseumTicketSnatch() {
         List<DoSnatchInfo> doSnatchInfos = palaceMuseumTicketServiceImpl.getDoSnatchInfos();
         if (ObjectUtils.isEmpty(doSnatchInfos)) {

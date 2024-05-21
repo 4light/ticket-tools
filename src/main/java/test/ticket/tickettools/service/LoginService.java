@@ -9,9 +9,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.client.RestTemplate;
 import test.ticket.tickettools.dao.UserInfoDao;
+import test.ticket.tickettools.domain.constant.ChannelEnum;
 import test.ticket.tickettools.domain.entity.UserInfoEntity;
 import test.ticket.tickettools.utils.DateUtils;
 import test.ticket.tickettools.utils.ImageUtils;
+import test.ticket.tickettools.utils.TemplateUtil;
 
 import javax.annotation.Resource;
 import java.io.File;
@@ -31,7 +33,9 @@ public class LoginService {
 
     private static String sendMessageUrl = "https://pcticket.cstm.org.cn/prod-api/ingore/sendMessage";
 
-    private static String loginUrl="https://pcticket.cstm.org.cn/prod-api/login";
+    private static String getCodeUrl = "http://api.jfbym.com/api/YmServer/customApi";
+
+    private static String loginUrl = "https://pcticket.cstm.org.cn/prod-api/login";
 
     @Resource
     UserInfoDao userInfoDao;
@@ -50,8 +54,9 @@ public class LoginService {
         JSONObject captchaImageJson = JSON.parseObject(captchaImageBody);
         if (!ObjectUtils.isEmpty(captchaImageJson) && captchaImageJson.getIntValue("code") == 200) {
             String img = captchaImageJson.getString("img");
+            log.info("img:{}", img);
             String uuid = captchaImageJson.getString("uuid");
-            String captchaUuid = UUID.randomUUID().toString();
+            /*String captchaUuid = UUID.randomUUID().toString();
             String path = "." + File.separator + captchaUuid + "captcha.png";
             ImageUtils.imagCreate(img, path, 24, 64);
             String captchaCode = ImageUtils.getCaptchaCode(path);
@@ -63,66 +68,83 @@ public class LoginService {
                 Files.delete(Paths.get(path));
             } catch (IOException e) {
                 e.printStackTrace();
+            }*/
+            HttpHeaders getCodeHeaders = new HttpHeaders();
+            getCodeHeaders.setContentType(MediaType.APPLICATION_JSON);
+            getCodeHeaders.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
+            JSONObject getPointBody = new JSONObject();
+            getPointBody.put("image", img);
+            getPointBody.put("token", "2J3UHYaDJTbELG55unhlt9JkNLKoLpcY9gsEOvbZ2Uc");
+            getPointBody.put("type", "10103");
+            HttpEntity getCodeEntity = new HttpEntity(getPointBody, getCodeHeaders);
+            JSONObject getPointRes = TemplateUtil.getResponse(TemplateUtil.initSSLTemplate(), getCodeUrl, HttpMethod.POST, getCodeEntity);
+            if (ObjectUtils.isEmpty(getPointRes) || getPointRes.getIntValue("code") != 10000) {
+                log.info("获取图片验证码失败：{}", getPointRes);
+                return null;
             }
-            JSONObject param=new JSONObject();
-            param.put("smsType",1);
-            param.put("username",loginPhone);
-            param.put("uuid",uuid);
-            param.put("verifyCode",captchaCode);
-            param.put("verifyCodeType",1);
-            HttpHeaders headers=getBaseHeader();
+            log.info("获取图片验证码：{}", getPointRes);
+            JSONObject getPointData = getPointRes.getJSONObject("data");
+            String captchaCode = getPointData.getString("data");
+            JSONObject param = new JSONObject();
+            param.put("smsType", 1);
+            param.put("username", loginPhone);
+            param.put("uuid", uuid);
+            param.put("verifyCode", captchaCode);
+            param.put("verifyCodeType", 1);
+            HttpHeaders headers = getBaseHeader();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity getMsgCodeEntity = new HttpEntity(param,headers);
+            HttpEntity getMsgCodeEntity = new HttpEntity(param, headers);
             ResponseEntity<String> getMsgCodeRes = restTemplate.exchange(sendMessageUrl, HttpMethod.POST, getMsgCodeEntity, String.class);
-            log.info("发送验证码结果:{}",getMsgCodeRes.getBody());
-            if(getMsgCodeRes.getBody().contains("550")){
+            log.info("发送验证码结果:{}", getMsgCodeRes.getBody());
+            if (getMsgCodeRes.getBody().contains("550")) {
                 log.error("验证码错误");
                 return null;
             }
             //等待接收的验证码
-            UserInfoEntity userInfoEntity =new UserInfoEntity();
-            userInfoEntity.setPhoneNum(loginPhone);
+            UserInfoEntity userInfoEntity = new UserInfoEntity();
+            userInfoEntity.setAccount(loginPhone);
+            userInfoEntity.setChannel(ChannelEnum.CSTM.getCode());
             long startTimestamp = System.currentTimeMillis();
-            LocalDateTime now=LocalDateTime.now();
+            LocalDateTime now = LocalDateTime.now();
             Pattern pattern = Pattern.compile("验证码(\\d{6})");
-            String verificationCode="";
+            String verificationCode = "";
             //等待获取短信验证码
-            while(true){
-                List<UserInfoEntity> result = userInfoDao.select(userInfoEntity);
-                if(ObjectUtils.isEmpty(result)){
-                    continue;
-                }
-                if(result.get(0).getCreateDate().after(DateUtils.localDateToDate(now))){
-                    String content = result.get(0).getAccount();
-                    Matcher matcher = pattern.matcher(content);
-                    if (matcher.find()) {
-                        verificationCode = matcher.group(1);
-                        log.info("提取到的验证码是:{}",verificationCode);
-                        break;
-                    } else {
-                       log.info("未找到验证码");
-                    }
-                }
+            while (true) {
                 try {
+                    List<UserInfoEntity> result = userInfoDao.select(userInfoEntity);
+                    if (ObjectUtils.isEmpty(result)||ObjectUtils.isEmpty(result.get(0).getUpdateDate())) {
+                        continue;
+                    }
+                    if (result.get(0).getUpdateDate().after(DateUtils.localDateToDate(now))) {
+                        String content = result.get(0).getExt();
+                        Matcher matcher = pattern.matcher(content);
+                        if (matcher.find()) {
+                            verificationCode = matcher.group(1);
+                            log.info("提取到的验证码是:{}", verificationCode);
+                            break;
+                        } else {
+                            log.info("未找到验证码");
+                        }
+                    }
                     Thread.sleep(5000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                if(System.currentTimeMillis()-startTimestamp>120*1000){
+                if (System.currentTimeMillis() - startTimestamp > 120 * 1000) {
                     break;
                 }
             }
-            JSONObject loginParam=new JSONObject();
-            loginParam.put("loginClient","1");
-            loginParam.put("loginType","2");
-            loginParam.put("password",verificationCode);
-            loginParam.put("userType",1);
-            loginParam.put("username",loginPhone);
-            HttpEntity loginEntity=new HttpEntity(loginParam,getBaseHeader());
+            JSONObject loginParam = new JSONObject();
+            loginParam.put("loginClient", "1");
+            loginParam.put("loginType", "2");
+            loginParam.put("password", verificationCode);
+            loginParam.put("userType", 1);
+            loginParam.put("username", loginPhone);
+            HttpEntity loginEntity = new HttpEntity(loginParam, getBaseHeader());
             ResponseEntity<JSONObject> getLoginRes = restTemplate.exchange(loginUrl, HttpMethod.POST, loginEntity, JSONObject.class);
             JSONObject loginRes = getLoginRes.getBody();
-            if(loginRes!=null){
-                return loginRes.getString("token")==null?"":"Bearer "+loginRes.getString("token");
+            if (loginRes != null) {
+                return loginRes.getString("token") == null ? "" : "Bearer " + loginRes.getString("token");
             }
         }
         return null;

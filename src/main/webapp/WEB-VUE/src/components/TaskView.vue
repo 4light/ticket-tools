@@ -121,7 +121,7 @@
             <el-link
               type="danger" @click="deleteTask(scope.row.taskId)">删除
             </el-link>
-            <el-link type="success" @click="pay" v-if="scope.row.channel!=1">支付</el-link>
+            <el-link type="success" @click="pay" v-if="scope.row.channel==0||scope.row.channel==2">支付</el-link>
             <el-link
               type="danger" @click="init">重置
             </el-link>

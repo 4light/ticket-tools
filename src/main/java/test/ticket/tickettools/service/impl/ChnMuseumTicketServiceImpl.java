@@ -54,7 +54,7 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
 
 
     @Override
-    public void initData() {
+    public void initData(TaskEntity entity) {
         TaskEntity taskEntity = new TaskEntity();
         taskEntity.setChannel(ChannelEnum.CHNMU.getCode());
         List<TaskEntity> unDoneTasks = taskDao.getUnDoneTasks(taskEntity);
@@ -67,6 +67,11 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
             unDoneTask.setPort(proxy.getInteger("port"));
             taskDao.updateTask(unDoneTask);
         }
+    }
+
+    @Override
+    public List<TaskEntity> getAllUndoneTask() {
+        return null;
     }
 
     @Override
@@ -121,6 +126,7 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
         int hallScheduleId = 1;
         int priceId = 8;
         try {
+            Thread.sleep(RandomUtil.randomInt(4000, 8000));
             boolean hasTicket = false;
             String getPriceByScheduleIdUrl = "https://wxmini.chnmuseum.cn/prod-api/pool/ingore/getPriceByScheduleId?hallId=%s&openPerson=1&queryDate=%s&saleMode=1&scheduleId=%s&p=wxmini";
             String getBlockUrl = "https://wxmini.chnmuseum.cn/prod-api/pool/getBlock?nonce=%s&platform=2&docType=1&p=wxmini";
@@ -219,11 +225,8 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
                 log.info("getCheckTime:{}", checkTime);
                 String ip = checkTime.split("\"")[9];
                 String data = doSnatchInfo.getChannelUserId() + ":" + checkTime.substring(26, 36) + "000" + ":" + DateUtils.dateToStr(doSnatchInfo.getUseDate(), "yyyy/MM/dd") + ":" + hallId + ":" + hallScheduleId + ":2";
-                log.info("data:{}",data);
                 String nonce = doAES(data, "AyrKJRXPO3nR5Abc");
                 String formatUrl = String.format(getBlockUrl,URLEncoder.encode(nonce,"utf-8"));
-                log.info("formatUrl:{}",formatUrl);
-                log.info("headers:{}",headers);
                 HttpEntity getBlockEntity=new HttpEntity(headers);
                 JSONObject getBlockRes = TemplateUtil.getResponse(restTemplate, formatUrl, HttpMethod.GET, getBlockEntity);
                 if (ObjectUtils.isEmpty(getBlockRes) || !StrUtil.equals("操作成功", getBlockRes.getString("msg"))) {

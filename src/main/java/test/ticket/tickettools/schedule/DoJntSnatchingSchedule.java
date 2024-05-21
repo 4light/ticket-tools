@@ -7,6 +7,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.ObjectUtils;
 import test.ticket.tickettools.domain.bo.DoSnatchInfo;
+import test.ticket.tickettools.domain.entity.TaskEntity;
 import test.ticket.tickettools.service.DoSnatchTicketService;
 
 import javax.annotation.Resource;
@@ -24,7 +25,7 @@ public class DoJntSnatchingSchedule {
     @Scheduled(cron = "0/2 28-29 12 * * ?")
     public void initData(){
         try {
-            jntTicketServiceImpl.initData();
+            jntTicketServiceImpl.initData(null);
         }catch (Exception e){
             e.printStackTrace();
         }

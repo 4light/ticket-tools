@@ -39,6 +39,7 @@ public class UserServiceImpl implements UserService {
         UserInfoEntity userInfoEntity = new UserInfoEntity();
         userInfoEntity.setUserName(userInfoRequest.getUserName());
         userInfoEntity.setAccount(userInfoRequest.getAccount());
+        userInfoEntity.setChannel(userInfoRequest.getChannel());
         List<UserInfoEntity> select = userInfoDao.select(userInfoEntity);
         if(ObjectUtils.isEmpty(userInfoRequest.getPage())){
             return ServiceResponse.createBySuccess(select);
@@ -148,9 +149,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ServiceResponse updateUser(UserInfoEntity userInfoEntity) {
-        userInfoEntity.setUpdateDate(new Date());
         if(ObjectUtils.isEmpty(userInfoEntity.getId())){
             userInfoEntity.setStatus(false);
+            userInfoEntity.setCreateDate(new Date());
         }
         Integer integer = userInfoDao.insertOrUpdate(userInfoEntity);
         if(integer==null){

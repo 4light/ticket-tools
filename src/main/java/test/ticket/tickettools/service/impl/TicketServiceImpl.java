@@ -318,7 +318,7 @@ public class TicketServiceImpl implements TicketService {
     @Override
     public ServiceResponse addPhoneInfo(UserInfoEntity userInfoEntity) {
         log.info("手机信息:{}", userInfoEntity);
-        Integer res = userInfoDao.insertOrUpdate(userInfoEntity);
+        Integer res = userInfoDao.updateByChannelAccount(userInfoEntity);
         if (res > 0) {
             ServiceResponse.createBySuccess();
         }

@@ -179,9 +179,11 @@ export default {
   methods: {
     edit() {
       if(this.taskInfo.channel==2){
-        let currentSession=[]
-        currentSession.push(this.taskInfo.session.toString())
-        this.session=currentSession
+        if(this.taskInfo.session) {
+          let currentSession = []
+          currentSession.push(this.taskInfo.session.toString())
+          this.session = currentSession
+        }
       }
       if(this.taskInfo.channel==3){
         let currentSession=[]
@@ -228,7 +230,7 @@ export default {
       }
       if(this.form.channel == 3){
         if(this.checkedSession.length>0){
-          this.form.session=this.checkedSession[0]
+          this.form.session=this.checkedSession[0]+1
         }else{
           this.form.session=null
         }
