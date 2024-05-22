@@ -1,14 +1,11 @@
 package test.ticket.tickettools.service.impl;
 
-import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -21,6 +18,7 @@ import test.ticket.tickettools.dao.TaskDao;
 import test.ticket.tickettools.dao.TaskDetailDao;
 import test.ticket.tickettools.dao.UserInfoDao;
 import test.ticket.tickettools.domain.bo.DoSnatchInfo;
+import test.ticket.tickettools.domain.bo.ProxyInfo;
 import test.ticket.tickettools.domain.bo.TaskInfo;
 import test.ticket.tickettools.domain.constant.ChannelEnum;
 import test.ticket.tickettools.domain.entity.TaskDetailEntity;
@@ -31,14 +29,12 @@ import test.ticket.tickettools.utils.*;
 
 import javax.annotation.Resource;
 import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 
 @Slf4j
@@ -72,9 +68,9 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
             if (!ObjectUtils.isEmpty(unDoneTask.getIp()) && !ObjectUtils.isEmpty(unDoneTask.getPort())) {
                 return;
             }
-            JSONObject proxy = ProxyUtil.getProxy();
-            unDoneTask.setIp(proxy.getString("ip"));
-            unDoneTask.setPort(proxy.getInteger("port"));
+            ProxyInfo proxy = ProxyUtil.getProxy();
+            unDoneTask.setIp(proxy.getIp());
+            unDoneTask.setPort(proxy.getPort());
             taskDao.updateTask(unDoneTask);
             UserInfoEntity userInfoEntity = userInfoDao.selectById(unDoneTask.getUserInfoId());
             String headerStr = userInfoEntity.getHeaders();
@@ -87,7 +83,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
             headers.setContentType(MediaType.APPLICATION_JSON);
             Integer integer = taskDao.updateTask(unDoneTask);
             if (integer > 0) {
-                RestTemplate restTemplate = TemplateUtil.initSSLTemplateWithProxy(proxy.getString("ip"), proxy.getInteger("port"));
+                RestTemplate restTemplate = TemplateUtil.initSSLTemplateWithProxy(proxy.getIp(), proxy.getPort());
                 HttpEntity getUsersEntity = new HttpEntity<>(headers);
                 JSONObject getUsersRes = TemplateUtil.getResponse(restTemplate, getUsersUrl, HttpMethod.GET, getUsersEntity);
                 if (ObjectUtils.isEmpty(getUsersRes) && StrUtil.equals("success", getUsersRes.getString("message"))) {

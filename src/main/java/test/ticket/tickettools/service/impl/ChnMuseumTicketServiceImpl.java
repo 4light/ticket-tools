@@ -6,17 +6,38 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpException;
+import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.conn.routing.HttpRoute;
+import org.apache.http.conn.routing.HttpRoutePlanner;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.protocol.HttpContext;
+import org.apache.http.ssl.SSLContextBuilder;
+import org.apache.http.util.EntityUtils;
 import org.springframework.http.*;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import test.ticket.tickettools.dao.TaskDao;
 import test.ticket.tickettools.dao.TaskDetailDao;
 import test.ticket.tickettools.dao.UserInfoDao;
 import test.ticket.tickettools.domain.bo.DoSnatchInfo;
+import test.ticket.tickettools.domain.bo.ProxyInfo;
 import test.ticket.tickettools.domain.constant.ChannelEnum;
 import test.ticket.tickettools.domain.entity.TaskDetailEntity;
 import test.ticket.tickettools.domain.entity.TaskEntity;
@@ -25,6 +46,13 @@ import test.ticket.tickettools.service.DoSnatchTicketService;
 import test.ticket.tickettools.utils.*;
 
 import javax.annotation.Resource;
+import javax.net.ssl.SSLContext;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.Proxy;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -62,9 +90,9 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
             if (!ObjectUtils.isEmpty(unDoneTask.getIp()) && !ObjectUtils.isEmpty(unDoneTask.getPort())) {
                 return;
             }
-            JSONObject proxy = ProxyUtil.getProxy();
-            unDoneTask.setIp(proxy.getString("ip"));
-            unDoneTask.setPort(proxy.getInteger("port"));
+            ProxyInfo proxy = ProxyUtil.getProxy();
+            unDoneTask.setIp(proxy.getIp());
+            unDoneTask.setPort(proxy.getPort());
             taskDao.updateTask(unDoneTask);
         }
     }
@@ -135,7 +163,7 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
             Map<String, String> idNameMap = doSnatchInfo.getIdNameMap();
             Integer session = doSnatchInfo.getSession();
             //获取所有信息
-            RestTemplate restTemplate =ObjectUtils.isEmpty(doSnatchInfo.getIp())?TemplateUtil.initSSLTemplate():TemplateUtil.initSSLTemplateWithProxy(doSnatchInfo.getIp(), doSnatchInfo.getPort());
+            RestTemplate restTemplate =ObjectUtils.isEmpty(doSnatchInfo.getIp())?TemplateUtil.initSSLTemplate():TemplateUtil.initSSLTemplateWithProxyAuth(doSnatchInfo.getIp(), doSnatchInfo.getPort());
             HttpHeaders headers = new HttpHeaders();
             String headerStr = doSnatchInfo.getHeaders();
             JSONObject headerJson = JSON.parseObject(headerStr);
@@ -175,15 +203,15 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
                                     hallScheduleId = scheduleTicketJson.getIntValue("hallScheduleId");
                                     break;
                                 } else {
-                                    if (session == 0 && StrUtil.equals("09:00-11:00", scheduleName)) {
+                                    if (session == 1 && StrUtil.equals("09:00-11:00", scheduleName)) {
                                         hallId = scheduleTicketJson.getIntValue("hallId");
                                         hallScheduleId = scheduleTicketJson.getIntValue("hallScheduleId");
                                     }
-                                    if (session == 1 && StrUtil.equals("11:00-13:30", scheduleName)) {
+                                    if (session == 2 && StrUtil.equals("11:00-13:30", scheduleName)) {
                                         hallId = scheduleTicketJson.getIntValue("hallId");
                                         hallScheduleId = scheduleTicketJson.getIntValue("hallScheduleId");
                                     }
-                                    if (session == 1 && StrUtil.equals("13:30-16:00", scheduleName)) {
+                                    if (session == 3 && StrUtil.equals("13:30-16:00", scheduleName)) {
                                         hallId = scheduleTicketJson.getIntValue("hallId");
                                         hallScheduleId = scheduleTicketJson.getIntValue("hallScheduleId");
                                     }
@@ -221,7 +249,7 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
                 }
                 log.info("CheckLeaderInfo结果:{}", getCheckLeaderInfoRes);
                 headers.remove("Content-Length");
-                String checkTime = getCheckTime(headerJson.getString("User-Agent"));
+                String checkTime = getCheckTime(headerJson.getString("User-Agent"),doSnatchInfo.getIp(),doSnatchInfo.getPort());
                 log.info("getCheckTime:{}", checkTime);
                 String ip = checkTime.split("\"")[9];
                 String data = doSnatchInfo.getChannelUserId() + ":" + checkTime.substring(26, 36) + "000" + ":" + DateUtils.dateToStr(doSnatchInfo.getUseDate(), "yyyy/MM/dd") + ":" + hallId + ":" + hallScheduleId + ":2";
@@ -268,7 +296,7 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
                 checkLeaderInfoParam.put("captchaToken", token);
                 checkLeaderInfoParam.put("scanToken", null);
                 headers.setContentLength(JSON.toJSONString(checkLeaderInfoParam).getBytes(StandardCharsets.UTF_8).length);
-                headers.set("Host-Ip", EncDecUtil.doAES(ip, "AyrKJRXPO3nR5Abc"));
+                headers.set("Host-Ip", EncDecUtil.doAES(doSnatchInfo.getIp(), "AyrKJRXPO3nR5Abc"));
                 HttpEntity placeOrderEntity = new HttpEntity(checkLeaderInfoParam, headers);
                 JSONObject placeOrderRes = TemplateUtil.getResponse(restTemplate, placeOrderUrl, HttpMethod.POST, placeOrderEntity);
                 if (ObjectUtils.isEmpty(placeOrderRes) || !StrUtil.equals("操作成功", getBlockRes.getString("msg"))) {
@@ -334,7 +362,7 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
         checkLeaderInfoParam.put("p","wxmini");
         return checkLeaderInfoParam;
     }
-    public static String getCheckTime(String userAgent){
+    public static String getCheckTime(String userAgent,String ip,Integer port){
         HttpHeaders httpHeaders=new HttpHeaders();
         httpHeaders.set("Host","vv.video.qq.com");
         httpHeaders.set("Connection","keep-alive");
@@ -348,22 +376,9 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
         httpHeaders.set("Referer","https://servicewechat.com/wx9e2927dd595b0473/73/page-frame.html");
         httpHeaders.set("Accept-Encoding","gzip, deflate, br");
         httpHeaders.set("Accept-Language","zh-CN,zh;q=0.9");
-        CloseableHttpClient httpClient = HttpClientBuilder.create()
-                .setMaxConnTotal(100) // 设置最大连接数
-                .setMaxConnPerRoute(20) // 设置每个路由的最大连接数
-                .build();
-
-        HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory(httpClient);
-
-        RestTemplate restTemplate = new RestTemplate(requestFactory);
+        RestTemplate restTemplate = TemplateUtil.initSSLTemplateWithProxyAuth(ip,port);
         HttpEntity httpEntity=new HttpEntity(httpHeaders);
-        ResponseEntity getCheckTimeRes = restTemplate.exchange("https://vv.video.qq.com/checktime?otype=json", HttpMethod.GET, httpEntity, String.class);
+        ResponseEntity getCheckTimeRes = restTemplate.exchange("http://vv.video.qq.com/checktime?otype=json", HttpMethod.GET, httpEntity, String.class);
         return getCheckTimeRes.getBody().toString();
-    }
-
-    public static void main(String[] args) {
-        String checkTime = getCheckTime("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36 MicroMessenger/6.8.0(0x16080000) NetType/WIFI MiniProgramEnv/Mac MacWechat/WMPF MacWechat/3.8.7(0x13080712) XWEB/1191");
-        System.out.println(checkTime);
-        System.out.println(checkTime.substring(26,36)+"000");
     }
 }

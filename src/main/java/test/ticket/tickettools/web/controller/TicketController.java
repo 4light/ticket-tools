@@ -1,10 +1,7 @@
 package test.ticket.tickettools.web.controller;
 import cn.hutool.core.date.DateUtil;
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
-import test.ticket.tickettools.dao.TaskDetailDao;
 import test.ticket.tickettools.domain.bo.*;
 import test.ticket.tickettools.domain.entity.UserInfoEntity;
 import test.ticket.tickettools.domain.entity.TaskDetailEntity;
@@ -15,8 +12,6 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-
-import static jdk.nashorn.internal.runtime.regexp.joni.Config.log;
 
 @RestController
 @RequestMapping("/ticket")

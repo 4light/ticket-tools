@@ -22,12 +22,27 @@ public class DoPalaceMuseumSnatchingSchedule {
     @Resource
     DoSnatchTicketService palaceMuseumTicketServiceImpl;
 
-    @Scheduled(cron = "0/8 01 20 * * ?")
+    @Scheduled(cron = "0/8 58 19 * * ?")
     public void initData() {
-        palaceMuseumTicketServiceImpl.initData(null);
+        List<TaskEntity> allUndoneTask = palaceMuseumTicketServiceImpl.getAllUndoneTask();
+        if (ObjectUtils.isEmpty(allUndoneTask)) {
+            return;
+        }
+        ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
+        pool.setThreadNamePrefix("chnMuseumDataProcessor-");
+        pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());//拒绝策略
+        int size = allUndoneTask.size();
+        pool.setMaxPoolSize(size);
+        pool.setCorePoolSize(size);
+        pool.setQueueCapacity(size);
+        pool.initialize();
+        for (TaskEntity taskEntity : allUndoneTask) {
+            CompletableFuture.runAsync(() ->palaceMuseumTicketServiceImpl.initData(taskEntity), pool);
+
+        }palaceMuseumTicketServiceImpl.initData(null);
     }
 
-    @Scheduled(cron = "0/1 02-40 20 * * ?")
+    @Scheduled(cron = "0/1 02-10 20 * * ?")
     public void doPalaceMuseumTicketSnatch() {
         List<DoSnatchInfo> doSnatchInfos = palaceMuseumTicketServiceImpl.getDoSnatchInfos();
         if (ObjectUtils.isEmpty(doSnatchInfos)) {

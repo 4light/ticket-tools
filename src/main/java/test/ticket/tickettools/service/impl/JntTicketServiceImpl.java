@@ -16,6 +16,7 @@ import test.ticket.tickettools.dao.TaskDao;
 import test.ticket.tickettools.dao.TaskDetailDao;
 import test.ticket.tickettools.dao.UserInfoDao;
 import test.ticket.tickettools.domain.bo.DoSnatchInfo;
+import test.ticket.tickettools.domain.bo.ProxyInfo;
 import test.ticket.tickettools.domain.constant.ChannelEnum;
 import test.ticket.tickettools.domain.entity.TaskDetailEntity;
 import test.ticket.tickettools.domain.entity.TaskEntity;
@@ -242,9 +243,9 @@ public class JntTicketServiceImpl implements DoSnatchTicketService {
             if (!ObjectUtils.isEmpty(unDoneTask.getUpdateDate()) && !ObjectUtils.isEmpty(unDoneTask.getIp()) && !ObjectUtils.isEmpty(unDoneTask.getPort()) && !ObjectUtils.isEmpty(unDoneTask.getAuth())) {
                 continue;
             }
-            JSONObject proxy = ProxyUtil.getProxy();
-            unDoneTask.setIp(proxy.getString("ip"));
-            unDoneTask.setPort(proxy.getInteger("port"));
+            ProxyInfo proxy = ProxyUtil.getProxy();
+            unDoneTask.setIp(proxy.getIp());
+            unDoneTask.setPort(proxy.getPort());
             UserInfoEntity userInfoEntity;
             if (ObjectUtils.isEmpty(unDoneTask.getUserInfoId())) {
                 UserInfoEntity userInfo = new UserInfoEntity();
@@ -259,7 +260,7 @@ public class JntTicketServiceImpl implements DoSnatchTicketService {
             unDoneTask.setAccount(userInfoEntity.getAccount());
             unDoneTask.setPwd(userInfoEntity.getPwd());
             //获取cookie
-            String cookie = getCookie(userInfoEntity.getAccount(), userInfoEntity.getPwd(), proxy.getString("ip"), proxy.getInteger("port"));
+            String cookie = getCookie(userInfoEntity.getAccount(), userInfoEntity.getPwd(), proxy.getIp(), proxy.getPort());
             if(ObjectUtils.isEmpty(cookie)){
                 continue;
             }
