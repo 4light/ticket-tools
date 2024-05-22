@@ -22,7 +22,7 @@ public class DoChnMuseumSnatchingSchedule {
     @Resource
     DoSnatchTicketService chnMuseumTicketServiceImpl;
 
-    @Scheduled(cron = "0/2 58 19 * * ?")
+    @Scheduled(cron = "0/2 58 16 * * ?")
     public void initData() {
         List<TaskEntity> allUndoneTask = chnMuseumTicketServiceImpl.getAllUndoneTask();
         if (ObjectUtils.isEmpty(allUndoneTask)) {
@@ -42,7 +42,7 @@ public class DoChnMuseumSnatchingSchedule {
         }
     }
 
-    @Scheduled(cron = "0/1 02-29 20 * * ?")
+    @Scheduled(cron = "0/1 02-29 17 * * ?")
     public void doPalaceMuseumTicketSnatch() {
         List<DoSnatchInfo> doSnatchInfos = chnMuseumTicketServiceImpl.getDoSnatchInfos();
         if (ObjectUtils.isEmpty(doSnatchInfos)) {
