@@ -154,7 +154,7 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
         int hallScheduleId = 1;
         int priceId = 8;
         try {
-            Thread.sleep(RandomUtil.randomInt(4000, 8000));
+            Thread.sleep(RandomUtil.randomInt(2000, 6000));
             boolean hasTicket = false;
             String getPriceByScheduleIdUrl = "https://wxmini.chnmuseum.cn/prod-api/pool/ingore/getPriceByScheduleId?hallId=%s&openPerson=1&queryDate=%s&saleMode=1&scheduleId=%s&p=wxmini";
             String getBlockUrl = "https://wxmini.chnmuseum.cn/prod-api/pool/getBlock?nonce=%s&platform=2&docType=1&p=wxmini";
@@ -172,9 +172,11 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
             }
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.remove("Content-Length");
+/*
             if(ObjectUtils.isEmpty(doSnatchInfo.getSession())) {
+*/
                 HttpEntity httpEntity = new HttpEntity(headers);
-                Thread.sleep(RandomUtil.randomInt(4000, 8000));
+                //Thread.sleep(RandomUtil.randomInt(4000, 8000));
                 JSONObject getAllConfigRes = TemplateUtil.getResponse(restTemplate, gainAllSystemConfigLoginUrl, HttpMethod.GET, httpEntity);
                 if (ObjectUtils.isEmpty(getAllConfigRes) || !StrUtil.equals("操作成功", getAllConfigRes.getString("msg"))) {
                     log.info("获取配置信息失败:{}", getAllConfigRes);
@@ -233,10 +235,10 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
                         }
                     }
                 }
-            }else{
+            /*}else{
                 hallScheduleId=doSnatchInfo.getSession();
                 hasTicket=true;
-            }
+            }*/
             if (hasTicket) {
                 JSONObject checkLeaderInfoParam = getCheckLeaderInfoParam(idNameMap, formatDate, hallId, hallScheduleId, priceId);
                 headers.setContentLength(JSON.toJSONString(checkLeaderInfoParam).getBytes(StandardCharsets.UTF_8).length);
@@ -254,8 +256,10 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
                 String ip = checkTime.split("\"")[9];
                 String data = doSnatchInfo.getChannelUserId() + ":" + checkTime.substring(26, 36) + "000" + ":" + DateUtils.dateToStr(doSnatchInfo.getUseDate(), "yyyy/MM/dd") + ":" + hallId + ":" + hallScheduleId + ":2";
                 String nonce = doAES(data, "AyrKJRXPO3nR5Abc");
-                String formatUrl = String.format(getBlockUrl,URLEncoder.encode(nonce,"utf-8"));
+                String formatUrl = String.format(getBlockUrl,nonce);
+                log.info("formatUrl:{}",formatUrl);
                 HttpEntity getBlockEntity=new HttpEntity(headers);
+                log.info("header:{}",headers);
                 JSONObject getBlockRes = TemplateUtil.getResponse(restTemplate, formatUrl, HttpMethod.GET, getBlockEntity);
                 if (ObjectUtils.isEmpty(getBlockRes) || !StrUtil.equals("操作成功", getBlockRes.getString("msg"))) {
                     log.info("获取验证码失败:{}", getBlockRes);
@@ -376,7 +380,7 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
         httpHeaders.set("Referer","https://servicewechat.com/wx9e2927dd595b0473/73/page-frame.html");
         httpHeaders.set("Accept-Encoding","gzip, deflate, br");
         httpHeaders.set("Accept-Language","zh-CN,zh;q=0.9");
-        RestTemplate restTemplate = TemplateUtil.initSSLTemplateWithProxyAuth(ip,port);
+        RestTemplate restTemplate = TemplateUtil.initSSLTemplate();
         HttpEntity httpEntity=new HttpEntity(httpHeaders);
         ResponseEntity getCheckTimeRes = restTemplate.exchange("http://vv.video.qq.com/checktime?otype=json", HttpMethod.GET, httpEntity, String.class);
         return getCheckTimeRes.getBody().toString();

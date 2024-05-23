@@ -53,6 +53,8 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
     private static final String delUserUrl = "https://lotswap.dpm.org.cn/lotsapi/up/api/user/contacts/";
 
     private static Map<Long, Object> runTaskCache = new HashMap<>();
+    private static Map<Long,Object> initTaskCache=new HashMap<>();
+
     @Resource
     TaskDao taskDao;
     @Resource
@@ -63,9 +65,16 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
 
     @Override
     public void initData(TaskEntity unDoneTask) {
+        Long taskId = unDoneTask.getId();
+        if(initTaskCache.containsKey(taskId)){
+            return;
+        }else{
+            initTaskCache.put(taskId,true);
+        }
         try {
             HttpHeaders headers = new HttpHeaders();
             if (!ObjectUtils.isEmpty(unDoneTask.getIp()) && !ObjectUtils.isEmpty(unDoneTask.getPort())) {
+                initTaskCache.remove(taskId);
                 return;
             }
             ProxyInfo proxy = ProxyUtil.getProxy();
@@ -122,7 +131,9 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
                     }
                 }
             }
+            initTaskCache.remove(taskId);
         } catch (Exception e) {
+            initTaskCache.remove(taskId);
             log.info("初始化故宫数据失败:{}", e);
         }
     }

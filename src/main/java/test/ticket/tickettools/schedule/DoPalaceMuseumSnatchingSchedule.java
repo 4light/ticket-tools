@@ -29,7 +29,7 @@ public class DoPalaceMuseumSnatchingSchedule {
             return;
         }
         ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
-        pool.setThreadNamePrefix("chnMuseumDataProcessor-");
+        pool.setThreadNamePrefix("palaceMuseumDataProcessor-");
         pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());//拒绝策略
         int size = allUndoneTask.size();
         pool.setMaxPoolSize(size);

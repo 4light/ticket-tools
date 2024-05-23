@@ -16,7 +16,6 @@ import test.ticket.tickettools.dao.TaskDao;
 import test.ticket.tickettools.dao.TaskDetailDao;
 import test.ticket.tickettools.dao.UserInfoDao;
 import test.ticket.tickettools.domain.bo.DoSnatchInfo;
-import test.ticket.tickettools.domain.bo.ProxyInfo;
 import test.ticket.tickettools.domain.constant.ChannelEnum;
 import test.ticket.tickettools.domain.entity.TaskDetailEntity;
 import test.ticket.tickettools.domain.entity.TaskEntity;
@@ -35,7 +34,6 @@ import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 
 @Slf4j
@@ -62,6 +60,7 @@ public class JntTicketServiceImpl implements DoSnatchTicketService {
     private static String checkIdUrl = "https://jnt.mfu.com.cn/ajax?ugi=bookingorder&action=checkBookingUserV2&bundleid=com.maiget.tickets&moduleid=6f77be86038c47269f1e00f7ddee9af4";
 
     private static Map<Long,Object> runTaskCache=new HashMap<>();
+    private static Map<Long,Object> initTaskCache=new HashMap<>();
 
 
 
@@ -232,27 +231,25 @@ public class JntTicketServiceImpl implements DoSnatchTicketService {
     }
 
     @Override
-    public void initData(TaskEntity entity) {
-        TaskEntity taskEntity = new TaskEntity();
-        taskEntity.setChannel(ChannelEnum.MFU.getCode());
-        List<TaskEntity> unDoneTasks = taskDao.getUnDoneTasks(taskEntity);
-        if(ObjectUtils.isEmpty(unDoneTasks)){
+    public void initData(TaskEntity unDoneTask) {
+        Long taskId = unDoneTask.getId();
+        if(initTaskCache.containsKey(taskId)){
             return;
+        }else{
+            initTaskCache.put(taskId,true);
         }
-        for (TaskEntity unDoneTask : unDoneTasks) {
-            if (!ObjectUtils.isEmpty(unDoneTask.getUpdateDate()) && !ObjectUtils.isEmpty(unDoneTask.getIp()) && !ObjectUtils.isEmpty(unDoneTask.getPort()) && !ObjectUtils.isEmpty(unDoneTask.getAuth())) {
-                continue;
+        try {
+            if (!ObjectUtils.isEmpty(unDoneTask.getUpdateDate())&& !ObjectUtils.isEmpty(unDoneTask.getAuth())) {
+                initTaskCache.remove(taskId);
+                return;
             }
-            ProxyInfo proxy = ProxyUtil.getProxy();
-            unDoneTask.setIp(proxy.getIp());
-            unDoneTask.setPort(proxy.getPort());
             UserInfoEntity userInfoEntity;
             if (ObjectUtils.isEmpty(unDoneTask.getUserInfoId())) {
                 UserInfoEntity userInfo = new UserInfoEntity();
                 userInfo.setChannel(ChannelEnum.MFU.getCode());
                 userInfo.setStatus(false);
                 List<UserInfoEntity> select = userInfoDao.select(userInfo);
-                userInfoEntity = select.get((int) (select.size()*Math.random()));
+                userInfoEntity = select.get((int) (select.size() * Math.random()));
             } else {
                 userInfoEntity = userInfoDao.selectById(unDoneTask.getUserInfoId());
             }
@@ -260,18 +257,40 @@ public class JntTicketServiceImpl implements DoSnatchTicketService {
             unDoneTask.setAccount(userInfoEntity.getAccount());
             unDoneTask.setPwd(userInfoEntity.getPwd());
             //获取cookie
-            String cookie = getCookie(userInfoEntity.getAccount(), userInfoEntity.getPwd(), proxy.getIp(), proxy.getPort());
-            if(ObjectUtils.isEmpty(cookie)){
-                continue;
+            String cookie = getCookie(userInfoEntity.getAccount(), userInfoEntity.getPwd(), unDoneTask.getIp(), unDoneTask.getPort());
+            if (ObjectUtils.isEmpty(cookie)) {
+                initTaskCache.remove(taskId);
+                return;
             }
-            unDoneTask.setAuth(cookie);
-            taskDao.updateTask(unDoneTask);
+            HttpHeaders headers=getHeaders();
+            headers.set("cookie",cookie);
+            HttpEntity logininfoEntity = new HttpEntity<>(headers);
+            JSONObject response = TemplateUtil.getResponse(TemplateUtil.initSSLTemplateWithProxyAuth(unDoneTask.getIp(), unDoneTask.getPort()), "https://jnt.mfu.com.cn/ajax?ugi=tg/account&action=logininfo&bundleid=com.maiget.tickets&moduleid=6f77be86038c47269f1e00f7ddee9af4", HttpMethod.POST, logininfoEntity);
+            if(!ObjectUtils.isEmpty(response)&&StrUtil.equals(response.getString("code"),"A00006")){
+                log.info("账号:{}获取cookie成功,cookie:{}",unDoneTask.getAccount(),cookie);
+                unDoneTask.setAuth(cookie);
+                unDoneTask.setUpdateDate(new Date());
+                taskDao.updateTask(unDoneTask);
+                JSONObject tourGuide = response.getJSONObject("tourGuide");
+                String realName = tourGuide.getString("realname");
+                userInfoEntity.setUserName(realName);
+                userInfoDao.insertOrUpdate(userInfoEntity);
+            }else{
+                log.info("账号:{}获取cookie失败,请求个人信息报错:{}",unDoneTask.getAccount(),response);
+            }
+        }catch (Exception e){
+            initTaskCache.remove(taskId);
+            log.info("毛纪初始化数据异常:{}",e);
         }
+        initTaskCache.remove(taskId);
     }
 
     @Override
     public List<TaskEntity> getAllUndoneTask() {
-        return null;
+        TaskEntity taskEntity = new TaskEntity();
+        taskEntity.setChannel(ChannelEnum.MFU.getCode());
+        List<TaskEntity> unDoneTasks = taskDao.getUnDoneTasks(taskEntity);
+        return unDoneTasks;
     }
 
     @Override
@@ -311,26 +330,20 @@ public class JntTicketServiceImpl implements DoSnatchTicketService {
         try {
             RestTemplate restTemplate = TemplateUtil.initSSLTemplate();
             if (!ObjectUtils.isEmpty(ip) && !ObjectUtils.isEmpty(port)) {
-                restTemplate = TemplateUtil.initSSLTemplateWithProxy(ip, port);
+                restTemplate = TemplateUtil.initSSLTemplateWithProxyAuth(ip, port);
             }
-            HttpHeaders headers = new HttpHeaders();
-            //获取Csrf
-            headers.set("Host", "jnt.mfu.com.cn");
-            headers.set("M-Lang", "zh");
-            headers.set("Accept-Encoding", "gzip, deflate, br");
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("Origin", "https://jnt.mfu.com.cn");
-            headers.set("Referer", "https://jnt.mfu.com.cn/page/tg/login");
-            headers.set("Sec-Fetch-Mode", "cors");
-            headers.set("Sec-Fetch-Site", "same-origin");
-            headers.set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36");
-            headers.set("Sec-Ch-Ua", "\"Google Chrome\";v=\"123\", \"Not:A-Brand\";v=\"8\", \"Chromium\";v=\"123\"");
-            headers.set("Sec-Ch-Ua-Platform", "macOS");
-            headers.set("Sec-Fetch-Dest", "empty");
+            HttpHeaders headers=getHeaders();
             HttpEntity getCsrfEntity = new HttpEntity<>(headers);
-            JSONObject getCsrfJson = TemplateUtil.getResponse(restTemplate, getCsrfUrl, HttpMethod.GET, getCsrfEntity);
-            if (ObjectUtils.isEmpty(getCsrfJson)) {
-                log.info("账号：{},获取CSRF失败", userName, getCsrfJson);
+            Thread.sleep(1500);
+            ResponseEntity<String> getCsrf = restTemplate.exchange(getCsrfUrl, HttpMethod.GET, getCsrfEntity, String.class);
+            HttpHeaders loginHeaders = getCsrf.getHeaders();
+            String body = getCsrf.getBody();
+            if (ObjectUtils.isEmpty(body)) {
+                log.info("账号：{},获取CSRF失败", userName, body);
+                return null;
+            }
+            JSONObject getCsrfJson=JSON.parseObject(body);
+            if(!StrUtil.equals("A00006",getCsrfJson.getString("code"))){
                 return null;
             }
             String csrf_req = getCsrfJson.getString("csrf_req");
@@ -340,14 +353,9 @@ public class JntTicketServiceImpl implements DoSnatchTicketService {
             headers.set("Content-Length", String.valueOf(customURLEncode(bodyFormat, "utf-8").getBytes(StandardCharsets.UTF_8).length));
             headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
             HttpEntity loginEntity = new HttpEntity<>(bodyFormat, headers);
-            ResponseEntity<String> doLogin = restTemplate.exchange(loginUrl, HttpMethod.POST, loginEntity, String.class);
-            HttpHeaders loginHeaders = doLogin.getHeaders();
-            List<String> cookies = loginHeaders.get("set-cookie");
-            headers.set("cookie",String.join(";",cookies));
-            HttpEntity logininfoEntity = new HttpEntity<>(headers);
-            JSONObject response = TemplateUtil.getResponse(restTemplate, "https://jnt.mfu.com.cn/ajax?ugi=tg/account&action=logininfo&bundleid=com.maiget.tickets&moduleid=6f77be86038c47269f1e00f7ddee9af4", HttpMethod.POST, logininfoEntity);
-            if(!ObjectUtils.isEmpty(response)&&StrUtil.equals(response.getString("code"),"A00006")){
-                log.info("账号:{}获取cookie成功,cookie:{}",userName,String.join(";",cookies));
+            JSONObject doLoginRes = TemplateUtil.getResponse(restTemplate, loginUrl, HttpMethod.POST, loginEntity);
+            if(StrUtil.equals("A00006",doLoginRes.getString("code"))){
+                List<String> cookies = loginHeaders.get("set-cookie");
                 return String.join(";",cookies);
             }
         }catch (Exception e){
@@ -523,5 +531,22 @@ public class JntTicketServiceImpl implements DoSnatchTicketService {
             param.add(item);
         }
         return param;
+    }
+    private HttpHeaders getHeaders(){
+        HttpHeaders headers = new HttpHeaders();
+        //获取Csrf
+        headers.set("Host", "jnt.mfu.com.cn");
+        headers.set("M-Lang", "zh");
+        headers.set("Accept-Encoding", "gzip, deflate, br");
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Origin", "https://jnt.mfu.com.cn");
+        headers.set("Referer", "https://jnt.mfu.com.cn/page/tg/login");
+        headers.set("Sec-Fetch-Mode", "cors");
+        headers.set("Sec-Fetch-Site", "same-origin");
+        headers.set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36");
+        headers.set("Sec-Ch-Ua", "\"Google Chrome\";v=\"123\", \"Not:A-Brand\";v=\"8\", \"Chromium\";v=\"123\"");
+        headers.set("Sec-Ch-Ua-Platform", "macOS");
+        headers.set("Sec-Fetch-Dest", "empty");
+        return headers;
     }
 }
