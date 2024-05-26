@@ -6,54 +6,23 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.http.HttpException;
-import org.apache.http.HttpHost;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.conn.routing.HttpRoute;
-import org.apache.http.conn.routing.HttpRoutePlanner;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.ssl.SSLContextBuilder;
-import org.apache.http.util.EntityUtils;
 import org.springframework.http.*;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import test.ticket.tickettools.dao.TaskDao;
 import test.ticket.tickettools.dao.TaskDetailDao;
-import test.ticket.tickettools.dao.UserInfoDao;
+import test.ticket.tickettools.dao.AccountInfoDao;
 import test.ticket.tickettools.domain.bo.DoSnatchInfo;
 import test.ticket.tickettools.domain.bo.ProxyInfo;
 import test.ticket.tickettools.domain.constant.ChannelEnum;
 import test.ticket.tickettools.domain.entity.TaskDetailEntity;
 import test.ticket.tickettools.domain.entity.TaskEntity;
-import test.ticket.tickettools.domain.entity.UserInfoEntity;
+import test.ticket.tickettools.domain.entity.AccountInfoEntity;
 import test.ticket.tickettools.service.DoSnatchTicketService;
 import test.ticket.tickettools.utils.*;
 
 import javax.annotation.Resource;
-import javax.net.ssl.SSLContext;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.Proxy;
-import java.net.URL;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -78,7 +47,7 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
     @Resource
     TaskDetailDao taskDetailDao;
     @Resource
-    UserInfoDao userInfoDao;
+    AccountInfoDao accountInfoDao;
 
 
     @Override
@@ -121,10 +90,10 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
             DoSnatchInfo doSnatchInfo = new DoSnatchInfo();
             doSnatchInfo.setTaskId(unDoneTask.getId());
             doSnatchInfo.setUserInfoId(unDoneTask.getUserInfoId());
-            UserInfoEntity userInfoEntity = userInfoDao.selectById(unDoneTask.getUserInfoId());
+            AccountInfoEntity accountInfoEntity = accountInfoDao.selectById(unDoneTask.getUserInfoId());
             doSnatchInfo.setAccount(unDoneTask.getAccount());
-            doSnatchInfo.setHeaders(userInfoEntity.getHeaders());
-            doSnatchInfo.setChannelUserId(userInfoEntity.getChannelUserId());
+            doSnatchInfo.setHeaders(accountInfoEntity.getHeaders());
+            doSnatchInfo.setChannelUserId(accountInfoEntity.getChannelUserId());
             doSnatchInfo.setUseDate(unDoneTask.getUseDate());
             doSnatchInfo.setSession(unDoneTask.getSession());
             doSnatchInfo.setIp(unDoneTask.getIp());

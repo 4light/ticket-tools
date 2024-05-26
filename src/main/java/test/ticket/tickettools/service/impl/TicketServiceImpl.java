@@ -25,12 +25,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
-import test.ticket.tickettools.dao.UserInfoDao;
+import test.ticket.tickettools.dao.AccountInfoDao;
 import test.ticket.tickettools.dao.TaskDetailDao;
 import test.ticket.tickettools.dao.TaskDao;
 import test.ticket.tickettools.domain.bo.*;
 import test.ticket.tickettools.domain.constant.ChannelEnum;
-import test.ticket.tickettools.domain.entity.UserInfoEntity;
+import test.ticket.tickettools.domain.entity.AccountInfoEntity;
 import test.ticket.tickettools.domain.entity.TaskDetailEntity;
 import test.ticket.tickettools.domain.entity.TaskEntity;
 import test.ticket.tickettools.service.TicketService;
@@ -91,7 +91,7 @@ public class TicketServiceImpl implements TicketService {
     TaskDetailDao taskDetailDao;
 
     @Resource
-    UserInfoDao userInfoDao;
+    AccountInfoDao accountInfoDao;
 
 
     @Override
@@ -136,13 +136,13 @@ public class TicketServiceImpl implements TicketService {
         TaskEntity taskEntity = JSON.parseObject(JSON.toJSONString(taskInfo), TaskEntity.class);
         BeanUtils.copyProperties(taskInfo, taskEntity);
         Long userInfoId = taskInfo.getUserInfoId();
-        UserInfoEntity userInfoEntity = userInfoDao.selectById(userInfoId);
-        if(ObjectUtils.isEmpty(userInfoEntity)||userInfoEntity.getStatus()){
+        AccountInfoEntity accountInfoEntity = accountInfoDao.selectById(userInfoId);
+        if(ObjectUtils.isEmpty(accountInfoEntity)|| accountInfoEntity.getStatus()){
             return ServiceResponse.createByErrorMessage("账号未授权不能创建任务");
         }
-        if (userInfoEntity != null) {
-            taskEntity.setAccount(userInfoEntity.getAccount());
-            taskEntity.setPwd(userInfoEntity.getPwd());
+        if (accountInfoEntity != null) {
+            taskEntity.setAccount(accountInfoEntity.getAccount());
+            taskEntity.setPwd(accountInfoEntity.getPwd());
         }
         if (ObjectUtils.isEmpty(taskInfo.getId())) {
             taskEntity.setCreateDate(new Date());
@@ -176,8 +176,8 @@ public class TicketServiceImpl implements TicketService {
             if (taskInfo.getSource()!=null&&ObjectUtils.isEmpty(userId)) {
                 return ServiceResponse.createByErrorMessage("获取用户Id失败");
             }
-            taskEntity.setAccount(userInfoEntity.getAccount());
-            taskEntity.setPwd(userInfoEntity.getPwd());
+            taskEntity.setAccount(accountInfoEntity.getAccount());
+            taskEntity.setPwd(accountInfoEntity.getPwd());
             taskEntity.setUserId(userId);
             taskEntity.setUserInfoId(userInfoId);
             Integer insert = taskDao.updateTask(taskEntity);
@@ -251,16 +251,16 @@ public class TicketServiceImpl implements TicketService {
         for (TaskEntity taskEntity : taskEntities) {
             Long id = taskEntity.getId();
             Long userInfoId = taskEntity.getUserInfoId();
-            UserInfoEntity userInfoEntity = userInfoDao.selectById(userInfoId);
+            AccountInfoEntity accountInfoEntity = accountInfoDao.selectById(userInfoId);
             List<TaskDetailEntity> taskDetailEntities = taskDetailDao.selectByTaskId(id);
             for (TaskDetailEntity taskDetailEntity : taskDetailEntities) {
                 TaskInfoListResponse taskInfoListResponse = new TaskInfoListResponse();
                 taskInfoListResponse.setTaskId(id);
-                taskInfoListResponse.setAccount(ObjectUtils.isEmpty(userInfoEntity) ? null : userInfoEntity.getUserName());
+                taskInfoListResponse.setAccount(ObjectUtils.isEmpty(accountInfoEntity) ? null : accountInfoEntity.getUserName());
                 taskInfoListResponse.setId(taskDetailEntity.getId());
                 taskInfoListResponse.setAuthorization(taskEntity.getAuth());
                 //使用名字好区分
-                taskInfoListResponse.setAccount(userInfoEntity==null?null:userInfoEntity.getUserName());
+                taskInfoListResponse.setAccount(accountInfoEntity ==null?null: accountInfoEntity.getUserName());
                 taskInfoListResponse.setUseDate(taskEntity.getUseDate());
                 taskInfoListResponse.setUserName(taskDetailEntity.getUserName());
                 taskInfoListResponse.setIDCard(taskDetailEntity.getIDCard());
@@ -316,9 +316,9 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
-    public ServiceResponse addPhoneInfo(UserInfoEntity userInfoEntity) {
-        log.info("手机信息:{}", userInfoEntity);
-        Integer res = userInfoDao.updateByChannelAccount(userInfoEntity);
+    public ServiceResponse addPhoneInfo(AccountInfoEntity accountInfoEntity) {
+        log.info("手机信息:{}", accountInfoEntity);
+        Integer res = accountInfoDao.updateByChannelAccount(accountInfoEntity);
         if (res > 0) {
             ServiceResponse.createBySuccess();
         }
@@ -327,9 +327,9 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     public ServiceResponse getPhoneMsg(String phoneNum) {
-        UserInfoEntity userInfoEntity = new UserInfoEntity();
-        userInfoEntity.setPhoneNum(phoneNum);
-        return ServiceResponse.createBySuccess(userInfoDao.select(userInfoEntity).get(0).getAccount());
+        AccountInfoEntity accountInfoEntity = new AccountInfoEntity();
+        accountInfoEntity.setPhoneNum(phoneNum);
+        return ServiceResponse.createBySuccess(accountInfoDao.select(accountInfoEntity).get(0).getAccount());
     }
 
     @Override

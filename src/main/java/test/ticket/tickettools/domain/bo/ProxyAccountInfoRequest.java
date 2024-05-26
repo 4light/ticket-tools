@@ -1,10 +1,10 @@
 package test.ticket.tickettools.domain.bo;
 
-public class ProxyUserInfoRequest {
+public class ProxyAccountInfoRequest {
     private String url;
     private String headers;
 
-    public ProxyUserInfoRequest(String url, String headers) {
+    public ProxyAccountInfoRequest(String url, String headers) {
         this.url = url;
         this.headers = headers;
     }

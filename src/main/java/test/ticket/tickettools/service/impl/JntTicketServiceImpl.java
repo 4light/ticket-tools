@@ -14,12 +14,12 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.web.client.RestTemplate;
 import test.ticket.tickettools.dao.TaskDao;
 import test.ticket.tickettools.dao.TaskDetailDao;
-import test.ticket.tickettools.dao.UserInfoDao;
+import test.ticket.tickettools.dao.AccountInfoDao;
 import test.ticket.tickettools.domain.bo.DoSnatchInfo;
 import test.ticket.tickettools.domain.constant.ChannelEnum;
 import test.ticket.tickettools.domain.entity.TaskDetailEntity;
 import test.ticket.tickettools.domain.entity.TaskEntity;
-import test.ticket.tickettools.domain.entity.UserInfoEntity;
+import test.ticket.tickettools.domain.entity.AccountInfoEntity;
 import test.ticket.tickettools.service.DoSnatchTicketService;
 import test.ticket.tickettools.utils.*;
 
@@ -71,7 +71,7 @@ public class JntTicketServiceImpl implements DoSnatchTicketService {
     TaskDetailDao taskDetailDao;
 
     @Resource
-    UserInfoDao userInfoDao;
+    AccountInfoDao accountInfoDao;
 
     @Override
     public void doSnatchingTicket(DoSnatchInfo doSnatchInfo) {
@@ -243,21 +243,21 @@ public class JntTicketServiceImpl implements DoSnatchTicketService {
                 initTaskCache.remove(taskId);
                 return;
             }
-            UserInfoEntity userInfoEntity;
+            AccountInfoEntity accountInfoEntity;
             if (ObjectUtils.isEmpty(unDoneTask.getUserInfoId())) {
-                UserInfoEntity userInfo = new UserInfoEntity();
+                AccountInfoEntity userInfo = new AccountInfoEntity();
                 userInfo.setChannel(ChannelEnum.MFU.getCode());
                 userInfo.setStatus(false);
-                List<UserInfoEntity> select = userInfoDao.select(userInfo);
-                userInfoEntity = select.get((int) (select.size() * Math.random()));
+                List<AccountInfoEntity> select = accountInfoDao.select(userInfo);
+                accountInfoEntity = select.get((int) (select.size() * Math.random()));
             } else {
-                userInfoEntity = userInfoDao.selectById(unDoneTask.getUserInfoId());
+                accountInfoEntity = accountInfoDao.selectById(unDoneTask.getUserInfoId());
             }
-            unDoneTask.setUserInfoId(userInfoEntity.getId());
-            unDoneTask.setAccount(userInfoEntity.getAccount());
-            unDoneTask.setPwd(userInfoEntity.getPwd());
+            unDoneTask.setUserInfoId(accountInfoEntity.getId());
+            unDoneTask.setAccount(accountInfoEntity.getAccount());
+            unDoneTask.setPwd(accountInfoEntity.getPwd());
             //获取cookie
-            String cookie = getCookie(userInfoEntity.getAccount(), userInfoEntity.getPwd(), unDoneTask.getIp(), unDoneTask.getPort());
+            String cookie = getCookie(accountInfoEntity.getAccount(), accountInfoEntity.getPwd(), unDoneTask.getIp(), unDoneTask.getPort());
             if (ObjectUtils.isEmpty(cookie)) {
                 initTaskCache.remove(taskId);
                 return;
@@ -273,8 +273,8 @@ public class JntTicketServiceImpl implements DoSnatchTicketService {
                 taskDao.updateTask(unDoneTask);
                 JSONObject tourGuide = response.getJSONObject("tourGuide");
                 String realName = tourGuide.getString("realname");
-                userInfoEntity.setUserName(realName);
-                userInfoDao.insertOrUpdate(userInfoEntity);
+                accountInfoEntity.setUserName(realName);
+                accountInfoDao.insertOrUpdate(accountInfoEntity);
             }else{
                 log.info("账号:{}获取cookie失败,请求个人信息报错:{}",unDoneTask.getAccount(),response);
             }

@@ -3,7 +3,7 @@ import cn.hutool.core.date.DateUtil;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 import test.ticket.tickettools.domain.bo.*;
-import test.ticket.tickettools.domain.entity.UserInfoEntity;
+import test.ticket.tickettools.domain.entity.AccountInfoEntity;
 import test.ticket.tickettools.domain.entity.TaskDetailEntity;
 import test.ticket.tickettools.service.*;
 
@@ -62,7 +62,7 @@ public class TicketController {
 
     @GetMapping(value = "/phone/captcha")
     public ServiceResponse savePhoneCaptcha(HttpServletRequest request) {
-        UserInfoEntity param=new UserInfoEntity();
+        AccountInfoEntity param=new AccountInfoEntity();
         Map<String, String[]> parameterMap = request.getParameterMap();
         for (Map.Entry<String, String[]> stringEntry : parameterMap.entrySet()) {
             //from=+8618310327323&addr=10684336557485380022&content=【科大讯飞】尊敬的用户，您正在进行手机号码登录操作。验证码为：848200。如非本人操作，还请忽略。五分钟内有效&date=2023-08-01 14:19:16 -> {String[1]@12216} [""]

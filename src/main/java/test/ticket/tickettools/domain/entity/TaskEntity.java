@@ -41,12 +41,14 @@ public class TaskEntity {
     private Integer port;
     private Long userInfoId;
     private String pwd;
+    private String creator;
+    private String operator;
 
 
     public TaskEntity() {
     }
 
-    public TaskEntity(Long id, String loginPhone, String ip, Date useDate, String auth, Boolean done, Date createDate, Date updateDate, Long userId, Integer channel, Integer venue, Integer session, Boolean yn, String userName, String account, String nickName, Integer port, Long userInfoId, String pwd) {
+    public TaskEntity(Long id, String loginPhone, String ip, Date useDate, String auth, Boolean done, Date createDate, Date updateDate, Long userId, Integer channel, Integer venue, Integer session, Boolean yn, String userName, String account, String nickName, Integer port, Long userInfoId, String pwd, String creator,String operator) {
         this.id = id;
         this.loginPhone = loginPhone;
         this.ip = ip;
@@ -66,6 +68,8 @@ public class TaskEntity {
         this.port = port;
         this.userInfoId = userInfoId;
         this.pwd = pwd;
+        this.creator = creator;
+        this.operator=operator;
     }
 
     public Long getId() {
@@ -218,5 +222,21 @@ public class TaskEntity {
 
     public void setUserInfoId(Long userInfoId) {
         this.userInfoId = userInfoId;
+    }
+
+    public String getCreator() {
+        return creator;
+    }
+
+    public void setCreator(String creator) {
+        this.creator = creator;
+    }
+
+    public String getOperator() {
+        return operator;
+    }
+
+    public void setOperator(String operator) {
+        this.operator = operator;
     }
 }

@@ -8,21 +8,15 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.client.RestTemplate;
-import test.ticket.tickettools.dao.UserInfoDao;
+import test.ticket.tickettools.dao.AccountInfoDao;
 import test.ticket.tickettools.domain.constant.ChannelEnum;
-import test.ticket.tickettools.domain.entity.UserInfoEntity;
+import test.ticket.tickettools.domain.entity.AccountInfoEntity;
 import test.ticket.tickettools.utils.DateUtils;
-import test.ticket.tickettools.utils.ImageUtils;
 import test.ticket.tickettools.utils.TemplateUtil;
 
 import javax.annotation.Resource;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -38,7 +32,7 @@ public class LoginService {
     private static String loginUrl = "https://pcticket.cstm.org.cn/prod-api/login";
 
     @Resource
-    UserInfoDao userInfoDao;
+    AccountInfoDao accountInfoDao;
 
     public String longinCSTM(String loginPhone) {
         RestTemplate restTemplate = new RestTemplate();
@@ -101,9 +95,9 @@ public class LoginService {
                 return null;
             }
             //等待接收的验证码
-            UserInfoEntity userInfoEntity = new UserInfoEntity();
-            userInfoEntity.setAccount(loginPhone);
-            userInfoEntity.setChannel(ChannelEnum.CSTM.getCode());
+            AccountInfoEntity accountInfoEntity = new AccountInfoEntity();
+            accountInfoEntity.setAccount(loginPhone);
+            accountInfoEntity.setChannel(ChannelEnum.CSTM.getCode());
             long startTimestamp = System.currentTimeMillis();
             LocalDateTime now = LocalDateTime.now();
             Pattern pattern = Pattern.compile("验证码(\\d{6})");
@@ -111,7 +105,7 @@ public class LoginService {
             //等待获取短信验证码
             while (true) {
                 try {
-                    List<UserInfoEntity> result = userInfoDao.select(userInfoEntity);
+                    List<AccountInfoEntity> result = accountInfoDao.select(accountInfoEntity);
                     if (ObjectUtils.isEmpty(result)||ObjectUtils.isEmpty(result.get(0).getUpdateDate())) {
                         continue;
                     }

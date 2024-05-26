@@ -16,14 +16,13 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.web.client.RestTemplate;
 import test.ticket.tickettools.dao.TaskDao;
 import test.ticket.tickettools.dao.TaskDetailDao;
-import test.ticket.tickettools.dao.UserInfoDao;
+import test.ticket.tickettools.dao.AccountInfoDao;
 import test.ticket.tickettools.domain.bo.DoSnatchInfo;
 import test.ticket.tickettools.domain.bo.ProxyInfo;
-import test.ticket.tickettools.domain.bo.TaskInfo;
 import test.ticket.tickettools.domain.constant.ChannelEnum;
 import test.ticket.tickettools.domain.entity.TaskDetailEntity;
 import test.ticket.tickettools.domain.entity.TaskEntity;
-import test.ticket.tickettools.domain.entity.UserInfoEntity;
+import test.ticket.tickettools.domain.entity.AccountInfoEntity;
 import test.ticket.tickettools.service.DoSnatchTicketService;
 import test.ticket.tickettools.utils.*;
 
@@ -60,7 +59,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
     @Resource
     TaskDetailDao taskDetailDao;
     @Resource
-    UserInfoDao userInfoDao;
+    AccountInfoDao accountInfoDao;
 
 
     @Override
@@ -81,8 +80,8 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
             unDoneTask.setIp(proxy.getIp());
             unDoneTask.setPort(proxy.getPort());
             taskDao.updateTask(unDoneTask);
-            UserInfoEntity userInfoEntity = userInfoDao.selectById(unDoneTask.getUserInfoId());
-            String headerStr = userInfoEntity.getHeaders();
+            AccountInfoEntity accountInfoEntity = accountInfoDao.selectById(unDoneTask.getUserInfoId());
+            String headerStr = accountInfoEntity.getHeaders();
             JSONObject headerJson = JSON.parseObject(headerStr);
             for (Map.Entry<String, Object> headerEntry : headerJson.entrySet()) {
                 headers.set(headerEntry.getKey(), headerEntry.getValue().toString());
@@ -165,10 +164,10 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
             DoSnatchInfo doSnatchInfo = new DoSnatchInfo();
             doSnatchInfo.setTaskId(unDoneTask.getId());
             doSnatchInfo.setUserInfoId(unDoneTask.getUserInfoId());
-            UserInfoEntity userInfoEntity = userInfoDao.selectById(unDoneTask.getUserInfoId());
+            AccountInfoEntity accountInfoEntity = accountInfoDao.selectById(unDoneTask.getUserInfoId());
             doSnatchInfo.setAccount(unDoneTask.getAccount());
-            doSnatchInfo.setHeaders(userInfoEntity.getHeaders());
-            doSnatchInfo.setChannelUserId(userInfoEntity.getChannelUserId());
+            doSnatchInfo.setHeaders(accountInfoEntity.getHeaders());
+            doSnatchInfo.setChannelUserId(accountInfoEntity.getChannelUserId());
             doSnatchInfo.setUseDate(unDoneTask.getUseDate());
             doSnatchInfo.setSession(unDoneTask.getSession());
             doSnatchInfo.setIp(unDoneTask.getIp());

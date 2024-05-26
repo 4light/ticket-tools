@@ -1,7 +1,7 @@
 package test.ticket.tickettools.service;
 
 import test.ticket.tickettools.domain.bo.*;
-import test.ticket.tickettools.domain.entity.UserInfoEntity;
+import test.ticket.tickettools.domain.entity.AccountInfoEntity;
 import test.ticket.tickettools.domain.entity.TaskDetailEntity;
 import test.ticket.tickettools.domain.entity.TaskEntity;
 
@@ -29,7 +29,7 @@ public interface TicketService {
 
     Boolean updateTaskDetail(TaskDetailEntity taskDetailEntity);
     //添加手机信息
-    ServiceResponse addPhoneInfo(UserInfoEntity userInfoEntity);
+    ServiceResponse addPhoneInfo(AccountInfoEntity accountInfoEntity);
 
     ServiceResponse getPhoneMsg(String phoneNum);
     //获取需要执行的任务

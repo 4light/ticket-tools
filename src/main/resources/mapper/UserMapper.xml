@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="test.ticket.tickettools.dao.UserDao">
+
+    <resultMap id="BaseResultMap" type="test.ticket.tickettools.domain.entity.UserEntity">
+        <id column="id" property="id" />
+        <result column="user_name" property="userName" />
+        <result column="pwd" property="pwd" />
+        <result column="role" property="role" />
+        <result column="status" property="status" />
+        <result column="yn" property="yn" />
+        <result column="ext" property="ext" />
+        <result column="create_date" property="createDate" />
+        <result column="update_date" property="updateDate" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, user_name, pwd, role, status, yn, ext, create_date, update_date
+    </sql>
+
+    <select id="selectById" parameterType="long" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from ticket_tools.user
+        where id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="com.example.model.User">
+        insert into ticket_tools.user
+            (user_name, pwd, role, status, yn, ext, create_date, update_date)
+        values
+        (#{userName}, #{pwd}, #{role}, #{status}, #{yn}, #{ext}, #{createDate}, #{updateDate})
+    </insert>
+
+    <update id="updateById" parameterType="com.example.model.User">
+        update ticket_tools.user
+        set
+            user_name = #{userName},
+            pwd = #{pwd},
+            role = #{role},
+            status = #{status},
+            yn = #{yn},
+            ext = #{ext},
+            create_date = #{createDate},
+            update_date = #{updateDate}
+        where id = #{id}
+    </update>
+
+    <delete id="deleteById" parameterType="long">
+        delete from ticket_tools.user where id = #{id}
+    </delete>
+
+</mapper>

@@ -1,13 +1,13 @@
 package test.ticket.tickettools.domain.bo;
 
-public class UserInfoRequest {
+public class AccountInfoRequest {
     private Integer channel;
     private String userName;
     private String account;
     private String pwd;
     private PageParam page;
 
-    public UserInfoRequest(Integer channel, String userName, String account, String pwd, PageParam page) {
+    public AccountInfoRequest(Integer channel, String userName, String account, String pwd, PageParam page) {
         this.channel = channel;
         this.userName = userName;
         this.account = account;

@@ -22,6 +22,8 @@
             <arg column="port" javaType="java.lang.Integer" jdbcType="INTEGER"/>
             <arg column="user_info_id" javaType="java.lang.Long" jdbcType="BIGINT"/>
             <arg column="pwd" javaType="java.lang.String" jdbcType="VARCHAR"/>
+            <arg column="creator" javaType="java.lang.String" jdbcType="VARCHAR"/>
+            <arg column="operator" javaType="java.lang.String" jdbcType="VARCHAR"/>
 
 
         </constructor>
@@ -31,11 +33,12 @@
         insert into task (id, login_phone, ip,
                           use_date, auth, create_date,
                           update_date, user_id, channel,
-                          venue, session,account,user_info_id,pwd)
+                          venue, session,account,user_info_id,pwd,creator,operator)
         values (#{id,jdbcType=BIGINT}, #{loginPhone,jdbcType=VARCHAR}, #{ip,jdbcType=VARCHAR},
                 #{useDate,jdbcType=DATE}, #{auth,jdbcType=VARCHAR}, #{createDate,jdbcType=TIMESTAMP},
                 #{updateDate,jdbcType=TIMESTAMP}, #{userId,jdbcType=BIGINT}, #{channel,jdbcType=INTEGER},
-                #{venue,jdbcType=INTEGER}, #{session,jdbcType=INTEGER},#{account,jdbcType=VARCHAR},#{userInfoId,jdbcType=BIGINT},#{pwd,jdbcType=VARCHAR})
+                #{venue,jdbcType=INTEGER}, #{session,jdbcType=INTEGER},#{account,jdbcType=VARCHAR},
+                #{userInfoId,jdbcType=BIGINT},#{pwd,jdbcType=VARCHAR},#{creator,jdbcType=VARCHAR},#{operator,jdbcType=VARCHAR})
     </insert>
     <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
         select *
@@ -91,6 +94,9 @@
         <if test='userInfoId!=null'>
             AND user_info_id = #{userInfoId}
         </if>
+        <if test='creator!=null'>
+            AND creator = #{creator}
+        </if>
         and yn =0
         order by id DESC
     </select>
@@ -132,7 +138,10 @@
                 port = #{port},
             </if>
             <if test='pwd!=null'>
-                pwd = #{pwd}
+                pwd = #{pwd},
+            </if>
+            <if test='operator!=null'>
+                operator = #{operator}
             </if>
         </set>
         where id = #{id}
