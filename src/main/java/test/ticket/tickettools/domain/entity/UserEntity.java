@@ -4,23 +4,30 @@ import java.util.Date;
 
 public class UserEntity {
     private Long id;
+    private String nickName;
     private String userName;
     private String pwd;
     private String role;
     private Boolean status;
     private Boolean yn;
-    private Date create_date;
-    private Date update_date;
+    private String ext;
+    private Date createDate;
+    private Date updateDate;
 
-    public UserEntity(Long id, String userName, String pwd, String role, Boolean status, Boolean yn, Date create_date, Date update_date) {
+    public UserEntity() {
+    }
+
+    public UserEntity(Long id, String nickName, String userName, String pwd, String role, Boolean status, Boolean yn, String ext, Date createDate, Date updateDate) {
         this.id = id;
+        this.nickName = nickName;
         this.userName = userName;
         this.pwd = pwd;
         this.role = role;
         this.status = status;
         this.yn = yn;
-        this.create_date = create_date;
-        this.update_date = update_date;
+        this.ext = ext;
+        this.createDate = createDate;
+        this.updateDate = updateDate;
     }
 
     public Long getId() {
@@ -29,6 +36,14 @@ public class UserEntity {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getNickName() {
+        return nickName;
+    }
+
+    public void setNickName(String nickName) {
+        this.nickName = nickName;
     }
 
     public String getUserName() {
@@ -71,19 +86,27 @@ public class UserEntity {
         this.yn = yn;
     }
 
-    public Date getCreate_date() {
-        return create_date;
+    public String getExt() {
+        return ext;
     }
 
-    public void setCreate_date(Date create_date) {
-        this.create_date = create_date;
+    public void setExt(String ext) {
+        this.ext = ext;
     }
 
-    public Date getUpdate_date() {
-        return update_date;
+    public Date getCreateDate() {
+        return createDate;
     }
 
-    public void setUpdate_date(Date update_date) {
-        this.update_date = update_date;
+    public void setCreateDate(Date createDate) {
+        this.createDate = createDate;
+    }
+
+    public Date getUpdateDate() {
+        return updateDate;
+    }
+
+    public void setUpdateDate(Date updateDate) {
+        this.updateDate = updateDate;
     }
 }

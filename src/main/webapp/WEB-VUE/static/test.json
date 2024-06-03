@@ -1,0 +1,1237 @@
+{
+  "data": [
+    {
+      "expanded": true,
+      "topic": "【需求】企业微信单点登录",
+      "isroot": true,
+      "id": "2ljut0a2c1eb9a19ldjh779lt0"
+    },
+    {
+      "expanded": true,
+      "topic": "基本场景",
+      "id": "6382vgqv4m3hlndoqplifuchgq",
+      "parentid": "2ljut0a2c1eb9a19ldjh779lt0",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "配置场景",
+      "id": "6vpc4t7233djvgndj70tk31ar9",
+      "parentid": "6382vgqv4m3hlndoqplifuchgq",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "秘钥存储",
+      "id": "4kvq2pg609r2jgrn0kr4tko1f6",
+      "parentid": "6vpc4t7233djvgndj70tk31ar9",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "仅仅配置通讯录秘钥",
+      "id": "0ov2afa4so26758g8uh69fqou7",
+      "parentid": "4kvq2pg609r2jgrn0kr4tko1f6",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "通讯录秘钥错误，单点登录开启，保存失败",
+      "id": "6m58vtfsachpult5na4hljrjte",
+      "parentid": "0ov2afa4so26758g8uh69fqou7",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "通讯录秘钥错误，单点登录关闭，保存失败",
+      "id": "6cqm20h4iruv8r5piel16chb7n",
+      "parentid": "0ov2afa4so26758g8uh69fqou7",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "通讯录秘钥正确，单点登录开启，保存成功",
+      "id": "46b5tdsp1ul347udmour6kl0q6",
+      "parentid": "0ov2afa4so26758g8uh69fqou7",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "通讯录秘钥正确，单点登录关闭，保存成功",
+      "id": "1jm3n94ntvolalin8ls9gn0lj6",
+      "parentid": "0ov2afa4so26758g8uh69fqou7",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "仅仅配置日程秘钥",
+      "id": "7lf17l1plaahgsu16jk1vv4g43",
+      "parentid": "4kvq2pg609r2jgrn0kr4tko1f6",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "日程秘钥错误，单点登录开启，保存失败",
+      "id": "59l3aqhbjn4pc5b5rnt22hnijg",
+      "parentid": "7lf17l1plaahgsu16jk1vv4g43",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "日程秘钥错误，单点登录关闭，保存失败",
+      "id": "4b95lce0fb1h12usacgp4vv8bf",
+      "parentid": "7lf17l1plaahgsu16jk1vv4g43",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "日程秘钥正确，单点登录开启，保存成功",
+      "id": "0vcvsu27v3op400d18lpqk7uda",
+      "parentid": "7lf17l1plaahgsu16jk1vv4g43",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "日程秘钥正确，单点登录关闭，保存成功",
+      "id": "0lait7aq95dpqn6e6c441hhvsn",
+      "parentid": "7lf17l1plaahgsu16jk1vv4g43",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "同时配置通讯录秘钥和日程秘钥",
+      "id": "0kktma33nhsdp6n9sabtk5jbj3",
+      "parentid": "4kvq2pg609r2jgrn0kr4tko1f6",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "其中通讯录秘钥错误，单点登录开启，保存失败",
+      "id": "0v3snp2o68i7qrnflgthbq7b23",
+      "parentid": "0kktma33nhsdp6n9sabtk5jbj3",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "其中通讯录秘钥错误，单点登录关闭，保存失败",
+      "id": "7atjud4tc5pq9jgddmfp58nr98",
+      "parentid": "0kktma33nhsdp6n9sabtk5jbj3",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "其中日程秘钥错误，单点登录开启，保存失败",
+      "id": "0b66mvcpq65o4cu4md0ovnq14g",
+      "parentid": "0kktma33nhsdp6n9sabtk5jbj3",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "其中日程秘钥错误，单点登录关闭，保存失败",
+      "id": "3jq3u9ck6ka0cfkhn4rl8sr8b1",
+      "parentid": "0kktma33nhsdp6n9sabtk5jbj3",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "两个都正确，单点登录开启，保存成功",
+      "id": "3mg9d92klrdl31ol472omsqiss",
+      "parentid": "0kktma33nhsdp6n9sabtk5jbj3",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "两个都正确，单点登录关闭，保存成功",
+      "id": "5ikfo80eptjasn1001mmmpelgn",
+      "parentid": "0kktma33nhsdp6n9sabtk5jbj3",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "单点登录匹配",
+      "id": "7ksuhfvkcpm44mcg1f96poca4k",
+      "parentid": "6vpc4t7233djvgndj70tk31ar9",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "默认使用邮箱",
+      "id": "5bo5qb284149viilbdl7omaspc",
+      "parentid": "7ksuhfvkcpm44mcg1f96poca4k",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "登录场景",
+      "id": "21ndlstlcptrg2068dn9mpt8b2",
+      "parentid": "6382vgqv4m3hlndoqplifuchgq",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "已经绑定进行登录",
+      "id": "4t5ojudn7co5a09qc1of48ff55",
+      "parentid": "21ndlstlcptrg2068dn9mpt8b2",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "已经通过邮箱绑定",
+      "id": "1codhuunkd7tuutv1sp6q0m41u",
+      "parentid": "4t5ojudn7co5a09qc1of48ff55",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "打开单点登录之后，依旧登录状态，身份不变",
+      "id": "7iucdgt469d536dnq0epn6c6lu",
+      "parentid": "1codhuunkd7tuutv1sp6q0m41u",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "内推人",
+      "id": "5pa60fqvmfllchtsci48eia8aj",
+      "parentid": "7iucdgt469d536dnq0epn6c6lu",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "面试官",
+      "id": "4vq3t0jgspqdj2iqudkj145ntb",
+      "parentid": "7iucdgt469d536dnq0epn6c6lu",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "hr",
+      "id": "421ohmq487iph7j44ojanb9i3u",
+      "parentid": "7iucdgt469d536dnq0epn6c6lu",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "管理员",
+      "id": "52757gkt4n2ljjaeqbhql99h1u",
+      "parentid": "7iucdgt469d536dnq0epn6c6lu",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "关闭单点登录之后，依旧登录状态，身份不变",
+      "id": "5jtrt073rep9k3kk5b6762sr3q",
+      "parentid": "1codhuunkd7tuutv1sp6q0m41u",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "内推人",
+      "id": "58t950r8a0744ur895qet59a5k",
+      "parentid": "5jtrt073rep9k3kk5b6762sr3q",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "面试官",
+      "id": "5cdjihfakbg1amsj4e4b5qpplt",
+      "parentid": "5jtrt073rep9k3kk5b6762sr3q",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "管理员",
+      "id": "4ervjl93fc7cmfrpvkkcl9o5lg",
+      "parentid": "5jtrt073rep9k3kk5b6762sr3q",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "已经通过手机绑定",
+      "id": "680e8tdhpj7befgdkn5i7l5ook",
+      "parentid": "4t5ojudn7co5a09qc1of48ff55",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "添加通讯录秘钥和日程秘钥打开单点登录之后，依旧登录状态，身份不变",
+      "id": "4qbvabuhhic216r0se2vcs5ns5",
+      "parentid": "680e8tdhpj7befgdkn5i7l5ook",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "内推人",
+      "id": "3pvg4e54huvdt0p2a60et5mkrg",
+      "parentid": "4qbvabuhhic216r0se2vcs5ns5",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "面试官",
+      "id": "6u0jf6fc1jgujp81k15sjhb0uq",
+      "parentid": "4qbvabuhhic216r0se2vcs5ns5",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "超级管理员",
+      "id": "6femmpakp74mvp1jsvlp7frot3",
+      "parentid": "4qbvabuhhic216r0se2vcs5ns5",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "关闭单点登录之后，依旧登录状态，身份不变",
+      "id": "0q2vc9dsrn2jrdqcucqhdfc9tf",
+      "parentid": "680e8tdhpj7befgdkn5i7l5ook",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "内推人",
+      "id": "4h184h7glasfmfu26reitfoudb",
+      "parentid": "0q2vc9dsrn2jrdqcucqhdfc9tf",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "面试官",
+      "id": "40cc6oblgb1k6j50kd89fl3p9n",
+      "parentid": "0q2vc9dsrn2jrdqcucqhdfc9tf",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "超管",
+      "id": "7v1g84v5qddeungbf0f07a86bl",
+      "parentid": "0q2vc9dsrn2jrdqcucqhdfc9tf",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "未绑定的情况下进行登录",
+      "id": "08a8kskqf23bjit0ecj45ultuh",
+      "parentid": "21ndlstlcptrg2068dn9mpt8b2",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "存在通讯录+日程秘钥",
+      "id": "5k96foff2crfbhpm1fa4oqka63",
+      "parentid": "08a8kskqf23bjit0ecj45ultuh",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "获取到用户信息",
+      "id": "66c1rh0kp392vq4934283i7u0f",
+      "parentid": "5k96foff2crfbhpm1fa4oqka63",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "配置手机号匹配",
+      "id": "6pdfka040app402kf010jrji9q",
+      "parentid": "66c1rh0kp392vq4934283i7u0f",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "匹配成功，成功绑定并且登陆",
+      "id": "5u9b1hu8sc7on6p2fhaqpvk3an",
+      "parentid": "6pdfka040app402kf010jrji9q",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "内推人",
+      "id": "558mia8qneipjcpl7qrankqe5b",
+      "parentid": "5u9b1hu8sc7on6p2fhaqpvk3an",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "前台",
+      "id": "2kk4gcfi1t209hfe93qrgju3d7",
+      "parentid": "5u9b1hu8sc7on6p2fhaqpvk3an",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "面试官",
+      "id": "1uppol95l7kl7ug8j1dilt44u2",
+      "parentid": "5u9b1hu8sc7on6p2fhaqpvk3an",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "hr",
+      "id": "28ialtaca1qqr1tcpjlpltfb1e",
+      "parentid": "5u9b1hu8sc7on6p2fhaqpvk3an",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "超管",
+      "id": "2u8s7et2o3tfvt5v3ea8noh7j7",
+      "parentid": "5u9b1hu8sc7on6p2fhaqpvk3an",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "禁用",
+      "id": "37kfvltom4tefkvcj7rn54v310",
+      "parentid": "5u9b1hu8sc7on6p2fhaqpvk3an",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "匹配失败",
+      "id": "1qp1kmrs1pjo4hmh2r6jdnhdog",
+      "parentid": "6pdfka040app402kf010jrji9q",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "招聘助手进入绑定页面",
+      "id": "5c9b7bc17nade4sqv3st80kp72",
+      "parentid": "1qp1kmrs1pjo4hmh2r6jdnhdog",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "内推助手，企业微信无手机号，需要手动进行登录",
+      "id": "4aqt13mcmceuppj1bbvofpksv6",
+      "parentid": "1qp1kmrs1pjo4hmh2r6jdnhdog",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "内推助手，企业微信的手机号不匹配系统内账号，创建内推人账号，自动登录成功",
+      "id": "0klaqafajd8t44jprgdgiquq07",
+      "parentid": "1qp1kmrs1pjo4hmh2r6jdnhdog",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "配置邮箱匹配",
+      "id": "2m8d6quei9f7588jn46ph1djps",
+      "parentid": "66c1rh0kp392vq4934283i7u0f",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "匹配成功，成功绑定并且登陆",
+      "id": "2q924ja2l4ii1q77dbvpv7jp9c",
+      "parentid": "2m8d6quei9f7588jn46ph1djps",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "内推人",
+      "id": "7vi6hin1g3ag20el3lka3ho7tt",
+      "parentid": "2q924ja2l4ii1q77dbvpv7jp9c",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "前台",
+      "id": "7sae96vf93ni963n1q1k3vm2l0",
+      "parentid": "2q924ja2l4ii1q77dbvpv7jp9c",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "面试官",
+      "id": "2ul6kut31iii5feb6hn7hkmi9i",
+      "parentid": "2q924ja2l4ii1q77dbvpv7jp9c",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "hr",
+      "id": "0niu9g4cnvuboe0pbgfom0451q",
+      "parentid": "2q924ja2l4ii1q77dbvpv7jp9c",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "超管",
+      "id": "7tr4ft8dnim1loqbuc6n643db4",
+      "parentid": "2q924ja2l4ii1q77dbvpv7jp9c",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "禁用",
+      "id": "329rii2kea5llois89nddurtc0",
+      "parentid": "2q924ja2l4ii1q77dbvpv7jp9c",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "匹配失败",
+      "id": "336m9u2hobbcj8kan740h24qf2",
+      "parentid": "2m8d6quei9f7588jn46ph1djps",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "招聘助手进入绑定页面",
+      "id": "61bordptuba43fse0kmac23dbk",
+      "parentid": "336m9u2hobbcj8kan740h24qf2",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "内推助手，企业微信无邮箱，需要手动进行登录",
+      "id": "3o919a65317r6nf7va1sdhb8bt",
+      "parentid": "336m9u2hobbcj8kan740h24qf2",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "内推助手，企业微信的邮箱不匹配系统内账号，创建内推人账号绑定（企业微信邮箱和企业微信用户名），登录成功",
+      "id": "1ek9c9nc108s87uk8sb7t607d9",
+      "parentid": "336m9u2hobbcj8kan740h24qf2",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "获取不到用户信息",
+      "id": "7e6crvv7v2icq358uqjlom9cot",
+      "parentid": "5k96foff2crfbhpm1fa4oqka63",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "招聘助手，进入绑定页面",
+      "id": "7f0sjvqragu3jb5d1bh5g4kq8m",
+      "parentid": "7e6crvv7v2icq358uqjlom9cot",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "内推助手，进入内推主页，进入个人页面显示需要登录",
+      "id": "461olkoq8dl0j9v4ddi5faut4b",
+      "parentid": "7e6crvv7v2icq358uqjlom9cot",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "存在通讯录秘钥",
+      "id": "1m6fkh5quavak9415bpi4qb9bk",
+      "parentid": "08a8kskqf23bjit0ecj45ultuh",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "获取到用户信息",
+      "id": "5pkuep0qjhjm2bt4qcir2g9cfh",
+      "parentid": "1m6fkh5quavak9415bpi4qb9bk",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "配置手机号匹配",
+      "id": "0km6s00320mq55f3t0rjqqn01h",
+      "parentid": "5pkuep0qjhjm2bt4qcir2g9cfh",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "匹配成功，成功绑定并且登陆",
+      "id": "6equ1sr7g7mcccqgmvr67ffh8e",
+      "parentid": "0km6s00320mq55f3t0rjqqn01h",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "内推人",
+      "id": "0t3f9ne2cg4agi8sduvem1l23t",
+      "parentid": "6equ1sr7g7mcccqgmvr67ffh8e",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "匹配失败",
+      "id": "67lsm9qn4ktkbk7c6soi4i8ea3",
+      "parentid": "0km6s00320mq55f3t0rjqqn01h",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "招聘助手进入绑定页面",
+      "id": "7brej2uk3ct34l5ld12iqa0kih",
+      "parentid": "67lsm9qn4ktkbk7c6soi4i8ea3",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "内推助手，创建内推人账号绑定，登录成功",
+      "id": "75phnl62b3svil95vut97cvfgc",
+      "parentid": "67lsm9qn4ktkbk7c6soi4i8ea3",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "配置邮箱匹配",
+      "id": "2507iup9oljes8inn4vdm8fh8c",
+      "parentid": "5pkuep0qjhjm2bt4qcir2g9cfh",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "匹配成功，成功绑定并且登陆",
+      "id": "2id66u0vi116or9r5k59gjqlt2",
+      "parentid": "2507iup9oljes8inn4vdm8fh8c",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "面试官",
+      "id": "56jidjsm985r8n1uf6ukhmljq5",
+      "parentid": "2id66u0vi116or9r5k59gjqlt2",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "匹配失败",
+      "id": "6hadu8nekfqbp69k9gd8k8u30q",
+      "parentid": "2507iup9oljes8inn4vdm8fh8c",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "招聘助手进入绑定页面",
+      "id": "51cq24lljt2c82t7fdbtvkavhh",
+      "parentid": "6hadu8nekfqbp69k9gd8k8u30q",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "内推助手，创建内推人账号绑定，登录成功",
+      "id": "2e2rbt1tg09p0bblqkvel61pll",
+      "parentid": "6hadu8nekfqbp69k9gd8k8u30q",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "获取不到用户信息",
+      "id": "652tbf5safkqmgvfts8etktmas",
+      "parentid": "1m6fkh5quavak9415bpi4qb9bk",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "招聘助手，进入绑定页面",
+      "id": "49mbkv2r9lk2qmm2r1dgjarr2s",
+      "parentid": "652tbf5safkqmgvfts8etktmas",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "内推助手，进入内推主页，进入个人页面显示需要登录",
+      "id": "7kt5mm25c5iijc5e1soiomnmmo",
+      "parentid": "652tbf5safkqmgvfts8etktmas",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "存在日程秘钥",
+      "id": "1pjfrskg9s8jk1id0fihtp5qh3",
+      "parentid": "08a8kskqf23bjit0ecj45ultuh",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "获取到用户信息",
+      "id": "6ifgik1849klnr8nfrlq5eie37",
+      "parentid": "1pjfrskg9s8jk1id0fihtp5qh3",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "配置手机号匹配",
+      "id": "7hs92ea78hds8uc0rb65vk8krm",
+      "parentid": "6ifgik1849klnr8nfrlq5eie37",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "匹配成功，成功绑定并且登陆",
+      "id": "2cr5679p08n19sa72f8fg9c2oo",
+      "parentid": "7hs92ea78hds8uc0rb65vk8krm",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "超管",
+      "id": "4j0d26kqcgb078m991moff3n1n",
+      "parentid": "2cr5679p08n19sa72f8fg9c2oo",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "禁用",
+      "id": "4gvem71cel6gd46i5hup3m5ca7",
+      "parentid": "2cr5679p08n19sa72f8fg9c2oo",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "匹配失败",
+      "id": "2pc6ifkmft117e40fh9k2u62up",
+      "parentid": "7hs92ea78hds8uc0rb65vk8krm",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "招聘助手进入绑定页面",
+      "id": "4o6697qefdjkvoo1887rfd2c61",
+      "parentid": "2pc6ifkmft117e40fh9k2u62up",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "内推助手，企业微信无手机号，需要手动进行登录",
+      "id": "53gou40ia5cifb6svcgikfsphc",
+      "parentid": "2pc6ifkmft117e40fh9k2u62up",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "内推助手，企业微信的手机号不匹配系统内账号，创建内推人账号，自动登录成功",
+      "id": "30n4g6qco8mh43qm9jnmb10c4v",
+      "parentid": "2pc6ifkmft117e40fh9k2u62up",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "配置邮箱匹配",
+      "id": "0b3rkote8n4lj1q1d5oq002hkt",
+      "parentid": "6ifgik1849klnr8nfrlq5eie37",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "匹配成功，成功绑定并且登陆",
+      "id": "7h4700odmhh57vbj5ftrj2b3at",
+      "parentid": "0b3rkote8n4lj1q1d5oq002hkt",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "hr",
+      "id": "66ur6fvgt14fbsnuhb2rl4626k",
+      "parentid": "7h4700odmhh57vbj5ftrj2b3at",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "禁用",
+      "id": "4biganlo03a7sd8rn30m5apq7e",
+      "parentid": "7h4700odmhh57vbj5ftrj2b3at",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "匹配失败",
+      "id": "0nvj3fk3oplmj629dquc1hbjgg",
+      "parentid": "0b3rkote8n4lj1q1d5oq002hkt",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "招聘助手进入绑定页面",
+      "id": "1kbufm2ood2avqnj4kh3lrn7ol",
+      "parentid": "0nvj3fk3oplmj629dquc1hbjgg",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "内推助手，企业微信无邮箱，需要手动进行登录",
+      "id": "5p1fmt6om8h3af340de1cel2tm",
+      "parentid": "0nvj3fk3oplmj629dquc1hbjgg",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "内推助手，企业微信的邮箱不匹配系统内账号，创建内推人账号绑定（企业微信邮箱和企业微信用户名），登录成功",
+      "id": "3qhmrn064pa9to1m97ggg65d8k",
+      "parentid": "0nvj3fk3oplmj629dquc1hbjgg",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "获取不到用户信息",
+      "id": "7p7j0cs0rdetrhbqg4qbvr4eu3",
+      "parentid": "1pjfrskg9s8jk1id0fihtp5qh3",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "招聘助手，进入绑定页面",
+      "id": "1999itehke9fbosbpihism36pp",
+      "parentid": "7p7j0cs0rdetrhbqg4qbvr4eu3",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "内推助手，进入内推主页，进入个人页面显示需要登录",
+      "id": "543n3nvk9d3v37h5ikd726m8l3",
+      "parentid": "7p7j0cs0rdetrhbqg4qbvr4eu3",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "没有任何秘钥（关闭单点登录）",
+      "id": "1f8103mc7uo4l5e8lco4n7bosu",
+      "parentid": "08a8kskqf23bjit0ecj45ultuh",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "招聘助手，进入绑定页面",
+      "id": "5fv2dv2gc5dlcr4r550ruv5bpk",
+      "parentid": "1f8103mc7uo4l5e8lco4n7bosu",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "内推助手，进入内推主页，进入个人页面显示需要登录",
+      "id": "55a95hk7q6lhriojbs3lrfp4m7",
+      "parentid": "1f8103mc7uo4l5e8lco4n7bosu",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "换绑场景",
+      "id": "4mto5g6725ihaas9sq8obnejmb",
+      "parentid": "6382vgqv4m3hlndoqplifuchgq",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "关闭单点登录",
+      "id": "5n3jnlavu71de47l25cf3m111j",
+      "parentid": "4mto5g6725ihaas9sq8obnejmb",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "内推人换绑到HR，可以成功登录",
+      "id": "06i4n9lg3n9o88mv462ub470td",
+      "parentid": "5n3jnlavu71de47l25cf3m111j",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "HR换绑到内推人，可以成功登录",
+      "id": "2lgpuln54ev1ga6uvt8915bpho",
+      "parentid": "5n3jnlavu71de47l25cf3m111j",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "内推助手登录一个系统之存在的账号，能够登录",
+      "id": "1or740b30nkiq9acskqqdf7tt7",
+      "parentid": "5n3jnlavu71de47l25cf3m111j",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "招聘助手绑定一个系统中存在的账号，能够绑定",
+      "id": "53itkpm01l52hbdj0u2f1snj5d",
+      "parentid": "5n3jnlavu71de47l25cf3m111j",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "开启单点登录",
+      "id": "20lri58e98qrt0ru8k2v7i5n4f",
+      "parentid": "4mto5g6725ihaas9sq8obnejmb",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "之前绑定的账号和微信登录是同一个账号，解绑之后再次登录成功",
+      "id": "3vg4vp12cdekcesl2t62pta57m",
+      "parentid": "20lri58e98qrt0ru8k2v7i5n4f",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "之前绑定的账号和微信登录不是同一个账号，解绑之后再次登录成功，身份改变",
+      "id": "5dvk3g6loaulk1q7m2fpmk1aet",
+      "parentid": "20lri58e98qrt0ru8k2v7i5n4f",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "特殊场景",
+      "id": "0c0ikldkeivc89q0kn15odf7j1",
+      "parentid": "2ljut0a2c1eb9a19ldjh779lt0",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "角色相关",
+      "id": "754mrpepdbbn5ra16nosl7b8b8",
+      "parentid": "0c0ikldkeivc89q0kn15odf7j1",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "基本角色绑定",
+      "id": "07091l36nemkvd2bs9cqpep2g9",
+      "parentid": "754mrpepdbbn5ra16nosl7b8b8",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "内推人",
+      "id": "0vfm9m9nhrnf5gp85iebtijd49",
+      "parentid": "07091l36nemkvd2bs9cqpep2g9",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "前台",
+      "id": "1ulut64v1bfi7ut9lvjetlha4k",
+      "parentid": "07091l36nemkvd2bs9cqpep2g9",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "面试官",
+      "id": "0h5o2ljiap0h0ra8uip7atp8oq",
+      "parentid": "07091l36nemkvd2bs9cqpep2g9",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "用人经理",
+      "id": "72fs2ci7tsm2oinm8hum4qakrv",
+      "parentid": "07091l36nemkvd2bs9cqpep2g9",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "高级用人经理",
+      "id": "3a8ng1bss7g5ceim5urclc1ap8",
+      "parentid": "07091l36nemkvd2bs9cqpep2g9",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "HR",
+      "id": "2a2jt08sr3tni93fjf8jke26ud",
+      "parentid": "07091l36nemkvd2bs9cqpep2g9",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "管理员",
+      "id": "3ahh2pmcqnucjtu74j97tpcqgr",
+      "parentid": "07091l36nemkvd2bs9cqpep2g9",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "超级管理员",
+      "id": "5b7kirshockp7hs0hnofvot191",
+      "parentid": "07091l36nemkvd2bs9cqpep2g9",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "自定义管理员",
+      "id": "2tdu8q9dgked8it34v6jte3fhb",
+      "parentid": "07091l36nemkvd2bs9cqpep2g9",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "自定义HR",
+      "id": "224gf0ihtiiui434nhd01q0ftl",
+      "parentid": "07091l36nemkvd2bs9cqpep2g9",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "自定义超管",
+      "id": "6u82lrvfbf5eae4u3cec18vvmd",
+      "parentid": "07091l36nemkvd2bs9cqpep2g9",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "预期成功登录",
+      "id": "0iec5fbir44cec9ee0aca3umai",
+      "parentid": "07091l36nemkvd2bs9cqpep2g9",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "角色切换",
+      "id": "4g8kompsiqmmdncn63dtg9eljj",
+      "parentid": "754mrpepdbbn5ra16nosl7b8b8",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "开启单点登录",
+      "id": "61gtc965aspvo8c2b7jk0plhv9",
+      "parentid": "4g8kompsiqmmdncn63dtg9eljj",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "内推助手",
+      "id": "7md267mk1nnteifuorlhej4i9g",
+      "parentid": "61gtc965aspvo8c2b7jk0plhv9",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "已经成功绑定的情况下，成员从启用变为禁用，内推助手登录状态更改为未登录，再从禁用变为启用，内推助手登录状态变为已登录",
+      "id": "1ohq8r3e8itr0tvdihf0khk816",
+      "parentid": "7md267mk1nnteifuorlhej4i9g",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "已经成功绑定的情况下，成员从内推人变为超管，再变为面试官，再变为HR，再变为前台，期间绑定状态不变",
+      "id": "0akiabfib72davr0ebuo1v2hd7",
+      "parentid": "7md267mk1nnteifuorlhej4i9g",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "已经成功绑定的情况下，成员从启用变为禁用，内推助手提示未登录，重新使用其他账号登录，可以登录成功",
+      "id": "2f88i62i4ja8fknpjhhiis0id6",
+      "parentid": "7md267mk1nnteifuorlhej4i9g",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "已经成功绑定的情况下，成员从启用变为禁用，打开内推助手提示未登录，关闭后再次打开依然是未登录状态",
+      "id": "7pvpcpkvmokkmdtebihrfpkdba",
+      "parentid": "7md267mk1nnteifuorlhej4i9g",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "招聘助手",
+      "id": "6g0sa7gihrdatj5b8oon8senc0",
+      "parentid": "61gtc965aspvo8c2b7jk0plhv9",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "已经成功绑定的情况下，成员从启用变为禁用，招聘助手提示未登录重新登录，再从禁用变为启用，招聘助手登录状态变为已登录",
+      "id": "3nlf33olbk2dfgi3flfln6l0hj",
+      "parentid": "6g0sa7gihrdatj5b8oon8senc0",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "已经成功绑定的情况下，成员从内推人变为超管，再变为面试官，再变为HR，再变为前台，期间绑定状态不变",
+      "id": "5dobcbnjolpbcrkjgthcrp2g92",
+      "parentid": "6g0sa7gihrdatj5b8oon8senc0",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "已经成功绑定的情况下，成员从启用变为禁用，招聘助手提示未登录，重新使用其他账号登录，可以登录成功",
+      "id": "5i4h1ftgikaeuj3qhtcb57hje3",
+      "parentid": "6g0sa7gihrdatj5b8oon8senc0",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "已经成功绑定的情况下，成员从启用变为禁用，打开招聘助手提示未登录，关闭后再次打开进入绑定页面",
+      "id": "45irt5co7kldimq169r1er8l7q",
+      "parentid": "6g0sa7gihrdatj5b8oon8senc0",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "关闭单点登录",
+      "id": "3qa2ihhptvmsocior7gmdo4vru",
+      "parentid": "4g8kompsiqmmdncn63dtg9eljj",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "已经成功绑定的情况下，成员从启用变为禁用，登录状态更改为未登录，再从禁用变为启用，可以再次登录成功",
+      "id": "060fph1gn62ju5l24nn1ojjpus",
+      "parentid": "3qa2ihhptvmsocior7gmdo4vru",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "已经成功绑定的情况下，成员从管理员变为面试官，再变为HR，再变为前台，期间绑定状态不变",
+      "id": "1lkqk7sogtovsrg190l1tvtl3i",
+      "parentid": "3qa2ihhptvmsocior7gmdo4vru",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "秘钥相关",
+      "id": "2cg1m5cfdq3a0mcn1dhi33dipo",
+      "parentid": "0c0ikldkeivc89q0kn15odf7j1",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "更新秘钥",
+      "id": "55l5pfc7k3uub907uqfhn6kqcc",
+      "parentid": "2cg1m5cfdq3a0mcn1dhi33dipo",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "开启单点登录，已经绑定成功，更新秘钥后，依旧是登录状态",
+      "id": "1g4ln6loral1euv9m70pp7l1h5",
+      "parentid": "55l5pfc7k3uub907uqfhn6kqcc",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "开启单点登录，已经成功绑定情况下，企业微信后台改变通讯录secret，依旧是登录状态，解绑后，不能登录成功，更换秘钥后，能够绑定登录成功",
+      "id": "47kl3g1ja1cqo2bmrsnccplbu7",
+      "parentid": "55l5pfc7k3uub907uqfhn6kqcc",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "删除秘钥",
+      "id": "7q2mtrjcsai7rblgl8eip7v55e",
+      "parentid": "2cg1m5cfdq3a0mcn1dhi33dipo",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "开启单点登录，已经绑定成功，删除秘钥后，依旧是登录状态",
+      "id": "1f5citvruuueh84gems5dv3bui",
+      "parentid": "7q2mtrjcsai7rblgl8eip7v55e",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "邮箱相关",
+      "id": "4lrr24hq848g6p2frjp9er6edp",
+      "parentid": "0c0ikldkeivc89q0kn15odf7j1",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "开启单点登录，已经登录的情况下，后台更换用户企业微信邮箱，登录状态不变，解绑后，重新使用新邮箱登录，可以登录成功",
+      "id": "1e56b8i31u45v00tk837amo6cj",
+      "parentid": "4lrr24hq848g6p2frjp9er6edp",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "匹配设置更改",
+      "id": "42btr1f50pre2t6ebubmc2qr67",
+      "parentid": "0c0ikldkeivc89q0kn15odf7j1",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "开启单点登录，已经登录绑定的情况下，后台从手机号匹配改为邮箱匹配，依旧在登录绑定状态",
+      "id": "4m08p1ng3mc37c13t8g6evt7ht",
+      "parentid": "42btr1f50pre2t6ebubmc2qr67",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "开启单点登录，已经登录绑定的情况下，后台从邮箱匹配改为手机号匹配，解绑账号，之后重新登录能登录成功",
+      "id": "47nbleq3u511vkobmmabls6kpn",
+      "parentid": "42btr1f50pre2t6ebubmc2qr67",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "UI",
+      "id": "1fbattnfg7cfar806eod1aglvr",
+      "parentid": "2ljut0a2c1eb9a19ldjh779lt0",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "CMS后台",
+      "id": "32fq9j7bj1cqokun0icf5ekjh0",
+      "parentid": "1fbattnfg7cfar806eod1aglvr",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "秘钥保存后显示********（8个）",
+      "id": "63rc1d8d435v74k2mrvip9vfic",
+      "parentid": "32fq9j7bj1cqokun0icf5ekjh0",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "重新输入秘钥的时候，在输入框键入任何一个字符，秘钥都是先清空",
+      "id": "6e4472uoquauk20e8n2ar2956q",
+      "parentid": "32fq9j7bj1cqokun0icf5ekjh0",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "兼容性",
+      "id": "5jb632ubu1d503e5l2ii2u8dgv",
+      "parentid": "2ljut0a2c1eb9a19ldjh779lt0",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "PC",
+      "id": "37jq3niu0soifld58kfgo6u9e5",
+      "parentid": "5jb632ubu1d503e5l2ii2u8dgv",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "windows",
+      "id": "7hmgupmgvroiirk7bdfm7ln3tt",
+      "parentid": "37jq3niu0soifld58kfgo6u9e5",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "mac",
+      "id": "3eituqvdbnlghl18l902kfl2o7",
+      "parentid": "37jq3niu0soifld58kfgo6u9e5",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "移动端",
+      "id": "3qomr3n9r1fo61kr6d7braf99f",
+      "parentid": "5jb632ubu1d503e5l2ii2u8dgv",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "iOS",
+      "id": "74lde3vkoh680m556n2plosvav",
+      "parentid": "3qomr3n9r1fo61kr6d7braf99f",
+      "direction": "right"
+    },
+    {
+      "expanded": true,
+      "topic": "Android",
+      "id": "2lcbebfe2geop69s35enhqqpk3",
+      "parentid": "3qomr3n9r1fo61kr6d7braf99f",
+      "direction": "right"
+    }
+  ],
+  "meta": {},
+  "format": "node_array"
+}

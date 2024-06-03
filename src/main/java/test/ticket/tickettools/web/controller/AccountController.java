@@ -8,10 +8,11 @@ import test.ticket.tickettools.service.LoginService;
 import test.ticket.tickettools.service.AccountService;
 
 import javax.annotation.Resource;
+import java.util.Calendar;
 
 @RestController
 @RequestMapping("/ticket")
-public class AccountController {
+public class AccountController extends BaseController{
 
     @Resource
     AccountService accountServiceImpl;
@@ -21,27 +22,31 @@ public class AccountController {
 
 
 
-    @PostMapping(value = "/user/list")
+    @PostMapping(value = "/account/list")
     public ServiceResponse<PageableResponse<AccountInfoEntity>> getUser(@RequestBody AccountInfoRequest accountInfoRequest) {
+        accountInfoRequest.setCreator(currentUser);
         return accountServiceImpl.queryAccount(accountInfoRequest);
     }
 
 
-    @PostMapping(value = "/user/add")
+    @PostMapping(value = "/account/add")
     public ServiceResponse addUser(@RequestBody AccountInfoRequest accountInfoRequest) {
+        accountInfoRequest.setCreator(currentUser);
         return accountServiceImpl.addAccount(accountInfoRequest);
     }
-    @PostMapping(value = "/user/update")
+    @PostMapping(value = "/account/update")
     public ServiceResponse updateUser(@RequestBody AccountInfoEntity accountInfoEntity) {
+        accountInfoEntity.setCreator(currentUser);
         return accountServiceImpl.updateAccount(accountInfoEntity);
     }
-    @GetMapping(value = "/user/del")
+    @GetMapping(value = "/account/del")
     public ServiceResponse delUser(@RequestParam Long id) {
         return accountServiceImpl.delAccount(id);
     }
 
     @PostMapping(value = "/proxy/user/add")
     public ServiceResponse addProxyUser(@RequestBody ProxyAccountInfoRequest proxyAccountInfoRequest) {
+        Calendar calendar = Calendar.getInstance();
         return accountServiceImpl.addProxyAccount(proxyAccountInfoRequest);
     }
 

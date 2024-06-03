@@ -15,7 +15,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/ticket")
-public class TicketController {
+public class TicketController  extends BaseController{
 
     @Resource
     TicketService ticketServiceImpl;
@@ -30,6 +30,7 @@ public class TicketController {
 
     @PostMapping(value = "/task/list")
     public ServiceResponse<PageableResponse<TaskInfoListResponse>> getTaskList(@RequestBody QueryTaskInfo queryTaskInfo) {
+        queryTaskInfo.setCreator(currentUser);
         return ticketServiceImpl.queryTask(queryTaskInfo);
     }
 
@@ -41,6 +42,7 @@ public class TicketController {
 
     @PostMapping(value = "/add/taskInfo")
     public ServiceResponse addTask(@RequestBody TaskInfo taskInfo) {
+        taskInfo.setCreator(currentUser);
         return ticketServiceImpl.addTaskInfo(taskInfo);
     }
 

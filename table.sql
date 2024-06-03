@@ -1,3 +1,28 @@
+create table account_info
+(
+    id              bigint auto_increment
+        primary key,
+    phone_num       varchar(30)                        null,
+    channel         int                                null,
+    channel_user_id varchar(100)                       null comment '用户id',
+    account         varchar(255)                       null comment '账号',
+    create_date     datetime default CURRENT_TIMESTAMP null,
+    update_date     datetime                           null,
+    user_name       varchar(50)                        null comment '用户名',
+    pwd             varchar(100)                       null comment '密码',
+    nick_name       varchar(50)                        null comment '昵称',
+    id_card         varchar(50)                        null comment '身份证、护照等有效证件',
+    id_type         varchar(10)                        null comment '证件类型',
+    headers         mediumtext                         null comment '请求头',
+    yn              tinyint  default 0                 null comment '是否有效',
+    ext             varchar(200)                       null comment '扩展信息',
+    status          tinyint  default 0                 null comment '状态，是否被禁用 0否 1是',
+    creator         varchar(100)                       null,
+    operator        varchar(100)                       null,
+    belong_user     bigint                             null comment '所属用户'
+)
+    comment '购票账号表';
+
 create table phone_info2
 (
     id   int auto_increment
@@ -26,7 +51,9 @@ create table task
     nick_name    varchar(20)                        null comment '昵称 如:微信昵称',
     port         int                                null comment '端口',
     user_info_id bigint                             null comment '映射的userInfo表id',
-    pwd          varchar(50)                        null comment '密码'
+    pwd          varchar(50)                        null comment '密码',
+    creator      varchar(100)                       null comment '创建人',
+    operator     varchar(100)                       null comment '操作人'
 );
 
 create table task_detail
@@ -50,23 +77,19 @@ create table task_detail
     price           int                                null comment '订单价格'
 );
 
-create table user_info
+create table user
 (
-    id              bigint auto_increment
+    id          bigint auto_increment
         primary key,
-    phone_num       varchar(30)                        null,
-    channel         int                                null,
-    channel_user_id varchar(100)                       null comment '用户id',
-    account         varchar(255)                       null comment '账号',
-    create_date     datetime default CURRENT_TIMESTAMP null,
-    update_date     datetime                           null,
-    user_name       varchar(50)                        null comment '用户名',
-    pwd             varchar(100)                       null comment '密码',
-    nick_name       varchar(50)                        null comment '昵称',
-    id_card         varchar(50)                        null comment '身份证、护照等有效证件',
-    id_type         varchar(10)                        null comment '证件类型',
-    headers         mediumtext                         null comment '请求头',
-    yn              tinyint  default 0                 null comment '是否有效',
-    ext             varchar(200)                       null comment '扩展信息',
-    status          tinyint  default 0                 null comment '状态，是否被禁用 0否 1是'
-);
+    nick_name   varchar(100)      null comment '昵称',
+    user_name   varchar(200)      null comment '用户名',
+    pwd         varchar(255)      null comment '密码',
+    role        varchar(20)       null comment '角色',
+    status      tinyint default 0 null comment '是否禁用，0否 1是',
+    yn          tinyint default 0 null comment '删除标识 0否 1是',
+    ext         varchar(255)      null comment '扩展信息',
+    create_date datetime          null,
+    update_date datetime          null
+)
+    comment '用户表';
+

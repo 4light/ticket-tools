@@ -5,14 +5,34 @@ public class AccountInfoRequest {
     private String userName;
     private String account;
     private String pwd;
+    private String creator;
+    private String operator;
     private PageParam page;
 
-    public AccountInfoRequest(Integer channel, String userName, String account, String pwd, PageParam page) {
+    public AccountInfoRequest(Integer channel, String userName, String account, String pwd, String creator, String operator, PageParam page) {
         this.channel = channel;
         this.userName = userName;
         this.account = account;
         this.pwd = pwd;
+        this.creator = creator;
+        this.operator = operator;
         this.page = page;
+    }
+
+    public String getCreator() {
+        return creator;
+    }
+
+    public void setCreator(String creator) {
+        this.creator = creator;
+    }
+
+    public String getOperator() {
+        return operator;
+    }
+
+    public void setOperator(String operator) {
+        this.operator = operator;
     }
 
     public Integer getChannel() {
@@ -46,6 +66,8 @@ public class AccountInfoRequest {
     public void setPwd(String pwd) {
         this.pwd = pwd;
     }
+
+
 
     public PageParam getPage() {
         return page;

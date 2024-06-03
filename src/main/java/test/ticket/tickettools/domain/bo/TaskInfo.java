@@ -22,6 +22,7 @@ public class TaskInfo implements Serializable {
     private Integer source;
     private Long userId;
     private Long userInfoId;
+    private String creator;
     private List<TaskDetailEntity> userList;
 
     public Long getId() {
@@ -102,6 +103,14 @@ public class TaskInfo implements Serializable {
 
     public void setUserInfoId(Long userInfoId) {
         this.userInfoId = userInfoId;
+    }
+
+    public String getCreator() {
+        return creator;
+    }
+
+    public void setCreator(String creator) {
+        this.creator = creator;
     }
 
     public List<TaskDetailEntity> getUserList() {

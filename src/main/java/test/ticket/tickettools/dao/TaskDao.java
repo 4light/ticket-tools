@@ -1,6 +1,5 @@
 package test.ticket.tickettools.dao;
 
-import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 import test.ticket.tickettools.domain.entity.TaskEntity;
 

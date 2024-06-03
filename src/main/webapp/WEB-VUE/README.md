@@ -1,4 +1,4 @@
-# ticket-tools-web
+# platform-front-end
 
 > A Vue.js project
 

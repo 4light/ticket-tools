@@ -13,6 +13,7 @@ public class QueryTaskInfo {
     private Boolean done;
     private PageParam page;
     private Long userInfoId;
+    private String creator;
 
     public String getAccount() {
         return account;
@@ -85,5 +86,13 @@ public class QueryTaskInfo {
 
     public void setUserInfoId(Long userInfoId) {
         this.userInfoId = userInfoId;
+    }
+
+    public String getCreator() {
+        return creator;
+    }
+
+    public void setCreator(String creator) {
+        this.creator = creator;
     }
 }

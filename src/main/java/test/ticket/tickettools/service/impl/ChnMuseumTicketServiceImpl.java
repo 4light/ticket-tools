@@ -38,7 +38,7 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
     //获取图片点选坐标
     private static String getPointUrl = "http://api.jfbym.com/api/YmServer/customApi";
     //下单url
-    private static String placeOrderUrl="https://wxmini.chnmuseum.cn/prod-api/config/orderRule/placeOrder";
+    private static String placeOrderUrl = "https://wxmini.chnmuseum.cn/prod-api/config/orderRule/placeOrder";
 
     private static Map<Long, Object> runTaskCache = new HashMap<>();
 
@@ -132,7 +132,7 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
             Map<String, String> idNameMap = doSnatchInfo.getIdNameMap();
             Integer session = doSnatchInfo.getSession();
             //获取所有信息
-            RestTemplate restTemplate =ObjectUtils.isEmpty(doSnatchInfo.getIp())?TemplateUtil.initSSLTemplate():TemplateUtil.initSSLTemplateWithProxyAuth(doSnatchInfo.getIp(), doSnatchInfo.getPort());
+            RestTemplate restTemplate = ObjectUtils.isEmpty(doSnatchInfo.getIp()) ? TemplateUtil.initSSLTemplate() : TemplateUtil.initSSLTemplateWithProxyAuth(doSnatchInfo.getIp(), doSnatchInfo.getPort());
             HttpHeaders headers = new HttpHeaders();
             String headerStr = doSnatchInfo.getHeaders();
             JSONObject headerJson = JSON.parseObject(headerStr);
@@ -141,73 +141,65 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
             }
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.remove("Content-Length");
-/*
-            if(ObjectUtils.isEmpty(doSnatchInfo.getSession())) {
-*/
-                HttpEntity httpEntity = new HttpEntity(headers);
-                //Thread.sleep(RandomUtil.randomInt(4000, 8000));
-                JSONObject getAllConfigRes = TemplateUtil.getResponse(restTemplate, gainAllSystemConfigLoginUrl, HttpMethod.GET, httpEntity);
-                if (ObjectUtils.isEmpty(getAllConfigRes) || !StrUtil.equals("操作成功", getAllConfigRes.getString("msg"))) {
-                    log.info("获取配置信息失败:{}", getAllConfigRes);
-                    runTaskCache.remove(taskId);
-                    return;
-                }
-                log.info("获取配置信息:{}", getAllConfigRes);
-                JSONObject getAllConfigData = getAllConfigRes.getJSONObject("data");
-                JSONArray calendarTicketPoolsByDate = getAllConfigData == null ? null : getAllConfigData.getJSONArray("calendarTicketPoolsByDate");
-                if (ObjectUtils.isEmpty(calendarTicketPoolsByDate)) {
-                    log.info("获取日期下余票信息失败:{}", getAllConfigRes);
-                    runTaskCache.remove(taskId);
-                    return;
-                }
-                for (int i = 0; i < calendarTicketPoolsByDate.size(); i++) {
-                    JSONObject calendarTicketInfo = calendarTicketPoolsByDate.getJSONObject(i);
-                    if (StrUtil.equals(formatDate, calendarTicketInfo.getString("currentDate"))) {
-                        if (calendarTicketInfo.getIntValue("status") == 4 && calendarTicketInfo.getIntValue("ticketPool") >= idNameMap.size()) {
-                            JSONArray hallTicketPoolVOS = calendarTicketInfo.getJSONArray("hallTicketPoolVOS");
-                            JSONArray scheduleTicketPoolVOS = hallTicketPoolVOS.getJSONObject(0).getJSONArray("scheduleTicketPoolVOS");
-                            for (int j = 0; j < scheduleTicketPoolVOS.size(); j++) {
-                                JSONObject scheduleTicketJson = scheduleTicketPoolVOS.getJSONObject(j);
-                                String scheduleName = scheduleTicketJson.getString("scheduleName");
-                                if (ObjectUtils.isEmpty(session)) {
+            HttpEntity httpEntity = new HttpEntity(headers);
+            JSONObject getAllConfigRes = TemplateUtil.getResponse(restTemplate, gainAllSystemConfigLoginUrl, HttpMethod.GET, httpEntity);
+            if (ObjectUtils.isEmpty(getAllConfigRes) || !StrUtil.equals("操作成功", getAllConfigRes.getString("msg"))) {
+                log.info("获取配置信息失败:{}", getAllConfigRes);
+                runTaskCache.remove(taskId);
+                return;
+            }
+            log.info("获取配置信息:{}", getAllConfigRes);
+            JSONObject getAllConfigData = getAllConfigRes.getJSONObject("data");
+            JSONArray calendarTicketPoolsByDate = getAllConfigData == null ? null : getAllConfigData.getJSONArray("calendarTicketPoolsByDate");
+            if (ObjectUtils.isEmpty(calendarTicketPoolsByDate)) {
+                log.info("获取日期下余票信息失败:{}", getAllConfigRes);
+                runTaskCache.remove(taskId);
+                return;
+            }
+            for (int i = 0; i < calendarTicketPoolsByDate.size(); i++) {
+                JSONObject calendarTicketInfo = calendarTicketPoolsByDate.getJSONObject(i);
+                if (StrUtil.equals(formatDate, calendarTicketInfo.getString("currentDate"))) {
+                    if (calendarTicketInfo.getIntValue("status") == 4 && calendarTicketInfo.getIntValue("ticketPool") >= idNameMap.size()) {
+                        JSONArray hallTicketPoolVOS = calendarTicketInfo.getJSONArray("hallTicketPoolVOS");
+                        JSONArray scheduleTicketPoolVOS = hallTicketPoolVOS.getJSONObject(0).getJSONArray("scheduleTicketPoolVOS");
+                        for (int j = 0; j < scheduleTicketPoolVOS.size(); j++) {
+                            JSONObject scheduleTicketJson = scheduleTicketPoolVOS.getJSONObject(j);
+                            String scheduleName = scheduleTicketJson.getString("scheduleName");
+                            if (ObjectUtils.isEmpty(session)) {
+                                hallId = scheduleTicketJson.getIntValue("hallId");
+                                hallScheduleId = scheduleTicketJson.getIntValue("hallScheduleId");
+                                break;
+                            } else {
+                                if (session == 1 && StrUtil.equals("09:00-11:00", scheduleName)) {
                                     hallId = scheduleTicketJson.getIntValue("hallId");
                                     hallScheduleId = scheduleTicketJson.getIntValue("hallScheduleId");
-                                    break;
-                                } else {
-                                    if (session == 1 && StrUtil.equals("09:00-11:00", scheduleName)) {
-                                        hallId = scheduleTicketJson.getIntValue("hallId");
-                                        hallScheduleId = scheduleTicketJson.getIntValue("hallScheduleId");
-                                    }
-                                    if (session == 2 && StrUtil.equals("11:00-13:30", scheduleName)) {
-                                        hallId = scheduleTicketJson.getIntValue("hallId");
-                                        hallScheduleId = scheduleTicketJson.getIntValue("hallScheduleId");
-                                    }
-                                    if (session == 3 && StrUtil.equals("13:30-16:00", scheduleName)) {
-                                        hallId = scheduleTicketJson.getIntValue("hallId");
-                                        hallScheduleId = scheduleTicketJson.getIntValue("hallScheduleId");
-                                    }
+                                }
+                                if (session == 2 && StrUtil.equals("11:00-13:30", scheduleName)) {
+                                    hallId = scheduleTicketJson.getIntValue("hallId");
+                                    hallScheduleId = scheduleTicketJson.getIntValue("hallScheduleId");
+                                }
+                                if (session == 3 && StrUtil.equals("13:30-16:00", scheduleName)) {
+                                    hallId = scheduleTicketJson.getIntValue("hallId");
+                                    hallScheduleId = scheduleTicketJson.getIntValue("hallScheduleId");
                                 }
                             }
-                            hasTicket = true;
-                            String formatUrl = String.format(getPriceByScheduleIdUrl, hallId, formatDate, hallScheduleId);
-                            JSONObject getPriceByScheduleIdRes = TemplateUtil.getResponse(restTemplate, formatUrl, HttpMethod.GET, httpEntity);
-                            if (ObjectUtils.isEmpty(getPriceByScheduleIdRes) || !StrUtil.equals("操作成功", getPriceByScheduleIdRes.getString("msg"))) {
-                                log.info("获取场次票价信息失败:{}", getAllConfigRes);
-                                runTaskCache.remove(taskId);
-                                return;
-                            }
-                            JSONArray data = getPriceByScheduleIdRes.getJSONArray("data");
-                            if (!ObjectUtils.isEmpty(data)) {
-                                priceId = data.getJSONObject(0).getIntValue("priceId");
-                            }
-                            break;
                         }
+                        hasTicket = true;
+                        String formatUrl = String.format(getPriceByScheduleIdUrl, hallId, formatDate, hallScheduleId);
+                        JSONObject getPriceByScheduleIdRes = TemplateUtil.getResponse(restTemplate, formatUrl, HttpMethod.GET, httpEntity);
+                        if (ObjectUtils.isEmpty(getPriceByScheduleIdRes) || !StrUtil.equals("操作成功", getPriceByScheduleIdRes.getString("msg"))) {
+                            log.info("获取场次票价信息失败:{}", getAllConfigRes);
+                            runTaskCache.remove(taskId);
+                            return;
+                        }
+                        JSONArray data = getPriceByScheduleIdRes.getJSONArray("data");
+                        if (!ObjectUtils.isEmpty(data)) {
+                            priceId = data.getJSONObject(0).getIntValue("priceId");
+                        }
+                        break;
                     }
                 }
-            /*}else{
-                hallScheduleId=doSnatchInfo.getSession();
-                hasTicket=true;
-            }*/
+            }
             if (hasTicket) {
                 JSONObject checkLeaderInfoParam = getCheckLeaderInfoParam(idNameMap, formatDate, hallId, hallScheduleId, priceId);
                 headers.setContentLength(JSON.toJSONString(checkLeaderInfoParam).getBytes(StandardCharsets.UTF_8).length);
@@ -220,15 +212,15 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
                 }
                 log.info("CheckLeaderInfo结果:{}", getCheckLeaderInfoRes);
                 headers.remove("Content-Length");
-                String checkTime = getCheckTime(headerJson.getString("User-Agent"),doSnatchInfo.getIp(),doSnatchInfo.getPort());
+                String checkTime = getCheckTime(headerJson.getString("User-Agent"), doSnatchInfo.getIp(), doSnatchInfo.getPort());
                 log.info("getCheckTime:{}", checkTime);
                 String ip = checkTime.split("\"")[9];
                 String data = doSnatchInfo.getChannelUserId() + ":" + checkTime.substring(26, 36) + "000" + ":" + DateUtils.dateToStr(doSnatchInfo.getUseDate(), "yyyy/MM/dd") + ":" + hallId + ":" + hallScheduleId + ":2";
                 String nonce = doAES(data, "AyrKJRXPO3nR5Abc");
-                String formatUrl = String.format(getBlockUrl,nonce);
-                log.info("formatUrl:{}",formatUrl);
-                HttpEntity getBlockEntity=new HttpEntity(headers);
-                log.info("header:{}",headers);
+                String formatUrl = String.format(getBlockUrl, nonce);
+                log.info("formatUrl:{}", formatUrl);
+                HttpEntity getBlockEntity = new HttpEntity(headers);
+                log.info("header:{}", headers);
                 JSONObject getBlockRes = TemplateUtil.getResponse(restTemplate, formatUrl, HttpMethod.GET, getBlockEntity);
                 if (ObjectUtils.isEmpty(getBlockRes) || !StrUtil.equals("操作成功", getBlockRes.getString("msg"))) {
                     log.info("获取验证码失败:{}", getBlockRes);
@@ -296,8 +288,8 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
                 }
             }
             runTaskCache.remove(taskId);
-        }catch (Exception e){
-            log.info("国博抢票任务出错:{}",e);
+        } catch (Exception e) {
+            log.info("国博抢票任务出错:{}", e);
             runTaskCache.remove(taskId);
         }
     }
@@ -331,26 +323,27 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
             ticketInfo.put("realNameFlag", 1);
             ticketInfoList.add(ticketInfo);
         }
-        checkLeaderInfoParam.put("ticketInfoList",ticketInfoList);
-        checkLeaderInfoParam.put("p","wxmini");
+        checkLeaderInfoParam.put("ticketInfoList", ticketInfoList);
+        checkLeaderInfoParam.put("p", "wxmini");
         return checkLeaderInfoParam;
     }
-    public static String getCheckTime(String userAgent,String ip,Integer port){
-        HttpHeaders httpHeaders=new HttpHeaders();
-        httpHeaders.set("Host","vv.video.qq.com");
-        httpHeaders.set("Connection","keep-alive");
-        httpHeaders.set("xweb_xhr","1");
-        httpHeaders.set("User-Agent",userAgent);
-        httpHeaders.set("Content-Type","application/json");
-        httpHeaders.set("Accept-Type","*/*");
-        httpHeaders.set("Sec-Fetch-Site","cross-site");
-        httpHeaders.set("Sec-Fetch-Mode","cors");
-        httpHeaders.set("Sec-Fetch-Dest","empty");
-        httpHeaders.set("Referer","https://servicewechat.com/wx9e2927dd595b0473/73/page-frame.html");
-        httpHeaders.set("Accept-Encoding","gzip, deflate, br");
-        httpHeaders.set("Accept-Language","zh-CN,zh;q=0.9");
+
+    public static String getCheckTime(String userAgent, String ip, Integer port) {
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.set("Host", "vv.video.qq.com");
+        httpHeaders.set("Connection", "keep-alive");
+        httpHeaders.set("xweb_xhr", "1");
+        httpHeaders.set("User-Agent", userAgent);
+        httpHeaders.set("Content-Type", "application/json");
+        httpHeaders.set("Accept-Type", "*/*");
+        httpHeaders.set("Sec-Fetch-Site", "cross-site");
+        httpHeaders.set("Sec-Fetch-Mode", "cors");
+        httpHeaders.set("Sec-Fetch-Dest", "empty");
+        httpHeaders.set("Referer", "https://servicewechat.com/wx9e2927dd595b0473/73/page-frame.html");
+        httpHeaders.set("Accept-Encoding", "gzip, deflate, br");
+        httpHeaders.set("Accept-Language", "zh-CN,zh;q=0.9");
         RestTemplate restTemplate = TemplateUtil.initSSLTemplate();
-        HttpEntity httpEntity=new HttpEntity(httpHeaders);
+        HttpEntity httpEntity = new HttpEntity(httpHeaders);
         ResponseEntity getCheckTimeRes = restTemplate.exchange("http://vv.video.qq.com/checktime?otype=json", HttpMethod.GET, httpEntity, String.class);
         return getCheckTimeRes.getBody().toString();
     }

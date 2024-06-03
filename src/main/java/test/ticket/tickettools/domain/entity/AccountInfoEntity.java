@@ -23,11 +23,17 @@ public class AccountInfoEntity {
     private Boolean yn;
     private String ext;
     private Boolean status;
+    private String creator;
+    private String operator;
+    private Long belongUser;
 
     public AccountInfoEntity() {
     }
 
-    public AccountInfoEntity(Long id, String phoneNum, Integer channel, String channelUserId, String account, Date createDate, Date updateDate, String userName, String pwd, String nickName, String idCard, String idType, String headers, Boolean yn, String ext, Boolean status) {
+    public AccountInfoEntity(Long id, String phoneNum, Integer channel, String channelUserId,
+                             String account, Date createDate, Date updateDate, String userName,
+                             String pwd, String nickName, String idCard, String idType,
+                             String headers, Boolean yn, String ext, Boolean status, String creator, String operator,Long belongUser) {
         this.id = id;
         this.phoneNum = phoneNum;
         this.channel = channel;
@@ -44,6 +50,25 @@ public class AccountInfoEntity {
         this.yn = yn;
         this.ext = ext;
         this.status = status;
+        this.creator = creator;
+        this.operator = operator;
+        this.belongUser=belongUser;
+    }
+
+    public String getCreator() {
+        return creator;
+    }
+
+    public void setCreator(String creator) {
+        this.creator = creator;
+    }
+
+    public String getOperator() {
+        return operator;
+    }
+
+    public void setOperator(String operator) {
+        this.operator = operator;
     }
 
     public Long getId() {
@@ -172,5 +197,13 @@ public class AccountInfoEntity {
 
     public void setStatus(Boolean status) {
         this.status = status;
+    }
+
+    public Long getBelongUser() {
+        return belongUser;
+    }
+
+    public void setBelongUser(Long belongUser) {
+        this.belongUser = belongUser;
     }
 }

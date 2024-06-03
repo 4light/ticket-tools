@@ -8,7 +8,6 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.ObjectUtils;
 import test.ticket.tickettools.domain.bo.DoSnatchInfo;
 import test.ticket.tickettools.domain.bo.ProxyInfo;
-import test.ticket.tickettools.domain.entity.TaskEntity;
 import test.ticket.tickettools.service.DoSnatchTicketService;
 import test.ticket.tickettools.utils.ProxyUtil;
 
@@ -30,7 +29,7 @@ public class DoChnMuseumSnatchingSchedule {
         chnMuseumTicketServiceImpl.initData(null);
     }
 
-    @Scheduled(cron = "0/1 01-30 17 * * ?")
+    //@Scheduled(cron = "0/1 01-30 17 * * ?")
     public void doPalaceMuseumTicketSnatch() {
         List<DoSnatchInfo> doSnatchInfos = chnMuseumTicketServiceImpl.getDoSnatchInfos();
         if (ObjectUtils.isEmpty(doSnatchInfos)) {

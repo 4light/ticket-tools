@@ -40,6 +40,7 @@ public class AccountServiceImpl implements AccountService {
         accountInfoEntity.setUserName(accountInfoRequest.getUserName());
         accountInfoEntity.setAccount(accountInfoRequest.getAccount());
         accountInfoEntity.setChannel(accountInfoRequest.getChannel());
+        accountInfoEntity.setCreator(accountInfoRequest.getCreator());
         List<AccountInfoEntity> select = accountInfoDao.select(accountInfoEntity);
         if(ObjectUtils.isEmpty(accountInfoRequest.getPage())){
             return ServiceResponse.createBySuccess(select);
@@ -53,6 +54,7 @@ public class AccountServiceImpl implements AccountService {
         userInfo.setChannel(accountInfoRequest.getChannel());
         userInfo.setUserName(accountInfoRequest.getUserName());
         userInfo.setAccount(accountInfoRequest.getAccount());
+        userInfo.setCreator(accountInfoRequest.getCreator());
         userInfo.setPwd(accountInfoRequest.getPwd());
         userInfo.setStatus(false);
         Integer insert = accountInfoDao.insert(userInfo);
@@ -152,6 +154,10 @@ public class AccountServiceImpl implements AccountService {
         if(ObjectUtils.isEmpty(accountInfoEntity.getId())){
             accountInfoEntity.setStatus(false);
             accountInfoEntity.setCreateDate(new Date());
+            accountInfoEntity.setCreator(accountInfoEntity.getCreator());
+        }else{
+            accountInfoEntity.setUpdateDate(new Date());
+            accountInfoEntity.setOperator(accountInfoEntity.getCreator());
         }
         Integer integer = accountInfoDao.insertOrUpdate(accountInfoEntity);
         if(integer==null){

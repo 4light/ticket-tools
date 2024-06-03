@@ -6,51 +6,91 @@
 <mapper namespace="test.ticket.tickettools.dao.UserDao">
 
     <resultMap id="BaseResultMap" type="test.ticket.tickettools.domain.entity.UserEntity">
-        <id column="id" property="id" />
-        <result column="user_name" property="userName" />
-        <result column="pwd" property="pwd" />
-        <result column="role" property="role" />
-        <result column="status" property="status" />
-        <result column="yn" property="yn" />
-        <result column="ext" property="ext" />
-        <result column="create_date" property="createDate" />
-        <result column="update_date" property="updateDate" />
+        <id column="id" property="id"/>
+        <result column="nick_name" property="nickName"/>
+        <result column="user_name" property="userName"/>
+        <result column="pwd" property="pwd"/>
+        <result column="role" property="role"/>
+        <result column="status" property="status"/>
+        <result column="yn" property="yn"/>
+        <result column="ext" property="ext"/>
+        <result column="create_date" property="createDate"/>
+        <result column="update_date" property="updateDate"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id, user_name, pwd, role, status, yn, ext, create_date, update_date
+        id
+        , nick_name,user_name, pwd, role, status, yn, ext, create_date, update_date
     </sql>
 
     <select id="selectById" parameterType="long" resultMap="BaseResultMap">
         select
-        <include refid="Base_Column_List" />
+        <include refid="Base_Column_List"/>
         from ticket_tools.user
         where id = #{id}
     </select>
 
-    <insert id="insert" parameterType="com.example.model.User">
+    <insert id="insert" parameterType="test.ticket.tickettools.domain.entity.UserEntity">
         insert into ticket_tools.user
-            (user_name, pwd, role, status, yn, ext, create_date, update_date)
-        values
-        (#{userName}, #{pwd}, #{role}, #{status}, #{yn}, #{ext}, #{createDate}, #{updateDate})
+        (nick_name, user_name, pwd, role, status, yn, ext, create_date, update_date)
+        values (#{nickName}, #{userName}, #{pwd}, #{role}, #{status}, #{yn}, #{ext}, #{createDate}, #{updateDate})
     </insert>
 
-    <update id="updateById" parameterType="com.example.model.User">
+    <update id="updateById" parameterType="test.ticket.tickettools.domain.entity.UserEntity">
         update ticket_tools.user
-        set
+        <set>
+        <if test="nickName!=null">
+            nick_name=#{nickName},
+        </if>
+        <if test="userName!=null">
             user_name = #{userName},
+        </if>
+        <if test="pwd!=null">
             pwd = #{pwd},
+        </if>
+        <if test="role!=null">
             role = #{role},
+        </if>
+        <if test="status!=null">
             status = #{status},
+        </if>
+        <if test="yn!=null">
             yn = #{yn},
+        </if>
+        <if test="ext!=null">
             ext = #{ext},
+        </if>
+        <if test="createDate!=null">
             create_date = #{createDate},
-            update_date = #{updateDate}
+        </if>
+        <if test="updateDate!=null">
+            update_date = #{updateDate},
+        </if>
+        </set>
         where id = #{id}
     </update>
 
     <delete id="deleteById" parameterType="long">
-        delete from ticket_tools.user where id = #{id}
+        delete
+        from ticket_tools.user
+        where id = #{id}
     </delete>
+    <select id="findByUsername" parameterType="java.lang.String" resultMap="BaseResultMap">
+        select *
+        from ticket_tools.user
+        where user_name = #{userName}
+    </select>
 
+    <select id="select" parameterType="test.ticket.tickettools.domain.entity.UserEntity" resultMap="BaseResultMap">
+        select * from ticket_tools.user
+        <where>
+            yn=0
+            <if test='nickName!=null'>
+                and nick_name = #{nickName}
+            </if>
+            <if test='userName!=null and userName!=""'>
+                and user_name = #{userName}
+            </if>
+        </where>
+    </select>
 </mapper>

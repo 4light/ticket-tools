@@ -10,10 +10,10 @@ module.exports = {
     // Paths
     assetsSubDirectory: 'static',
     assetsPublicPath: '/',
+    // proxyTable: {},
     proxyTable: {
-      "/ticket":{
-        target: 'http://127.0.0.1:8082',
-        changeOrigin: true
+      '/ticket': {
+        target: 'http://localhost:8082',
       }
     },
 
