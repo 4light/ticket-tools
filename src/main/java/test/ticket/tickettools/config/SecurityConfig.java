@@ -1,5 +1,6 @@
 package test.ticket.tickettools.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -24,10 +25,16 @@ import javax.annotation.Resource;
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-    @Resource
+    final
     JwtRequestFilter jwtRequestFilter;
-    @Resource
+    final
     UserService userService;
+
+    public SecurityConfig(JwtRequestFilter jwtRequestFilter, UserService userService) {
+        this.jwtRequestFilter = jwtRequestFilter;
+        this.userService = userService;
+    }
+
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.userDetailsService(new UserDetailsService() {
