@@ -3,6 +3,7 @@ package test.ticket.tickettools.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -28,11 +29,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     final
     JwtRequestFilter jwtRequestFilter;
     final
-    UserService userService;
+    UserService userServiceImpl;
 
-    public SecurityConfig(JwtRequestFilter jwtRequestFilter, UserService userService) {
+    public SecurityConfig(JwtRequestFilter jwtRequestFilter, @Lazy UserService userServiceImpl) {
         this.jwtRequestFilter = jwtRequestFilter;
-        this.userService = userService;
+        this.userServiceImpl = userServiceImpl;
     }
 
     @Override
@@ -40,7 +41,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         auth.userDetailsService(new UserDetailsService() {
             @Override
             public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-                UserEntity user = userService.selectByUserName(username);
+                UserEntity user = userServiceImpl.selectByUserName(username);
                 if (user == null) {
                     throw new UsernameNotFoundException("User not found");
                 }
