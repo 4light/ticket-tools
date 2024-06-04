@@ -29,7 +29,7 @@ public class DoChnMuseumSnatchingSchedule {
         chnMuseumTicketServiceImpl.initData(null);
     }
 
-    //@Scheduled(cron = "0/1 01-30 17 * * ?")
+    @Scheduled(cron = "0/1 01-30 17 * * ?")
     public void doPalaceMuseumTicketSnatch() {
         List<DoSnatchInfo> doSnatchInfos = chnMuseumTicketServiceImpl.getDoSnatchInfos();
         if (ObjectUtils.isEmpty(doSnatchInfos)) {

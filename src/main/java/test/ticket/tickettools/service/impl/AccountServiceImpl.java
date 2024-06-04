@@ -16,7 +16,9 @@ import test.ticket.tickettools.domain.bo.AccountInfoRequest;
 import test.ticket.tickettools.domain.bo.ServiceResponse;
 import test.ticket.tickettools.domain.constant.ChannelEnum;
 import test.ticket.tickettools.domain.entity.AccountInfoEntity;
+import test.ticket.tickettools.domain.entity.UserEntity;
 import test.ticket.tickettools.service.AccountService;
+import test.ticket.tickettools.service.UserService;
 import test.ticket.tickettools.utils.TemplateUtil;
 
 import javax.annotation.Resource;
@@ -30,17 +32,22 @@ import java.util.List;
 public class AccountServiceImpl implements AccountService {
 
     @Resource
+    UserService userServiceImpl;
+
+    @Resource
     AccountInfoDao accountInfoDao;
     private String getPlaceMuUserInfoUrl ="https://lotswap.dpm.org.cn/lotsapi/leaguer/api/userLeaguer/manage/leaguerInfo?cipherText=0&merchantId=2655&merchantInfoId=2655";
     private String getChnMuUserInfoUrl ="https://uu.chnmuseum.cn/prod-api/getUserInfoToIndividual2Mini?p=wxmini";
     private static List<String> accessTokenList=new ArrayList<>();
     @Override
     public ServiceResponse queryAccount(AccountInfoRequest accountInfoRequest) {
+        UserEntity userEntity = userServiceImpl.selectByUserName(accountInfoRequest.getCreator());
         AccountInfoEntity accountInfoEntity = new AccountInfoEntity();
-        accountInfoEntity.setUserName(accountInfoRequest.getUserName());
+        if(!StrUtil.equals("admin",userEntity.getRole())) {
+            accountInfoEntity.setBelongUser(userEntity.getId());
+        }
         accountInfoEntity.setAccount(accountInfoRequest.getAccount());
         accountInfoEntity.setChannel(accountInfoRequest.getChannel());
-        accountInfoEntity.setCreator(accountInfoRequest.getCreator());
         List<AccountInfoEntity> select = accountInfoDao.select(accountInfoEntity);
         if(ObjectUtils.isEmpty(accountInfoRequest.getPage())){
             return ServiceResponse.createBySuccess(select);

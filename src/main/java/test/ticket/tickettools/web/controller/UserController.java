@@ -13,7 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/ticket")
-public class UserController {
+public class UserController extends BaseController{
 
     @Resource
     UserService userServiceImpl;

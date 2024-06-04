@@ -18,6 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import test.ticket.tickettools.dao.UserDao;
 import test.ticket.tickettools.domain.entity.UserEntity;
+import test.ticket.tickettools.service.MyUserDetailsService;
 import test.ticket.tickettools.service.UserService;
 
 import javax.annotation.Resource;
@@ -27,32 +28,33 @@ import javax.annotation.Resource;
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     final
-    JwtRequestFilter jwtRequestFilter;
-    final
-    UserService userServiceImpl;
+    MyUserDetailsService myUserDetailsService;
 
-    public SecurityConfig(JwtRequestFilter jwtRequestFilter, @Lazy UserService userServiceImpl) {
+    final
+    JwtRequestFilter jwtRequestFilter;
+
+    public SecurityConfig(JwtRequestFilter jwtRequestFilter, MyUserDetailsService myUserDetailsService) {
         this.jwtRequestFilter = jwtRequestFilter;
-        this.userServiceImpl = userServiceImpl;
+        this.myUserDetailsService = myUserDetailsService;
     }
 
-    @Override
+    /*@Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.userDetailsService(new UserDetailsService() {
             @Override
             public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-                UserEntity user = userServiceImpl.selectByUserName(username);
+                UserDetails user = myUserDetailsService.loadUserByUsername(username);
                 if (user == null) {
                     throw new UsernameNotFoundException("User not found");
                 }
                 return org.springframework.security.core.userdetails.User.builder()
-                        .username(user.getUserName())
-                        .password(user.getPwd())
-                        .roles(user.getRole().split(","))
+                        .username(user.getUsername())
+                        .password(user.getPassword())
+                        .roles(user.g().split(","))
                         .build();
             }
         }).passwordEncoder(passwordEncoder());
-    }
+    }*/
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -70,6 +72,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     public AuthenticationManager authenticationManagerBean() throws Exception {
         return super.authenticationManagerBean();
+    }
+
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.userDetailsService(myUserDetailsService).passwordEncoder(passwordEncoder());
     }
 
     @Bean

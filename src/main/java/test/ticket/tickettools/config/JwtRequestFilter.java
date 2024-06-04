@@ -1,5 +1,6 @@
 package test.ticket.tickettools.config;
 
+import cn.hutool.core.util.StrUtil;
 import io.jsonwebtoken.Claims;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,10 +34,20 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
 
+
         final String authorizationHeader = request.getHeader("Authorization");
 
         String username = null;
         String jwt = null;
+
+        // 获取请求路径
+        String requestURI = request.getRequestURI();
+
+        // 如果请求路径是 "/ticket/auth/register"，则直接放行，不进行 JWT 验证
+        if (StrUtil.equals("/ticket/auth/register",requestURI)|| StrUtil.equals("/ticket/proxy/user/add",requestURI)) {
+            chain.doFilter(request, response);
+            return;
+        }
 
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             jwt = authorizationHeader.substring(7);

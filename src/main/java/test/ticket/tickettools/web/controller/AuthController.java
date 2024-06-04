@@ -8,6 +8,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
@@ -29,13 +30,11 @@ public class AuthController{
     UserService userServiceImpl;
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
-    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public AuthController(AuthenticationManager authenticationManager, JwtUtil jwtUtil,PasswordEncoder passwordEncoder) {
+    public AuthController(AuthenticationManager authenticationManager, JwtUtil jwtUtil) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
-        this.passwordEncoder=passwordEncoder;
     }
 
     @PostMapping("/login")
@@ -74,7 +73,7 @@ public class AuthController{
         // 创建用户实体并设置用户名和加密后的密码
         UserEntity user = new UserEntity();
         user.setUserName(registrationRequest.getUserName());
-        user.setPwd(passwordEncoder.encode(registrationRequest.getPwd()));
+        user.setPwd(registrationRequest.getPwd());
         user.setCreateDate(new Date());
         // 在这里你可能还需要设置用户的其他属性，例如角色等
 
