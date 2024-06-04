@@ -72,8 +72,10 @@ public class AuthController{
 
         // 创建用户实体并设置用户名和加密后的密码
         UserEntity user = new UserEntity();
+        user.setNickName(registrationRequest.getNickName());
         user.setUserName(registrationRequest.getUserName());
         user.setPwd(registrationRequest.getPwd());
+        user.setRole(registrationRequest.getRole());
         user.setCreateDate(new Date());
         // 在这里你可能还需要设置用户的其他属性，例如角色等
 

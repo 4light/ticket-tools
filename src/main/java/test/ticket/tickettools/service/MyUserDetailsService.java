@@ -15,22 +15,15 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class MyUserDetailsService implements UserDetailsService {
-    private final ConcurrentHashMap<String, UserDetails> usersCache = new ConcurrentHashMap<>();
 
     @Resource
     UserDao userDao;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        // 先从缓存中查找
-        UserDetails cachedUser = usersCache.get(username);
-        if (cachedUser != null) {
-            return cachedUser;
-        }
         UserEntity byUsername = userDao.findByUsername(username);// 如果缓存中没有，则从数据库加载（这里模拟数据库查询）
         if (!ObjectUtils.isEmpty(byUsername)) {
             UserDetails user = new User(byUsername.getUserName(), byUsername.getPwd(), new ArrayList<>());
-            usersCache.put(username, user); // 加载后放入缓存
             return user;
         } else {
             throw new UsernameNotFoundException("User not found with username: " + username);

@@ -4,6 +4,7 @@ public class LoginRequest {
     private String nickName;
     private String userName;
     private String pwd;
+    private String role;
 
     public String getNickName() {
         return nickName;
@@ -27,6 +28,14 @@ public class LoginRequest {
 
     public void setPwd(String pwd) {
         this.pwd = pwd;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 }
 
