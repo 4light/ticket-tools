@@ -34,6 +34,7 @@ import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 @Slf4j
@@ -59,8 +60,8 @@ public class JntTicketServiceImpl implements DoSnatchTicketService {
     //校验身份证号
     private static String checkIdUrl = "https://jnt.mfu.com.cn/ajax?ugi=bookingorder&action=checkBookingUserV2&bundleid=com.maiget.tickets&moduleid=6f77be86038c47269f1e00f7ddee9af4";
 
-    private static Map<Long,Object> runTaskCache=new HashMap<>();
-    private static Map<Long,Object> initTaskCache=new HashMap<>();
+    private static Map<Long,Object> runTaskCache=new ConcurrentHashMap<>();
+    private static Map<Long,Object> initTaskCache=new ConcurrentHashMap<>();
 
 
 

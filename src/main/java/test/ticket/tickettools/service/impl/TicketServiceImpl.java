@@ -1,5 +1,6 @@
 package test.ticket.tickettools.service.impl;
 
+import cn.hutool.core.util.StrUtil;
 import org.bytedeco.opencv.global.opencv_core;
 import org.bytedeco.opencv.global.opencv_imgcodecs;
 import org.bytedeco.opencv.global.opencv_imgproc;
@@ -28,11 +29,13 @@ import org.springframework.web.client.RestTemplate;
 import test.ticket.tickettools.dao.AccountInfoDao;
 import test.ticket.tickettools.dao.TaskDetailDao;
 import test.ticket.tickettools.dao.TaskDao;
+import test.ticket.tickettools.dao.UserDao;
 import test.ticket.tickettools.domain.bo.*;
 import test.ticket.tickettools.domain.constant.ChannelEnum;
 import test.ticket.tickettools.domain.entity.AccountInfoEntity;
 import test.ticket.tickettools.domain.entity.TaskDetailEntity;
 import test.ticket.tickettools.domain.entity.TaskEntity;
+import test.ticket.tickettools.domain.entity.UserEntity;
 import test.ticket.tickettools.service.TicketService;
 import test.ticket.tickettools.service.WebSocketServer;
 import test.ticket.tickettools.utils.*;
@@ -46,6 +49,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -72,8 +76,7 @@ public class TicketServiceImpl implements TicketService {
     private static String wxPayForPcUrl = "https://pcticket.cstm.org.cn/prod-api/order/OrderInfo/wxPayForPc";
 
     private static List<String> doneList = new ArrayList<>();
-    private static Map<Long,Object> runTaskCache=new HashMap<>();
-
+    private static Map<Long,Object> runTaskCache=new ConcurrentHashMap<>();
 
     private static CloseableHttpClient httpClient = HttpClientBuilder.create()
             .setMaxConnTotal(100) // 设置最大连接数
@@ -92,6 +95,8 @@ public class TicketServiceImpl implements TicketService {
 
     @Resource
     AccountInfoDao accountInfoDao;
+    @Resource
+    UserDao userDao;
 
 
     @Override
@@ -138,7 +143,7 @@ public class TicketServiceImpl implements TicketService {
         Long userInfoId = taskInfo.getUserInfoId();
         AccountInfoEntity accountInfoEntity = accountInfoDao.selectById(userInfoId);
         if(ObjectUtils.isEmpty(accountInfoEntity)|| accountInfoEntity.getStatus()){
-            return ServiceResponse.createByErrorMessage("账号未授权不能创建任务");
+            return ServiceResponse.createByErrorMessage("购票账号未授权不能创建任务");
         }
         if (accountInfoEntity != null) {
             taskEntity.setAccount(accountInfoEntity.getAccount());
@@ -148,11 +153,6 @@ public class TicketServiceImpl implements TicketService {
             taskEntity.setCreateDate(new Date());
             taskEntity.setAuth(taskInfo.getAuth());
             taskEntity.setUserInfoId(taskInfo.getUserInfoId());
-            Long userId = taskInfo.getSource() == 0 && taskInfo.getChannel() == 0 ? getUserId(taskEntity.getAuth()) : taskInfo.getUserId();
-            if (ObjectUtils.isEmpty(userId) && taskInfo.getChannel() == 0) {
-                return ServiceResponse.createByErrorMessage("获取用户Id失败");
-            }
-            taskEntity.setUserId(userId);
             Integer insert = taskDao.insert(taskEntity);
             if (insert > 0) {
                 List<TaskDetailEntity> userList = taskInfo.getUserList();
@@ -172,13 +172,8 @@ public class TicketServiceImpl implements TicketService {
             }
         } else {
             taskEntity.setUpdateDate(new Date());
-            Long userId = taskInfo.getSource()!=null&&taskInfo.getSource() == 0 ? getUserId(taskEntity.getAuth()) : taskInfo.getUserId();
-            if (taskInfo.getSource()!=null&&ObjectUtils.isEmpty(userId)) {
-                return ServiceResponse.createByErrorMessage("获取用户Id失败");
-            }
             taskEntity.setAccount(accountInfoEntity.getAccount());
             taskEntity.setPwd(accountInfoEntity.getPwd());
-            taskEntity.setUserId(userId);
             taskEntity.setUserInfoId(userInfoId);
             Integer insert = taskDao.updateTask(taskEntity);
             if (insert > 0) {
@@ -246,7 +241,10 @@ public class TicketServiceImpl implements TicketService {
         query.setAccount(queryTaskInfo.getAccount());
         query.setUseDate(queryTaskInfo.getUseDate());
         query.setUserInfoId(queryTaskInfo.getUserInfoId());
-        query.setCreator(queryTaskInfo.getCreator());
+        UserEntity byUsername = userDao.findByUsername(queryTaskInfo.getCreator());
+        if(!StrUtil.equals("admin",byUsername.getRole())){
+            query.setCreator(queryTaskInfo.getCreator());
+        }
         List<TaskEntity> taskEntities = taskDao.fuzzyQuery(query);
         List<TaskInfoListResponse> list = new ArrayList<>();
         for (TaskEntity taskEntity : taskEntities) {
@@ -348,6 +346,8 @@ public class TicketServiceImpl implements TicketService {
         for (TaskEntity entity : taskEntities) {
             DoSnatchInfo doSnatchInfo = new DoSnatchInfo();
             Long id = entity.getId();
+            Long userInfoId = entity.getUserInfoId();
+            AccountInfoEntity accountInfoEntity = accountInfoDao.selectById(userInfoId);
             List<TaskDetailEntity> taskDetailEntities = taskDetailDao.selectByTaskIdLimit(id);
             if (ObjectUtils.isEmpty(taskDetailEntities)) {
                 entity.setDone(true);
@@ -359,9 +359,9 @@ public class TicketServiceImpl implements TicketService {
             Map<String, String> nameIdMap = taskDetailEntities.stream()
                     .collect(Collectors.toMap(TaskDetailEntity::getUserName, TaskDetailEntity::getIDCard));
             doSnatchInfo.setTaskId(id);
-            doSnatchInfo.setUserId(entity.getUserId());
+            doSnatchInfo.setUserId(Long.valueOf(accountInfoEntity.getChannelUserId()));
             doSnatchInfo.setAccount(entity.getAccount());
-            doSnatchInfo.setAuthorization(entity.getAuth());
+            doSnatchInfo.setAuthorization(accountInfoEntity.getHeaders());
             doSnatchInfo.setSession(entity.getSession());
             doSnatchInfo.setUseDate(entity.getUseDate());
             doSnatchInfo.setTaskDetailIds(taskDetailIds);
@@ -383,6 +383,8 @@ public class TicketServiceImpl implements TicketService {
             return result;
         }
         for (TaskEntity entity : allUnDoneTasks) {
+            Long userInfoId = entity.getUserInfoId();
+            AccountInfoEntity accountInfoEntity = accountInfoDao.selectById(userInfoId);
             TaskDetailEntity query = new TaskDetailEntity();
             query.setTaskId(entity.getId());
             query.setDone(false);
@@ -394,9 +396,9 @@ public class TicketServiceImpl implements TicketService {
             for (TaskDetailEntity taskDetailEntity : taskDetailEntities) {
                 DoSnatchInfo doSnatchInfo = new DoSnatchInfo();
                 doSnatchInfo.setTaskId(entity.getId());
-                doSnatchInfo.setUserId(entity.getUserId());
+                doSnatchInfo.setUserId(Long.valueOf(accountInfoEntity.getChannelUserId()));
                 doSnatchInfo.setAccount(entity.getAccount());
-                doSnatchInfo.setAuthorization(entity.getAuth());
+                doSnatchInfo.setAuthorization(accountInfoEntity.getHeaders());
                 doSnatchInfo.setUseDate(entity.getUseDate());
                 doSnatchInfo.setSession(entity.getSession());
                 doSnatchInfo.setTaskDetailIds(Arrays.asList(taskDetailEntity.getId()));
@@ -700,6 +702,7 @@ public class TicketServiceImpl implements TicketService {
             runTaskCache.remove(taskId);
             log.info("科技馆抢票异常:{}",e);
         }
+        runTaskCache.remove(taskId);
     }
 
 

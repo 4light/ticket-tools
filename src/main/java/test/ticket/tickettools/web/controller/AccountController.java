@@ -46,8 +46,23 @@ public class AccountController extends BaseController{
 
     @PostMapping(value = "/proxy/user/add")
     public ServiceResponse addProxyUser(@RequestBody ProxyAccountInfoRequest proxyAccountInfoRequest) {
-        Calendar calendar = Calendar.getInstance();
         return accountServiceImpl.addProxyAccount(proxyAccountInfoRequest);
+    }
+
+    @GetMapping(value = "/account/getCaptcha")
+    public ServiceResponse accountCaptcha() {
+        return loginService.getCaptchaImage();
+    }
+
+    @PostMapping(value = "/account/getMsgCode")
+    public ServiceResponse accountgetMsgCode(@RequestBody LogInCSTMParam logInCSTMParam) {
+        return loginService.sendMessageCode(logInCSTMParam);
+    }
+
+
+    @PostMapping(value = "/account/login")
+    public ServiceResponse accountLogin(@RequestBody LogInCSTMParam logInCSTMParam) {
+        return loginService.login(logInCSTMParam);
     }
 
     @GetMapping(value = "/test/jnt")

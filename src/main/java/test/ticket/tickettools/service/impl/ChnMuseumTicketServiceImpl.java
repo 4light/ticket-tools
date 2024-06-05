@@ -25,6 +25,7 @@ import test.ticket.tickettools.utils.*;
 import javax.annotation.Resource;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static test.ticket.tickettools.utils.EncDecUtil.doAES;
 
@@ -40,7 +41,7 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
     //下单url
     private static String placeOrderUrl = "https://wxmini.chnmuseum.cn/prod-api/config/orderRule/placeOrder";
 
-    private static Map<Long, Object> runTaskCache = new HashMap<>();
+    private static Map<Long, Object> runTaskCache = new ConcurrentHashMap<>();
 
     @Resource
     TaskDao taskDao;

@@ -118,7 +118,16 @@
         update account_info
         <set>
             <if test="ext!=null">
-                ext=#{ext}
+                ext=#{ext},
+            </if>
+            <if test="headers!=null">
+                headers=#{headers},
+            </if>
+            <if test="updateDate!=null">
+                update_date=#{updateDate},
+            </if>
+            <if test="channelUserId!=null">
+                channel_user_id=#{channelUserId}
             </if>
         </set>
         where channel = #{channel} and account = #{account} and yn=0

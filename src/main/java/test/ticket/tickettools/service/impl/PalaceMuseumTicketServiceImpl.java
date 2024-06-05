@@ -34,6 +34,7 @@ import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 @Slf4j
@@ -51,8 +52,8 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
     //删除常用用户
     private static final String delUserUrl = "https://lotswap.dpm.org.cn/lotsapi/up/api/user/contacts/";
 
-    private static Map<Long, Object> runTaskCache = new HashMap<>();
-    private static Map<Long,Object> initTaskCache=new HashMap<>();
+    private static Map<Long, Object> runTaskCache = new ConcurrentHashMap<>();
+    private static Map<Long,Object> initTaskCache=new ConcurrentHashMap<>();
 
     @Resource
     TaskDao taskDao;

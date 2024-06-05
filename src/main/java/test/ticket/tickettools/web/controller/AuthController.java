@@ -83,5 +83,6 @@ public class AuthController{
         userServiceImpl.insert(user);
         return ResponseEntity.ok("User registered successfully");
     }
+
 }
 

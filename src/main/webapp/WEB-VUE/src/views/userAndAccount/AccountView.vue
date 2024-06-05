@@ -75,6 +75,9 @@
             <el-link
               type="danger" @click="deleteUser(scope.row.id)">删除
             </el-link>
+            <el-link
+              type="primary" @click="loginAccount(scope.row)" v-if="scope.row.channel==0">登录
+            </el-link>
           </template>
         </el-table-column>
       </el-table>
@@ -129,6 +132,29 @@
         </el-form-item>
       </el-form>
     </el-dialog>
+    <el-dialog
+      :visible.sync="showAccountLogin"
+      width="30%"
+    >
+      <el-form :model="accountLoginInfo" style="margin-left: 3em" :label-position="labelPosition">
+        <el-form-item label="当前账号:">
+          <el-tag type="success">{{ accountLoginInfo.phone }}</el-tag>
+        </el-form-item>
+        <el-form-item label="图形验证码:">
+          <el-col :span="12">
+          <el-input v-model="accountLoginInfo.captchaImage" placeholder="图形验证码" clearable></el-input>
+          <img :src="accountLoginInfo.captchaImageBase64">
+          </el-col>
+        </el-form-item>
+        <el-form-item label="短信验证码:" :inline="true">
+            <el-input v-model="accountLoginInfo.verificationCode" clearable style="width: 40%"></el-input>
+            <el-button type="info" @click="getMsgCode" size="small" plain>获取验证码</el-button>
+        </el-form-item>
+        <el-form-item>
+            <el-button type="primary" @click="doLogin" size="small" round style="margin-left: 22em">登录</el-button>
+        </el-form-item>
+      </el-form>
+    </el-dialog>
   </div>
 </template>
 
@@ -176,7 +202,15 @@ export default {
       showDialog: false,
       labelPosition: 'right',
       formData: {},
-      ownerList:[]
+      ownerList:[],
+      showAccountLogin:false,
+      accountLoginInfo:{
+        phone:"",
+        captchaImage:"",
+        captchaImageBase64:"",
+        verificationCode:"",
+        uuid:""
+      },
     }
   },
   mounted() {
@@ -290,6 +324,80 @@ export default {
     },
     closeForm() {
       this.showDialog = false
+    },
+    loginAccount(row){
+      this.accountLoginInfo={}
+      this.accountLoginInfo.phone=row.account
+      get("/ticket/account/getCaptcha",null).then(res=>{
+        if (res.status != 0) {
+          this.$notify.error({
+            title: '失败',
+            message: res.msg,
+            duration: 2000
+          });
+        } else {
+          let base64= res.data.captchaImageBase64
+          this.accountLoginInfo.captchaImageBase64=`data:image/png;base64,${base64}`
+          this.accountLoginInfo.uuid=res.data.uuid
+          this.showAccountLogin=true
+        }
+      })
+    },
+    getMsgCode(){
+      if(this.accountLoginInfo.captchaImage.length<4){
+        this.$notify.error({
+          title: '请输入正确图形验证码',
+          duration: 2000
+        });
+        return
+      }
+      post("/ticket/account/getMsgCode",this.accountLoginInfo).then(res=>{
+        if (res.status != 0) {
+          this.$notify.error({
+            title: '失败',
+            message: res.msg,
+            duration: 2000
+          });
+        } else {
+          this.$notify.success({
+            title: '成功',
+            message: res.msg,
+            duration: 2000
+          });
+        }
+      })
+    },
+    doLogin(){
+      if(this.accountLoginInfo.captchaImage.length<4){
+        this.$notify.error({
+          title: '请输入正确图形验证码',
+          duration: 2000
+        });
+        return
+      }
+      if(this.accountLoginInfo.verificationCode.length<6){
+        this.$notify.error({
+          title: '请检查短信验证码是否正确',
+          duration: 2000
+        });
+        return
+      }
+      post("/ticket/account/login",this.accountLoginInfo).then(res=>{
+        if (res.status != 0) {
+          this.$notify.error({
+            title: '失败',
+            message: res.msg,
+            duration: 2000
+          });
+        } else {
+          this.$notify.success({
+            title: '成功',
+            message: res.msg,
+            duration: 2000
+          });
+          this.showAccountLogin=false
+        }
+      })
     }
   }
 }
@@ -298,5 +406,10 @@ export default {
 <style scoped>
 .inputStyle {
   width: 50%;
+}
+img {
+  cursor: pointer;
+  width: 100px;
+  height: 40px;
 }
 </style>

@@ -55,7 +55,6 @@ export default {
             } */
       this.closeSideMenu()
       this.getOptionList()
-      console.log(this.$root.optionList)
     },
     getOptionList(){/*
       get('/platform/common/loadAllOption').then(res => {

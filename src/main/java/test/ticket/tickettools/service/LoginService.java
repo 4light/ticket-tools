@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.client.RestTemplate;
 import test.ticket.tickettools.dao.AccountInfoDao;
+import test.ticket.tickettools.domain.bo.LogInCSTMParam;
+import test.ticket.tickettools.domain.bo.ServiceResponse;
 import test.ticket.tickettools.domain.constant.ChannelEnum;
 import test.ticket.tickettools.domain.entity.AccountInfoEntity;
 import test.ticket.tickettools.utils.DateUtils;
@@ -16,6 +18,7 @@ import test.ticket.tickettools.utils.TemplateUtil;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -30,6 +33,9 @@ public class LoginService {
     private static String getCodeUrl = "http://api.jfbym.com/api/YmServer/customApi";
 
     private static String loginUrl = "https://pcticket.cstm.org.cn/prod-api/login";
+
+    private static String getCurrentUserUrl = "https://pcticket.cstm.org.cn/prod-api/getUserInfoToIndividual";
+
 
     @Resource
     AccountInfoDao accountInfoDao;
@@ -143,6 +149,90 @@ public class LoginService {
         }
         return null;
     }
+
+    public ServiceResponse<LogInCSTMParam> getCaptchaImage(){
+        LogInCSTMParam logInCSTMParam=new LogInCSTMParam();
+        HttpEntity entity = new HttpEntity<>(getBaseHeader());
+        JSONObject captchaImageRes = TemplateUtil.getResponse(TemplateUtil.initSSLTemplate(),getCaptchaImageUrl, HttpMethod.GET, entity);
+        if (!ObjectUtils.isEmpty(captchaImageRes) && captchaImageRes.getIntValue("code") == 200) {
+            String img = captchaImageRes.getString("img");
+            String uuid = captchaImageRes.getString("uuid");
+            logInCSTMParam.setCaptchaImageBase64(img);
+            logInCSTMParam.setUuid(uuid);
+            return ServiceResponse.createBySuccess(logInCSTMParam);
+        }
+        return ServiceResponse.createByErrorMessage("获取验证码失败!");
+    }
+
+    public ServiceResponse sendMessageCode(LogInCSTMParam logInCSTMParam){
+        JSONObject param = new JSONObject();
+        param.put("smsType", 1);
+        param.put("username", logInCSTMParam.getPhone());
+        param.put("uuid", logInCSTMParam.getUuid());
+        param.put("verifyCode", logInCSTMParam.getCaptchaImage());
+        param.put("verifyCodeType", 1);
+        HttpHeaders headers = getBaseHeader();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity getMsgCodeEntity = new HttpEntity(param, headers);
+        JSONObject getMsgCodeRes = TemplateUtil.getResponse(TemplateUtil.initSSLTemplate(),sendMessageUrl, HttpMethod.POST, getMsgCodeEntity);
+        log.info("发送验证码结果:{}", getMsgCodeRes);
+        if(!ObjectUtils.isEmpty(getMsgCodeRes)&&getMsgCodeRes.getIntValue("code")==200){
+            return ServiceResponse.createBySuccessMessgge("发送短信成功");
+        }
+        return ServiceResponse.createByErrorMessage("发送验证码失败:"+JSON.toJSONString(getMsgCodeRes));
+    }
+
+    public ServiceResponse login(LogInCSTMParam logInCSTMParam){
+        JSONObject loginParam = new JSONObject();
+        loginParam.put("loginClient", "1");
+        loginParam.put("loginType", "2");
+        loginParam.put("password", logInCSTMParam.getVerificationCode());
+        loginParam.put("userType", 1);
+        loginParam.put("username", logInCSTMParam.getPhone());
+        HttpEntity loginEntity = new HttpEntity(loginParam, getBaseHeader());
+        JSONObject getLoginRes = TemplateUtil.getResponse(TemplateUtil.initSSLTemplate(),loginUrl, HttpMethod.POST, loginEntity);
+        if (!ObjectUtils.isEmpty(getLoginRes)&&getLoginRes.getIntValue("code")==200) {
+            String auth="Bearer " + getLoginRes.getString("token");
+            Long userId = getUserId(auth);
+            if(ObjectUtils.isEmpty(userId)){
+                return ServiceResponse.createByErrorMessage("获取用户ID失败");
+            }
+            AccountInfoEntity accountInfoEntity=new AccountInfoEntity();
+            accountInfoEntity.setChannel(ChannelEnum.CSTM.getCode());
+            accountInfoEntity.setAccount(logInCSTMParam.getPhone());
+            accountInfoEntity.setUpdateDate(new Date());
+            accountInfoEntity.setChannelUserId(String.valueOf(userId));
+            accountInfoEntity.setHeaders(auth);
+            Integer integer = accountInfoDao.updateByChannelAccount(accountInfoEntity);
+            if(integer>0){
+                return ServiceResponse.createBySuccessMessgge("登录态更新成功");
+            }
+            return ServiceResponse.createByErrorMessage("登录态保存失败");
+        }
+        return ServiceResponse.createByErrorMessage("获取登录态失败:"+JSON.toJSONString(getLoginRes));
+    }
+
+
+    private Long getUserId(String auth) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("authority", "pcticket.cstm.org.cn");
+        headers.set("accept", "application/json");
+        headers.set("authorization", auth);
+        headers.set("cookie", "SL_G_WPT_TO=zh; SL_GWPT_Show_Hide_tmp=1; SL_wptGlobTipTmp=1");
+        headers.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
+        HttpEntity entity = new HttpEntity<>(headers);
+        JSONObject getUserRes = TemplateUtil.getResponse(TemplateUtil.initSSLTemplate(),getCurrentUserUrl, HttpMethod.GET, entity);
+        JSONObject userInfo = getUserRes == null ? null : getUserRes.getJSONObject("user");
+        if (userInfo == null) {
+            log.info("获取用户信息失败：{}", getUserRes);
+            return null;
+        }
+        long userId = userInfo.getLongValue("userId");
+        return userId;
+    }
+
+
 
     private HttpHeaders getBaseHeader() {
         HttpHeaders headers = new HttpHeaders();

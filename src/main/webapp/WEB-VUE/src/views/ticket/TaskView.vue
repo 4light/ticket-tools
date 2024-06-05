@@ -152,6 +152,11 @@
     >
       <div id="qrcodeImg" style="text-align: center" v-if="showPayPic"></div>
     </el-dialog>
+    <audio
+      ref="audio"
+    >
+      <source src="../../../static/ding.mp3" />
+    </audio>
   </div>
 </template>
 
@@ -168,7 +173,7 @@ export default {
   },
   created() {
     this.currentUser = Date.now()
-    //this.initWebSocket()
+    this.initWebSocket()
   },
   mounted() {
     this.onSubmit()
@@ -245,9 +250,10 @@ export default {
     },
   },
   methods: {
-    /*initWebSocket() {
+    initWebSocket() {
       //let ws = 'ws://8.140.16.73/api/pushMessage/' + this.currentUser
-      let ws = 'ws://10.240.17.195:8082/api/pushMessage/' + this.currentUser
+      let userName=localStorage.getItem("userName")
+      let ws = `ws://localhost:8082/api/pushMessage/${userName}`
       this.websock = new WebSocket(ws)
       this.websock.onmessage = this.websocketOnMessage
       this.websock.onopen = this.websocketOnOpen
@@ -264,9 +270,9 @@ export default {
     },
     // 数据接收
     websocketOnMessage(e) {
-      /!*console.log(this.websock.readyState)
+      /*console.log(this.websock.readyState)
       this.$message.error(e.data)
-      console.log(e.data)*!/
+      console.log(e.data)*/
       let res = JSON.parse(e.data)
       this.$notify({
         title: res.title,
@@ -275,6 +281,9 @@ export default {
         duration: res.time,
         type: 'success'
       });
+      if(res){
+        this.doDing()
+      }
       this.onSubmit()
       this.websocketClose()
     },
@@ -282,11 +291,14 @@ export default {
     websocketSend(Data) {
       this.websock.send(Data)
     },
+    doDing(){
+      this.$refs.audio.play();
+    },
     // 关闭
     websocketClose(e) {
       this.initWebSocket()
       console.log('断开连接', e)
-    },*/
+    },
     onSubmit() {
       this.queryParam.page = this.page
       post('/ticket/task/list',this.queryParam).then(res => {
@@ -472,7 +484,6 @@ export default {
           this.$refs.multipleTable.toggleRowSelection(lastElement, false);
           val.pop()
           this.selectTicket = val
-          console.log(this.selectTicket)
           break;
         }
       }

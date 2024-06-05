@@ -8,7 +8,7 @@ const routers = [
     component: Login,
   },
   {
-    path: '/manage',
+    path: '/user',
     name: 'Layout',
     component: Layout,
     meta: {
@@ -23,23 +23,36 @@ const routers = [
         name: 'user',
         component: () => import('../views/userAndAccount/UserView'),
         meta: {
-          title: '用户管理',
+          title: '登录用户管理',
           icon: 'el-icon-s-custom',
           fixed: true,
           requiresAuth: true,
           roles: ['admin']
         }
-      },
+      }
+    ]
+  },
+  {
+    path: '/account',
+    name: 'Layout',
+    component: Layout,
+    meta: {
+      title: '账号管理',
+      icon: 'el-icon-user',
+      requiresAuth: true,
+      roles: ['admin',"user"]
+    },
+    children: [
       {
-      path: '/manage/account',
-      name: 'account',
-      component: () => import('../views/userAndAccount/AccountView'),
-      meta: {
-        title: '购票账号管理',
-        icon: 'el-icon-user',
-        requiresAuth: true,
-        roles: ['admin'],
-        fixed: true
+        path: '/manage/account',
+        name: 'account',
+        component: () => import('../views/userAndAccount/AccountView'),
+        meta: {
+          title: '购票账号管理',
+          icon: 'el-icon-user',
+          requiresAuth: true,
+          roles: ['admin',"user"],
+          fixed: true
         }
       }
     ]

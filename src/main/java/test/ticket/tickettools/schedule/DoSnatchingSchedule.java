@@ -62,6 +62,7 @@ public class DoSnatchingSchedule {
         pool.setMaxPoolSize(size);
         pool.setCorePoolSize(size);
         pool.setQueueCapacity(size);
+        pool.initialize();
         for (Map.Entry<String, DoSnatchInfo> entity : taskForRun.entrySet()) {
             CompletableFuture.runAsync(() -> {
                 ticketServiceImpl.snatchingTicket(entity.getValue());
@@ -85,6 +86,7 @@ public class DoSnatchingSchedule {
         pool.setMaxPoolSize(size);
         pool.setCorePoolSize(size);
         pool.setQueueCapacity(size);
+        pool.initialize();
         for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
             CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo),pool);
         }
@@ -103,12 +105,13 @@ public class DoSnatchingSchedule {
         pool.setMaxPoolSize(size);
         pool.setCorePoolSize(size);
         pool.setQueueCapacity(size);
+        pool.initialize();
         for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
             CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo),pool);
         }
     }
 
-    @Scheduled(cron = "0/1 * 8-17,19-21 * * ?")
+    @Scheduled(cron = "0/1 * 8-17,19-22 * * ?")
     public void doSingleSnatchOtherTime() {
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
         if (ObjectUtils.isEmpty(allTaskForRun)) {
@@ -121,6 +124,7 @@ public class DoSnatchingSchedule {
         pool.setMaxPoolSize(size);
         pool.setCorePoolSize(size);
         pool.setQueueCapacity(size);
+        pool.initialize();
         for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
             CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo), pool);
         }

@@ -39,6 +39,7 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
+        localStorage.removeItem("authorization");
         this.delToken
         this.$router.push('/login')
       })
