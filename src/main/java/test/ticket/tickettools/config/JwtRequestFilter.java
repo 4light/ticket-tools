@@ -44,7 +44,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         String requestURI = request.getRequestURI();
 
         // 如果请求路径是 "/ticket/auth/register"，则直接放行，不进行 JWT 验证
-        if (requestURI.contains("/api/pushMessage")||StrUtil.equals("/ticket/auth/register",requestURI)|| StrUtil.equals("/ticket/proxy/user/add",requestURI)||StrUtil.equals("/ticket/user",requestURI)) {
+        if (requestURI.contains("/ticket/api/pushMessage")||StrUtil.equals("/ticket/auth/register",requestURI)|| StrUtil.equals("/ticket/proxy/user/add",requestURI)||StrUtil.equals("/ticket/user",requestURI)) {
             chain.doFilter(request, response);
             return;
         }

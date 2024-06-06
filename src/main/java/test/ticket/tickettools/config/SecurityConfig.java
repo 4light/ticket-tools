@@ -60,7 +60,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable()
                 .authorizeRequests()
-                .antMatchers("/api/pushMessage/*","/ticket/auth/login", "/ticket/auth/register","/ticket/proxy/user/add").permitAll()
+                .antMatchers("/ticket/api/pushMessage/*","/ticket/auth/login", "/ticket/auth/register","/ticket/proxy/user/add").permitAll()
                 .anyRequest().authenticated()
                 .and().sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS); // 禁用会话

@@ -253,7 +253,7 @@ export default {
     initWebSocket() {
       //let ws = 'ws://8.140.16.73/api/pushMessage/' + this.currentUser
       let userName=localStorage.getItem("userName")
-      let ws = `ws://localhost:8082/api/pushMessage/${userName}`
+      let ws = `ws://42.51.40.37/ticket/api/pushMessage/${userName}`
       this.websock = new WebSocket(ws)
       this.websock.onmessage = this.websocketOnMessage
       this.websock.onopen = this.websocketOnOpen
