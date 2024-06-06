@@ -257,7 +257,7 @@ public class TicketServiceImpl implements TicketService {
                 taskInfoListResponse.setTaskId(id);
                 taskInfoListResponse.setAccount(ObjectUtils.isEmpty(accountInfoEntity) ? null : accountInfoEntity.getUserName());
                 taskInfoListResponse.setId(taskDetailEntity.getId());
-                taskInfoListResponse.setAuthorization(taskEntity.getAuth());
+                taskInfoListResponse.setAuthorization(accountInfoEntity.getHeaders());
                 //使用名字好区分
                 taskInfoListResponse.setAccount(accountInfoEntity ==null?null: accountInfoEntity.getUserName());
                 taskInfoListResponse.setUseDate(taskEntity.getUseDate());
@@ -270,6 +270,7 @@ public class TicketServiceImpl implements TicketService {
                 taskInfoListResponse.setChildrenTicket(taskDetailEntity.getChildrenTicket());
                 taskInfoListResponse.setChannel(taskEntity.getChannel());
                 taskInfoListResponse.setOrderId(taskDetailEntity.getOrderId());
+                taskInfoListResponse.setOrderNumber(taskDetailEntity.getOrderNumber());
                 taskInfoListResponse.setPrice(taskDetailEntity.getPrice());
                 taskInfoListResponse.setUserInfoId(taskEntity.getUserInfoId());
                 list.add(taskInfoListResponse);
@@ -454,6 +455,9 @@ public class TicketServiceImpl implements TicketService {
             //获取场次下余票
             ResponseEntity getPriceByScheduleRes = restTemplate.exchange(formatGetHallUrl, HttpMethod.GET, entity, String.class);
             JSONObject getPriceByScheduleJson = JSON.parseObject(getPriceByScheduleRes.getBody().toString());
+            if(!ObjectUtils.isEmpty(getPriceByScheduleJson)&&getPriceByScheduleJson.getIntValue("code")==401){
+                WebSocketServer.sendInfo(socketMsg("抢票异常", "账号:"+doSnatchInfo.getAccount()+"登录态异常", 0), null);
+            }
             //log.info("获取到的场次下余票为:{}",getPriceByScheduleJson);
             //获取成人票和儿童票
             JSONArray getPriceByScheduleData = getPriceByScheduleJson == null ? null : getPriceByScheduleJson.getJSONArray("data");
@@ -611,6 +615,7 @@ public class TicketServiceImpl implements TicketService {
                     String body = exchange.getBody();
                     JSONObject bodyJson = JSON.parseObject(body);
                     if (!ObjectUtils.isEmpty(bodyJson) && (bodyJson.getIntValue("code") == 550 || bodyJson.getIntValue("code") == 503)) {
+                        WebSocketServer.sendInfo(socketMsg("抢票出错", bodyJson.getString("msg"), 0), null);
                         runTaskCache.remove(taskId);
                         try {
                             Files.delete(Paths.get(sliderImageName));
@@ -764,7 +769,7 @@ public class TicketServiceImpl implements TicketService {
                 HttpEntity payEntity = new HttpEntity<>(payParam, headers);
                 ResponseEntity<JSONObject> payResEntity = restTemplate.exchange(wxPayForPcUrl, HttpMethod.POST, payEntity, JSONObject.class);
                 JSONObject payRes = payResEntity.getBody();
-                log.info("后去支付url结果:{}", payRes);
+                log.info("获取支付url结果:{}", payRes);
                 if (!ObjectUtils.isEmpty(payRes) && payRes.getIntValue("code") == 200) {
                     return payRes.getString("data");
                 }
@@ -776,7 +781,7 @@ public class TicketServiceImpl implements TicketService {
             HttpEntity payEntity = new HttpEntity<>(payParam, headers);
             ResponseEntity<JSONObject> payResEntity = restTemplate.exchange(wxPayForPcUrl, HttpMethod.POST, payEntity, JSONObject.class);
             JSONObject payRes = payResEntity.getBody();
-            log.info("后去支付url结果:{}", payRes);
+            log.info("获取支付url结果:{}", payRes);
             if (!ObjectUtils.isEmpty(payRes) && payRes.getIntValue("code") == 200) {
                 return payRes.getString("data");
             }

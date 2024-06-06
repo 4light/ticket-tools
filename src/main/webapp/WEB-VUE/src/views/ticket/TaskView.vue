@@ -68,6 +68,11 @@
         <el-table-column
           prop="userName"
           label="姓名">
+          <template slot-scope="{ row }">
+            <div>{{ row.userName }}
+            <el-link type="success" @click="ticketInspectionCode(row.orderNumber,row.userName)" v-if="row.childrenTicket&&row.channel==0&&row.orderNumber!=null">二维码</el-link>
+            </div>
+          </template>
         </el-table-column>
         <el-table-column
           prop="IDCard"
@@ -149,8 +154,19 @@
       :visible.sync="showPayDialog"
       style="height: 50em;overflow: unset"
       width="20%"
+      :before-close="closePayDialog"
     >
       <div id="qrcodeImg" style="text-align: center" v-if="showPayPic"></div>
+    </el-dialog>
+    <el-dialog
+      :visible.sync="showTicketInspectionImg"
+      style="height: 50em;overflow: unset"
+      width="20%"
+      :before-close="closeTicketInspectionImg"
+    >
+      <div id="ticketInspectionImg" style="text-align: center" v-if="showImg">
+        <p style="font-size: medium; font-weight: bolder;margin-bottom: 5px">{{this.currentUserName}}</p>
+      </div>
     </el-dialog>
     <audio
       ref="audio"
@@ -232,7 +248,10 @@ export default {
         }
       ],
       showPayPic: false,
-      userIdList: []
+      userIdList: [],
+      showTicketInspectionImg:false,
+      showImg:false,
+      currentUserName:""
     }
   },
   watch: {
@@ -247,13 +266,13 @@ export default {
                 this.qrcode(this.payUrl);
               }
             });*/
-    },
+    }
   },
   methods: {
     initWebSocket() {
-      //let ws = 'ws://8.140.16.73/api/pushMessage/' + this.currentUser
       let userName=localStorage.getItem("userName")
       let ws = `ws://42.51.40.37/ticket/api/pushMessage/${userName}`
+      //let ws = `ws://localhost:8082/ticket/api/pushMessage/${userName}`
       this.websock = new WebSocket(ws)
       this.websock.onmessage = this.websocketOnMessage
       this.websock.onopen = this.websocketOnOpen
@@ -497,6 +516,18 @@ export default {
         colorLight: '#fff'
       })
     },
+    ticketInspectionCode(ticketNum,userName) {  // 前端根据 URL 生成微信支付二维码
+      this.showTicketInspectionImg=true
+      this.showImg=true
+      this.currentUserName=userName
+      setTimeout(()=>{
+        return new QRCode('ticketInspectionImg', {
+          width: 200,
+          height: 200,
+          text: ticketNum
+        })
+      },1500)
+    },
     pay() {
       this.showPayPic = false
       this.payUrl = ""
@@ -538,6 +569,12 @@ export default {
             this.showPayDialog = true;
             this.showPayPic = true
             this.qrcode(this.payUrl)
+          }else{
+            this.$notify.success({
+              title: '成功',
+              message: "免费票无需支付",
+              duration: 2000
+            });
           }
         }
       })
@@ -599,6 +636,14 @@ export default {
         return (y + "-" + M + "-" + d + " " + H + ":" + m + ":" + s)
       }
       return ""
+    },
+    closePayDialog(){
+      this.showPayPic=false
+      this.showPayDialog=false
+    },
+    closeTicketInspectionImg(){
+      this.showImg=false
+      this.showTicketInspectionImg=false
     }
   }
 }
