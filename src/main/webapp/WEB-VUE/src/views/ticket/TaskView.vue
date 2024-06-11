@@ -438,12 +438,11 @@ export default {
         }
       ).then(res => {
         this.taskInfo = res.data
-        this.showDialog = true
         setTimeout(() => {
           this.$refs.taskEditView.getUserIdList();
-          this.$refs.taskEditView.changeChannel();
-          this.$refs.taskEditView.edit();
+          //this.$refs.taskEditView.edit();
         }, 200)
+        this.showDialog = true
       })
     },
     deleteTask(taskId) {
@@ -483,6 +482,7 @@ export default {
     },
     closeDialog() {
       this.showDialog = false
+      this.taskInfo= {}
       this.onSubmit()
     },
     handleSelectionChange(val) {

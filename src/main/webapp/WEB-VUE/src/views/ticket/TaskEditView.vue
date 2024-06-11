@@ -32,7 +32,7 @@
         </el-checkbox-group>
       </el-form-item>
       <el-form-item label="账号">
-        <el-select v-model="form.userInfoId">
+        <el-select v-model="currentUserInfoId">
           <el-option
             v-for="item in currentUserIdList"
             :key="item.id"
@@ -133,6 +133,7 @@ export default {
         "userInfoId": null,
         "source": 0
       },
+      currentUserInfoId:null,
       channelList: [
         {
           "id": 0,
@@ -235,6 +236,7 @@ export default {
           this.form.session=null
         }
       }
+      this.form.userInfoId=this.currentUserInfoId
       this.form.userList = this.userList
       post('/ticket/add/taskInfo', this.form).then(res => {
         if (res.status != 0) {
@@ -272,12 +274,14 @@ export default {
           });
         } else {
           this.userIdList = res.data
+          this.edit()
           this.changeChannel()
+          this.currentUserInfoId=this.form.userInfoId
         }
       })
     },
     changeChannel() {
-      this.form.userInfoId=null
+      this.currentUserInfoId=null
       let newUserIdList = []
       for (let o of this.userIdList) {
         if (o.channel == this.form.channel) {
