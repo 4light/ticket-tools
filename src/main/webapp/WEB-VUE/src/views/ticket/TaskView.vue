@@ -304,7 +304,6 @@ export default {
         this.doDing()
       }
       this.onSubmit()
-      this.websocketClose()
     },
     // 数据发送
     websocketSend(Data) {
@@ -556,16 +555,16 @@ export default {
       payParam.childTicketNum = childrenCount
       payParam.ticketNum = this.selectTicket.length
       post("/ticket/pay", payParam).then(res => {
-        if (res.data.status != 0) {
+        if (res.status != 0) {
           this.$notify.error({
             title: '失败',
-            message: res.data.msg,
+            message: res.msg,
             duration: 2000
           });
         } else {
-          if (res.data.data && res.data.data != "") {
+          if (res.data && res.data != "") {
             this.showPayDialog = true;
-            this.payUrl = res.data.data
+            this.payUrl = res.data
             this.showPayDialog = true;
             this.showPayPic = true
             this.qrcode(this.payUrl)
@@ -584,17 +583,22 @@ export default {
         this.$alert("需勾选要重置的订单")
         return;
       }
+      let intiParam={}
       let req = []
+      let currentTaskId
       for (let item of this.selectTicket) {
+        currentTaskId=item.taskId
         let payParam = {}
         payParam.id = item.id
         req.push(payParam)
       }
-      post("ticket/init/task", req).then(res => {
-        if (res.data.status != 0) {
+      intiParam.taskId=currentTaskId
+      intiParam.taskDetailEntityList=req
+      post("/ticket/init/task", intiParam).then(res => {
+        if (res.status != 0) {
           this.$notify.error({
             title: '失败',
-            message: res.data.msg,
+            message: res.msg,
             duration: 2000
           });
         } else {

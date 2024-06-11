@@ -208,8 +208,13 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
-    public ServiceResponse initTask(List<TaskDetailEntity> taskDetailEntityList) {
-        Integer res = taskDetailDao.initTaskDetail(taskDetailEntityList);
+    public ServiceResponse initTask(InitTaskParam initTaskParam) {
+        TaskEntity taskEntity=new TaskEntity();
+        taskEntity.setDone(false);
+        taskEntity.setId(initTaskParam.getTaskId());
+        taskEntity.setUpdateDate(new Date());
+        taskDao.updateTask(taskEntity);
+        Integer res = taskDetailDao.initTaskDetail(initTaskParam.getTaskDetailEntityList());
         if (res > 0) {
             return ServiceResponse.createBySuccess();
         }
@@ -437,11 +442,8 @@ public class TicketServiceImpl implements TicketService {
         Map<String, String> nameIDMap = doSnatchInfo.getIdNameMap();
         String useDate = DateUtil.format(doSnatchInfo.getUseDate(), "yyyy-MM-dd hh:mm:ss");
         String formatGetHallUrl = String.format(getHallUrl, DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"));
+        RestTemplate restTemplate=TemplateUtil.initSSLTemplate();
         try {
-            RestTemplateBuilder restTemplateBuilder = new RestTemplateBuilder()
-                    .setConnectTimeout(Duration.ofSeconds(60)) //连接超时时间10秒
-                    .setReadTimeout(Duration.ofSeconds(60)); //读取超时时间30秒
-            RestTemplate restTemplate = restTemplateBuilder.build();
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.set("authority", "pcticket.cstm.org.cn");
@@ -453,8 +455,9 @@ public class TicketServiceImpl implements TicketService {
             long userId = doSnatchInfo.getUserId();
             String phone = doSnatchInfo.getAccount();
             //获取场次下余票
-            ResponseEntity getPriceByScheduleRes = restTemplate.exchange(formatGetHallUrl, HttpMethod.GET, entity, String.class);
-            JSONObject getPriceByScheduleJson = JSON.parseObject(getPriceByScheduleRes.getBody().toString());
+            /*ResponseEntity getPriceByScheduleRes = restTemplate.exchange(formatGetHallUrl, HttpMethod.GET, entity, String.class);
+            JSONObject getPriceByScheduleJson = JSON.parseObject(getPriceByScheduleRes.getBody().toString());*/
+            JSONObject getPriceByScheduleJson = TemplateUtil.getResponse(restTemplate,formatGetHallUrl,HttpMethod.GET,entity);
             if(!ObjectUtils.isEmpty(getPriceByScheduleJson)&&getPriceByScheduleJson.getIntValue("code")==401){
                 WebSocketServer.sendInfo(socketMsg("抢票异常", "账号:"+doSnatchInfo.getAccount()+"登录态异常", 0), null);
             }
@@ -588,10 +591,12 @@ public class TicketServiceImpl implements TicketService {
                 //几个人添加几次
                 for (Map.Entry<String, String> entry : nameIDMap.entrySet()) {
                     HttpEntity addEntity = new HttpEntity<>(buildAddParam(entry.getValue(), entry.getKey(), userId), headers);
-                    restTemplate.exchange(addUrl, HttpMethod.POST, addEntity, String.class);
+                    //restTemplate.exchange(addUrl, HttpMethod.POST, addEntity, String.class);
+                    TemplateUtil.getResponse(restTemplate,addUrl,HttpMethod.POST,addEntity);
                 }
-                ResponseEntity<JSONObject> getCheckImagRes = restTemplate.exchange(getCheckImagUrl, HttpMethod.GET, entity, JSONObject.class);
-                JSONObject getCheckImageJson = getCheckImagRes.getBody();
+                //ResponseEntity<JSONObject> getCheckImagRes = restTemplate.exchange(getCheckImagUrl, HttpMethod.GET, entity, JSONObject.class);
+                //JSONObject getCheckImageJson = getCheckImagRes.getBody();
+                JSONObject getCheckImageJson = TemplateUtil.getResponse(restTemplate,getCheckImagUrl,HttpMethod.GET,entity);
                 if (!StringUtils.isEmpty(getCheckImageJson)) {
                     JSONObject data = getCheckImageJson.getJSONObject("data");
                     String jigsawImageBase64 = data == null ? null : data.getString("jigsawImageBase64");
@@ -610,10 +615,11 @@ public class TicketServiceImpl implements TicketService {
                     param.put("y", 5);
                     String point = EncDecUtil.doAES(JSON.toJSONString(param), secretKey);
                     HttpEntity shoppingCartUrlEntity = new HttpEntity<>(buildParam(token, priceNameCountMap.get("childrenTicket"), point, doSnatchInfo.getSession(), useDate, priceId, childrenPriceId, discountPriceId, olderPriceId, phone, nameIDMap), headers);
-                    ResponseEntity<String> exchange = restTemplate.exchange(shoppingCartUrl, HttpMethod.POST, shoppingCartUrlEntity, String.class);
+                    //ResponseEntity<String> exchange = restTemplate.exchange(shoppingCartUrl, HttpMethod.POST, shoppingCartUrlEntity, String.class);
                     //log.info(exchange.getBody());
-                    String body = exchange.getBody();
-                    JSONObject bodyJson = JSON.parseObject(body);
+                    //String body = exchange.getBody();
+                    //JSONObject bodyJson = JSON.parseObject(body);
+                    JSONObject bodyJson = TemplateUtil.getResponse(restTemplate,shoppingCartUrl,HttpMethod.POST,shoppingCartUrlEntity);
                     if (!ObjectUtils.isEmpty(bodyJson) && (bodyJson.getIntValue("code") == 550 || bodyJson.getIntValue("code") == 503)) {
                         WebSocketServer.sendInfo(socketMsg("抢票出错", bodyJson.getString("msg"), 0), null);
                         runTaskCache.remove(taskId);
@@ -627,7 +633,7 @@ public class TicketServiceImpl implements TicketService {
                     }
                     //WebSocketServer.sendInfo("余票不足","web");
                     if (!ObjectUtils.isEmpty(bodyJson) && bodyJson.getIntValue("code") == 200) {
-                        log.info("提交订单结果：{}", body);
+                        log.info("提交订单结果：{}", bodyJson);
                         /*//doneList.addAll(nameIDMap.values());
                         HttpEntity placeOrderEntity = new HttpEntity<>(buildPlaceOrderParam(priceNameCountMap.get("childrenTicket"), useDate, phone, bodyJson.getJSONArray("data").toJavaList(Long.class)), headers);
                         ResponseEntity<String> placeOrderRes = restTemplate.exchange(placeOrderUrl, HttpMethod.POST, placeOrderEntity, String.class);
@@ -682,8 +688,8 @@ public class TicketServiceImpl implements TicketService {
                             }
                         }
                         taskDetailDao.updateTaskDetailBath(taskDetailEntities);
-                        SendMessageUtil.send(ChannelEnum.CSTM.getDesc(),DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"),"主场馆",doSnatchInfo.getAccount(),String.join(",",doSnatchInfo.getIdNameMap().values()));
-                        WebSocketServer.sendInfo(socketMsg("抢票成功", JSON.toJSONString(nameIDMap), 0), null);
+                        //SendMessageUtil.send(ChannelEnum.CSTM.getDesc(),DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"),"主场馆",doSnatchInfo.getAccount(),String.join(",",doSnatchInfo.getIdNameMap().values()));
+                        WebSocketServer.sendInfo(socketMsg("抢票成功", String.valueOf(nameIDMap.values()), 0), null);
                     }
                     /*if (!ObjectUtils.isEmpty(bodyJson) && bodyJson.getIntValue("code") == 550) {
                         if(bodyJson.getString("msg").contains("已有订单")){
@@ -712,7 +718,7 @@ public class TicketServiceImpl implements TicketService {
 
 
     @Override
-    public String pay(PlaceOrderInfo placeOrderInfo) {
+    public ServiceResponse<String> pay(PlaceOrderInfo placeOrderInfo) {
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.setRequestFactory(new SimpleClientHttpRequestFactory() {
             {
@@ -745,6 +751,9 @@ public class TicketServiceImpl implements TicketService {
             log.info("提交订单结果:{}", exchange.getBody());
             placeOrderRes = exchange.getBody();
             if (!ObjectUtils.isEmpty(placeOrderRes)) {
+                if(placeOrderRes.getIntValue("code")!=200){
+                    return ServiceResponse.createByErrorMessage(placeOrderRes.getString("msg"));
+                }
                 JSONObject orderData = placeOrderRes.getJSONObject("data");
                 long orderId = orderData.getLongValue("orderId");
                 String orderNumber = orderData.getString("orderNumber");
@@ -771,7 +780,7 @@ public class TicketServiceImpl implements TicketService {
                 JSONObject payRes = payResEntity.getBody();
                 log.info("获取支付url结果:{}", payRes);
                 if (!ObjectUtils.isEmpty(payRes) && payRes.getIntValue("code") == 200) {
-                    return payRes.getString("data");
+                    return ServiceResponse.createBySuccess(payRes.getString("data"));
                 }
             }
         }else {
@@ -783,7 +792,9 @@ public class TicketServiceImpl implements TicketService {
             JSONObject payRes = payResEntity.getBody();
             log.info("获取支付url结果:{}", payRes);
             if (!ObjectUtils.isEmpty(payRes) && payRes.getIntValue("code") == 200) {
-                return payRes.getString("data");
+                return ServiceResponse.createBySuccess(payRes.getString("data"));
+            }else{
+                return ServiceResponse.createByErrorMessage(payRes.getString("msg"));
             }
         }
         return null;

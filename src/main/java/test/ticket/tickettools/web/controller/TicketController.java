@@ -47,8 +47,8 @@ public class TicketController  extends BaseController{
     }
 
     @PostMapping(value = "/init/task")
-    public ServiceResponse initTask(@RequestBody List<TaskDetailEntity> taskDetailEntityList) {
-        return ticketServiceImpl.initTask(taskDetailEntityList);
+    public ServiceResponse initTask(@RequestBody InitTaskParam initTaskParam) {
+        return ticketServiceImpl.initTask(initTaskParam);
     }
 
     @GetMapping(value = "/get/detail")
@@ -103,11 +103,7 @@ public class TicketController  extends BaseController{
 
     @PostMapping(value = "/pay")
     public ServiceResponse pay(@RequestBody PlaceOrderInfo placeOrderInfo) {
-        String pay = ticketServiceImpl.pay(placeOrderInfo);
-        if(ObjectUtils.isEmpty(pay)){
-            return ServiceResponse.createByErrorMessage("获取支付链接失败");
-        }
-        return ServiceResponse.createBySuccess(pay);
+        return ticketServiceImpl.pay(placeOrderInfo);
     }
 
     @GetMapping(value = "/test")

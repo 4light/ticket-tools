@@ -13,7 +13,7 @@ public interface TicketService {
     //添加任务
     ServiceResponse addTaskInfo(TaskInfo taskInfo);
     //重置任务
-    ServiceResponse initTask(List<TaskDetailEntity> taskDetailEntityList);
+    ServiceResponse initTask(InitTaskParam initTaskParam);
     //添加任务详情
     ServiceResponse addTaskDetail(TaskDetailEntity taskDetailEntity);
     //更新任务
@@ -41,5 +41,5 @@ public interface TicketService {
     //执行抢票任务
     void snatchingTicket(DoSnatchInfo doSnatchInfo);
     //支付
-    String pay(PlaceOrderInfo placeOrderInfo);
+    ServiceResponse<String> pay(PlaceOrderInfo placeOrderInfo);
 }
