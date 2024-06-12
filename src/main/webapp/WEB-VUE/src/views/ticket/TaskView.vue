@@ -147,6 +147,7 @@
       top="2vh"
       :visible.sync="showDialog"
       style="height: 50em;overflow: unset"
+      :before-close="closeDialog"
     >
       <taskEditView @close="closeDialog" v-if="showDialog" :taskInfo="taskInfo" ref="taskEditView"></taskEditView>
     </el-dialog>
@@ -482,7 +483,7 @@ export default {
     },
     closeDialog() {
       this.showDialog = false
-      this.taskInfo= {}
+      this.taskInfo= {"userList":[]}
       this.onSubmit()
     },
     handleSelectionChange(val) {
@@ -644,6 +645,7 @@ export default {
     closePayDialog(){
       this.showPayPic=false
       this.showPayDialog=false
+      this.onSubmit()
     },
     closeTicketInspectionImg(){
       this.showImg=false

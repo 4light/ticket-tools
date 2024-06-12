@@ -180,6 +180,9 @@ export default {
    },*/
   methods: {
     edit() {
+      if(Object.keys(this.taskInfo).length<=0){
+        return
+      }
       if(this.taskInfo.channel==2){
         if(this.taskInfo.session) {
           let currentSession = []
@@ -218,6 +221,8 @@ export default {
       this.showUserList = true
     },
     onSubmit() {
+      this.form.session=23
+      this.form.venue=1
       if (this.form.channel == 0 && this.userList.length > 15) {
         this.$alert("最多只能添加15条，请检查", "添加失败")
         return

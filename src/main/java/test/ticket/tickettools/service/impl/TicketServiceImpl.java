@@ -161,6 +161,7 @@ public class TicketServiceImpl implements TicketService {
                 }
                 userList.forEach(o -> {
                     o.setTaskId(taskEntity.getId());
+                    o.setPayment(false);
                     o.setCreateDate(new Date());
                 });
                 Integer res = taskDetailDao.insertBatch(userList);
@@ -408,6 +409,7 @@ public class TicketServiceImpl implements TicketService {
                 doSnatchInfo.setUseDate(entity.getUseDate());
                 doSnatchInfo.setSession(entity.getSession());
                 doSnatchInfo.setTaskDetailIds(Arrays.asList(taskDetailEntity.getId()));
+                doSnatchInfo.setSession(entity.getSession());
                 doSnatchInfo.setIdNameMap(new HashMap<String, String>() {{
                     put(taskDetailEntity.getUserName(), taskDetailEntity.getIDCard());
                 }});
@@ -440,7 +442,6 @@ public class TicketServiceImpl implements TicketService {
         }
         String getHallUrl = "https://pcticket.cstm.org.cn/prod-api/pool/ingore/getHall?saleMode=1&openPerson=1&queryDate=%s";
         Map<String, String> nameIDMap = doSnatchInfo.getIdNameMap();
-        String useDate = DateUtil.format(doSnatchInfo.getUseDate(), "yyyy-MM-dd hh:mm:ss");
         String formatGetHallUrl = String.format(getHallUrl, DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"));
         RestTemplate restTemplate=TemplateUtil.initSSLTemplate();
         try {
@@ -614,14 +615,15 @@ public class TicketServiceImpl implements TicketService {
                     param.put("x", x);
                     param.put("y", 5);
                     String point = EncDecUtil.doAES(JSON.toJSONString(param), secretKey);
-                    HttpEntity shoppingCartUrlEntity = new HttpEntity<>(buildParam(token, priceNameCountMap.get("childrenTicket"), point, doSnatchInfo.getSession(), useDate, priceId, childrenPriceId, discountPriceId, olderPriceId, phone, nameIDMap), headers);
+                    Integer childrenTicketNum = priceNameCountMap.get("childrenTicket");
+                    HttpEntity shoppingCartUrlEntity = new HttpEntity<>(buildParam(token, childrenTicketNum==null?0:childrenTicketNum, point, doSnatchInfo.getSession(), doSnatchInfo.getUseDate(), priceId, childrenPriceId, discountPriceId, olderPriceId, phone, nameIDMap), headers);
                     //ResponseEntity<String> exchange = restTemplate.exchange(shoppingCartUrl, HttpMethod.POST, shoppingCartUrlEntity, String.class);
                     //log.info(exchange.getBody());
                     //String body = exchange.getBody();
                     //JSONObject bodyJson = JSON.parseObject(body);
                     JSONObject bodyJson = TemplateUtil.getResponse(restTemplate,shoppingCartUrl,HttpMethod.POST,shoppingCartUrlEntity);
                     if (!ObjectUtils.isEmpty(bodyJson) && (bodyJson.getIntValue("code") == 550 || bodyJson.getIntValue("code") == 503)) {
-                        WebSocketServer.sendInfo(socketMsg("抢票出错", bodyJson.getString("msg"), 0), null);
+                        WebSocketServer.sendInfo(socketMsg("抢票异常", "账号:"+doSnatchInfo.getAccount()+","+bodyJson.getString("msg"), 0), null);
                         runTaskCache.remove(taskId);
                         try {
                             Files.delete(Paths.get(sliderImageName));
@@ -762,7 +764,6 @@ public class TicketServiceImpl implements TicketService {
                 placeOrderInfo.getTaskDetailIds().forEach(o -> {
                     TaskDetailEntity taskDetailEntity = new TaskDetailEntity();
                     taskDetailEntity.setId(o);
-                    taskDetailEntity.setOrderNumber(orderNumber);
                     taskDetailEntity.setUpdateDate(new Date());
                     taskDetailEntity.setOrderId(orderId);
                     taskDetailEntity.setPayment(needChargeCode != 1);
@@ -798,27 +799,6 @@ public class TicketServiceImpl implements TicketService {
             }
         }
         return null;
-    }
-
-    private Long getUserId(String auth) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("authority", "pcticket.cstm.org.cn");
-        headers.set("accept", "application/json");
-        headers.set("authorization", auth);
-        headers.set("cookie", "SL_G_WPT_TO=zh; SL_GWPT_Show_Hide_tmp=1; SL_wptGlobTipTmp=1");
-        headers.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
-        HttpEntity entity = new HttpEntity<>(headers);
-        ResponseEntity getUserRes = restTemplate.exchange(getCurrentUserUrl, HttpMethod.GET, entity, String.class);
-        String userInfoStr = getUserRes.getBody().toString();
-        JSONObject userInfoJson = JSON.parseObject(userInfoStr);
-        JSONObject userInfo = userInfoJson == null ? null : userInfoJson.getJSONObject("user");
-        if (userInfo == null) {
-            log.info("获取用户信息失败：{}", userInfoJson);
-            return null;
-        }
-        long userId = userInfo.getLongValue("userId");
-        return userId;
     }
 
     private String socketMsg(String title, String msg, Integer time) {
@@ -877,11 +857,11 @@ public class TicketServiceImpl implements TicketService {
      * @param phone
      * @return
      */
-    public Object buildParam(String captchaToken, Integer childTicketNum, String point, Integer hallScheduleId, String useDate, Integer priceId, Integer childrenPriceId, Integer discountPriceId, Integer olderTicketPriceId, String phone, Map<String, String> iDMap) {
+    public Object buildParam(String captchaToken, Integer childTicketNum, String point, Integer hallScheduleId, Date useDate, Integer priceId, Integer childrenPriceId, Integer discountPriceId, Integer olderTicketPriceId, String phone, Map<String, String> iDMap) {
         JSONObject param = new JSONObject();
         param.put("captchaToken", captchaToken);
         param.put("childTicketNum", childTicketNum);
-        param.put("date", useDate);
+        param.put("date", DateUtil.format(useDate, "yyyy-MM-dd"));
         param.put("phone", phone);
         param.put("platform", 1);
         param.put("pointJson", point);
@@ -920,7 +900,7 @@ public class TicketServiceImpl implements TicketService {
             if (ageForIdCard >= 60 && ageForIdCard <= 199) {
                 ticketInfo.put("ticketPriceId", olderTicketPriceId);
             }
-            ticketInfo.put("useDate", useDate);
+            ticketInfo.put("useDate", DateUtil.format(useDate, "yyyy-MM-dd HH:mm:ss"));
             ticketInfo.put("userName", entry.getKey());
             ticketInfoList.add(ticketInfo);
         }

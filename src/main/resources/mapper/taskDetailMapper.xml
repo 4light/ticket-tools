@@ -102,8 +102,7 @@
     <select id="selectUnpaid" resultMap="BaseResultMap">
         select *
         from task_detail
-        where done = 1 and order_number IS NOT NULL
-          and payment = 0 and yn=0
+        where done = 1 and payment = 0 and yn=0
     </select>
     <select id="selectByEntity" parameterType="test.ticket.tickettools.domain.entity.TaskDetailEntity"
             resultMap="BaseResultMap">
