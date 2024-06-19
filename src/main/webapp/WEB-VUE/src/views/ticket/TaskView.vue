@@ -286,20 +286,21 @@ export default {
     },
     // 连接建立失败重连
     websocketOnError() {
-      this.initWebSocket()
+      this.$notify.error({
+        title: 'scoket异常',
+        message: "scoket连接失败，请刷新页面",
+        duration: 2000
+      });
     },
     // 数据接收
     websocketOnMessage(e) {
-      /*console.log(this.websock.readyState)
-      this.$message.error(e.data)
-      console.log(e.data)*/
       let res = JSON.parse(e.data)
       this.$notify({
         title: res.title,
         dangerouslyUseHTMLString: true,
         message: res.msg,
         duration: res.time,
-        type: 'success'
+        type: 'plain'
       });
       if(res){
         this.doDing()

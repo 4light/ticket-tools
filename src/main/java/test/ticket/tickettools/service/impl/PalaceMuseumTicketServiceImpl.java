@@ -24,6 +24,7 @@ import test.ticket.tickettools.domain.entity.TaskDetailEntity;
 import test.ticket.tickettools.domain.entity.TaskEntity;
 import test.ticket.tickettools.domain.entity.AccountInfoEntity;
 import test.ticket.tickettools.service.DoSnatchTicketService;
+import test.ticket.tickettools.service.WebSocketServer;
 import test.ticket.tickettools.utils.*;
 
 import javax.annotation.Resource;
@@ -403,6 +404,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
                 taskDetailEntity.setOrderNumber(createRes.getJSONObject("data").getString("orderCode"));
                 taskDetailDao.updateEntityByTaskId(taskDetailEntity);
                 SendMessageUtil.send(ChannelEnum.LOTS.getDesc(), formatDate, currentParkFsyyDetail.getString("fsTimeName"), doSnatchInfo.getAccount(), String.join(",", doSnatchInfo.getIdNameMap().values()));
+                WebSocketServer.sendInfo(socketMsg("抢票成功", "账号:" + doSnatchInfo.getAccount() + "购票成功，请支付", 5000), null);
             }
             runTaskCache.remove(taskId);
         } catch (Exception e) {
@@ -590,5 +592,12 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
             }
         }
         return sb.toString();
+    }
+    private String socketMsg(String title, String msg, Integer time) {
+        JSONObject res = new JSONObject();
+        res.put("title", title);
+        res.put("msg", msg);
+        res.put("time", time);
+        return JSON.toJSONString(res);
     }
 }

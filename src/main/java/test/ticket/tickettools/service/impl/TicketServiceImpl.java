@@ -77,6 +77,7 @@ public class TicketServiceImpl implements TicketService {
 
     private static List<String> doneList = new ArrayList<>();
     private static Map<Long,Object> runTaskCache=new ConcurrentHashMap<>();
+    private static Map<Long,Object> msgCache=new ConcurrentHashMap<>();
 
     private static CloseableHttpClient httpClient = HttpClientBuilder.create()
             .setMaxConnTotal(100) // 设置最大连接数
@@ -363,8 +364,8 @@ public class TicketServiceImpl implements TicketService {
             List<Long> taskDetailIds = taskDetailEntities.stream()
                     .map(TaskDetailEntity::getId) // 提取每个对象的 ID
                     .collect(Collectors.toList());
-            Map<String, String> nameIdMap = taskDetailEntities.stream()
-                    .collect(Collectors.toMap(TaskDetailEntity::getUserName, TaskDetailEntity::getIDCard));
+            Map<String, String> idNameMap = taskDetailEntities.stream()
+                    .collect(Collectors.toMap(TaskDetailEntity::getIDCard, TaskDetailEntity::getUserName));
             doSnatchInfo.setTaskId(id);
             doSnatchInfo.setUserId(Long.valueOf(accountInfoEntity.getChannelUserId()));
             doSnatchInfo.setAccount(entity.getAccount());
@@ -372,7 +373,7 @@ public class TicketServiceImpl implements TicketService {
             doSnatchInfo.setSession(entity.getSession());
             doSnatchInfo.setUseDate(entity.getUseDate());
             doSnatchInfo.setTaskDetailIds(taskDetailIds);
-            doSnatchInfo.setIdNameMap(nameIdMap);
+            doSnatchInfo.setIdNameMap(idNameMap);
             result.put(entity.getAccount(), doSnatchInfo);
         }
         return result;
@@ -411,7 +412,7 @@ public class TicketServiceImpl implements TicketService {
                 doSnatchInfo.setTaskDetailIds(Arrays.asList(taskDetailEntity.getId()));
                 doSnatchInfo.setSession(entity.getSession());
                 doSnatchInfo.setIdNameMap(new HashMap<String, String>() {{
-                    put(taskDetailEntity.getUserName(), taskDetailEntity.getIDCard());
+                    put(taskDetailEntity.getIDCard(), taskDetailEntity.getUserName());
                 }});
                 result.add(doSnatchInfo);
             }
@@ -437,9 +438,8 @@ public class TicketServiceImpl implements TicketService {
         Long taskId = doSnatchInfo.getTaskId();
         if(runTaskCache.containsKey(taskId)){
             return;
-        }else{
-            runTaskCache.put(taskId,true);
         }
+        runTaskCache.put(taskId,true);
         String getHallUrl = "https://pcticket.cstm.org.cn/prod-api/pool/ingore/getHall?saleMode=1&openPerson=1&queryDate=%s";
         Map<String, String> nameIDMap = doSnatchInfo.getIdNameMap();
         String formatGetHallUrl = String.format(getHallUrl, DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"));
@@ -460,7 +460,10 @@ public class TicketServiceImpl implements TicketService {
             JSONObject getPriceByScheduleJson = JSON.parseObject(getPriceByScheduleRes.getBody().toString());*/
             JSONObject getPriceByScheduleJson = TemplateUtil.getResponse(restTemplate,formatGetHallUrl,HttpMethod.GET,entity);
             if(!ObjectUtils.isEmpty(getPriceByScheduleJson)&&getPriceByScheduleJson.getIntValue("code")==401){
-                WebSocketServer.sendInfo(socketMsg("抢票异常", "账号:"+doSnatchInfo.getAccount()+"登录态异常", 0), null);
+                if(!msgCache.containsKey(doSnatchInfo.getTaskId())) {
+                    WebSocketServer.sendInfo(socketMsg("抢票异常", "账号:" + doSnatchInfo.getAccount() + "登录态异常", 0), null);
+                }
+                msgCache.put(doSnatchInfo.getTaskId(),true);
             }
             //log.info("获取到的场次下余票为:{}",getPriceByScheduleJson);
             //获取成人票和儿童票
@@ -490,8 +493,8 @@ public class TicketServiceImpl implements TicketService {
             //老年票
             int olderPriceId = 38;
             Map<String, Integer> priceNameCountMap = new HashMap<>();
-            for (String value : nameIDMap.values()) {
-                int ageForIdcard = getAgeForIdcard(value);
+            for (String ids : nameIDMap.values()) {
+                int ageForIdcard = getAgeForIdcard(ids);
                 if (ageForIdcard > 0 && ageForIdcard <= 8) {
                     if (priceNameCountMap.containsKey("childrenTicket")) {
                         priceNameCountMap.put("childrenTicket", priceNameCountMap.get("childrenTicket") + 1);
@@ -591,14 +594,14 @@ public class TicketServiceImpl implements TicketService {
             if (flag) {
                 //几个人添加几次
                 for (Map.Entry<String, String> entry : nameIDMap.entrySet()) {
-                    HttpEntity addEntity = new HttpEntity<>(buildAddParam(entry.getValue(), entry.getKey(), userId), headers);
+                    HttpEntity addEntity = new HttpEntity<>(buildAddParam(entry.getKey(),entry.getValue(), userId), headers);
                     //restTemplate.exchange(addUrl, HttpMethod.POST, addEntity, String.class);
                     TemplateUtil.getResponse(restTemplate,addUrl,HttpMethod.POST,addEntity);
                 }
                 //ResponseEntity<JSONObject> getCheckImagRes = restTemplate.exchange(getCheckImagUrl, HttpMethod.GET, entity, JSONObject.class);
                 //JSONObject getCheckImageJson = getCheckImagRes.getBody();
                 JSONObject getCheckImageJson = TemplateUtil.getResponse(restTemplate,getCheckImagUrl,HttpMethod.GET,entity);
-                if (!StringUtils.isEmpty(getCheckImageJson)) {
+                if (!ObjectUtils.isEmpty(getCheckImageJson)&&getCheckImageJson.getIntValue("code")==200) {
                     JSONObject data = getCheckImageJson.getJSONObject("data");
                     String jigsawImageBase64 = data == null ? null : data.getString("jigsawImageBase64");
                     String originalImageBase64 = data == null ? null : data.getString("originalImageBase64");
@@ -623,7 +626,10 @@ public class TicketServiceImpl implements TicketService {
                     //JSONObject bodyJson = JSON.parseObject(body);
                     JSONObject bodyJson = TemplateUtil.getResponse(restTemplate,shoppingCartUrl,HttpMethod.POST,shoppingCartUrlEntity);
                     if (!ObjectUtils.isEmpty(bodyJson) && (bodyJson.getIntValue("code") == 550 || bodyJson.getIntValue("code") == 503)) {
-                        WebSocketServer.sendInfo(socketMsg("抢票异常", "账号:"+doSnatchInfo.getAccount()+","+bodyJson.getString("msg"), 0), null);
+                        if(!msgCache.containsKey(doSnatchInfo.getTaskId())) {
+                            WebSocketServer.sendInfo(socketMsg("抢票异常", "账号:"+doSnatchInfo.getAccount()+","+bodyJson.getString("msg"), 0), null);
+                        }
+                        msgCache.put(doSnatchInfo.getTaskId(),true);
                         runTaskCache.remove(taskId);
                         try {
                             Files.delete(Paths.get(sliderImageName));
@@ -635,6 +641,7 @@ public class TicketServiceImpl implements TicketService {
                     }
                     //WebSocketServer.sendInfo("余票不足","web");
                     if (!ObjectUtils.isEmpty(bodyJson) && bodyJson.getIntValue("code") == 200) {
+                        msgCache.remove(doSnatchInfo.getTaskId());
                         log.info("提交订单结果：{}", bodyJson);
                         /*//doneList.addAll(nameIDMap.values());
                         HttpEntity placeOrderEntity = new HttpEntity<>(buildPlaceOrderParam(priceNameCountMap.get("childrenTicket"), useDate, phone, bodyJson.getJSONArray("data").toJavaList(Long.class)), headers);
@@ -675,10 +682,10 @@ public class TicketServiceImpl implements TicketService {
                                 JSONObject item = dataArr.getJSONObject(i);
                                 String certificateInfo = item.getString("certificateInfo");
                                 nameIDMap.forEach((key, val) -> {
-                                    if (ObjectUtils.nullSafeEquals(val, certificateInfo)) {
+                                    if (ObjectUtils.nullSafeEquals(key, certificateInfo)) {
                                         TaskDetailEntity taskDetailEntity = new TaskDetailEntity();
                                         taskDetailEntity.setTaskId(doSnatchInfo.getTaskId());
-                                        taskDetailEntity.setIDCard(val);
+                                        taskDetailEntity.setIDCard(key);
                                         taskDetailEntity.setUpdateDate(new Date());
                                         taskDetailEntity.setChildrenTicket(item.getIntValue("isChildFreeTicket") == 1);
                                         taskDetailEntity.setTicketId(item.getLongValue("id"));
@@ -691,7 +698,7 @@ public class TicketServiceImpl implements TicketService {
                         }
                         taskDetailDao.updateTaskDetailBath(taskDetailEntities);
                         //SendMessageUtil.send(ChannelEnum.CSTM.getDesc(),DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"),"主场馆",doSnatchInfo.getAccount(),String.join(",",doSnatchInfo.getIdNameMap().values()));
-                        WebSocketServer.sendInfo(socketMsg("抢票成功", String.valueOf(nameIDMap.values()), 0), null);
+                        WebSocketServer.sendInfo(socketMsg("抢票成功", String.valueOf(nameIDMap.values()), 5000), null);
                     }
                     /*if (!ObjectUtils.isEmpty(bodyJson) && bodyJson.getIntValue("code") == 550) {
                         if(bodyJson.getString("msg").contains("已有订单")){
@@ -709,6 +716,11 @@ public class TicketServiceImpl implements TicketService {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
+                }else{
+                        if(!msgCache.containsKey(doSnatchInfo.getTaskId())) {
+                            WebSocketServer.sendInfo(socketMsg("抢票异常", "账号:" + doSnatchInfo.getAccount() + "."+getCheckImageJson.getString("msg"), 0), null);
+                        }
+                        msgCache.put(doSnatchInfo.getTaskId(),true);
                 }
             }
         } catch (Exception e) {
@@ -872,10 +884,10 @@ public class TicketServiceImpl implements TicketService {
         param.put("useTicketType", 1);
         List ticketInfoList = new ArrayList();
         for (Map.Entry<String, String> entry : iDMap.entrySet()) {
-            int ageForIdCard = getAgeForIdcard(entry.getValue());
+            int ageForIdCard = getAgeForIdcard(entry.getKey());
             JSONObject ticketInfo = new JSONObject();
             ticketInfo.put("certificate", 1);
-            ticketInfo.put("certificateInfo", entry.getValue());
+            ticketInfo.put("certificateInfo", entry.getKey());
             ticketInfo.put("cinemaFlag", 0);
             ticketInfo.put("hallId", 1);
             ticketInfo.put("hallScheduleId", hallScheduleId);
@@ -901,7 +913,7 @@ public class TicketServiceImpl implements TicketService {
                 ticketInfo.put("ticketPriceId", olderTicketPriceId);
             }
             ticketInfo.put("useDate", DateUtil.format(useDate, "yyyy-MM-dd HH:mm:ss"));
-            ticketInfo.put("userName", entry.getKey());
+            ticketInfo.put("userName", entry.getValue());
             ticketInfoList.add(ticketInfo);
         }
         param.put("ticketInfoList", ticketInfoList);

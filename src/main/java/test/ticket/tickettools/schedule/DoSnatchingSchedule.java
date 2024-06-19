@@ -12,6 +12,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
+import test.ticket.tickettools.config.TaskExecutorConfig;
 import test.ticket.tickettools.dao.AccountInfoDao;
 import test.ticket.tickettools.dao.TaskDao;
 import test.ticket.tickettools.domain.bo.DoSnatchInfo;
@@ -23,9 +24,11 @@ import test.ticket.tickettools.domain.entity.TaskEntity;
 import test.ticket.tickettools.service.AccountService;
 import test.ticket.tickettools.service.LoginService;
 import test.ticket.tickettools.service.TicketService;
+import test.ticket.tickettools.utils.DateUtils;
 import test.ticket.tickettools.utils.TemplateUtil;
 
 import javax.annotation.Resource;
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -52,6 +55,8 @@ public class DoSnatchingSchedule {
     AccountInfoDao accountInfoDao;
     @Resource
     LoginService loginService;
+    @Resource
+    TaskExecutorConfig taskExecutorConfig;
 
     /**
      * 执行放票当天的任务
@@ -59,21 +64,11 @@ public class DoSnatchingSchedule {
     @Scheduled(cron = "0/1 0-30 18 * * ?")
     public void doSnatching() {
         Map<String, DoSnatchInfo> taskForRun = ticketServiceImpl.getTaskForRun();
-        if (ObjectUtils.isEmpty(taskForRun)) {
+        if(ObjectUtils.isEmpty(taskForRun)){
             return;
         }
-        ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
-        pool.setThreadNamePrefix("doSnatchingProcessor-");
-        pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());//拒绝策略
-        int size = taskForRun.size();
-        pool.setMaxPoolSize(size);
-        pool.setCorePoolSize(size);
-        pool.setQueueCapacity(size);
-        pool.initialize();
         for (Map.Entry<String, DoSnatchInfo> entity : taskForRun.entrySet()) {
-            CompletableFuture.runAsync(() -> {
-                ticketServiceImpl.snatchingTicket(entity.getValue());
-            }, pool);
+            CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(entity.getValue()), taskExecutorConfig.getAsyncExecutor());
         }
     }
 
@@ -83,61 +78,31 @@ public class DoSnatchingSchedule {
     @Scheduled(cron = "0/1 0-30 18 * * ?")
     public void doSnatchingExcludeTarget() {
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
-        if (ObjectUtils.isEmpty(allTaskForRun)) {
-            return;
-        }
-        ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
-        pool.setThreadNamePrefix("singleDoSnatchingProcessor-");
-        pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());//拒绝策略
-        int size = allTaskForRun.size();
-        pool.setMaxPoolSize(size);
-        pool.setCorePoolSize(size);
-        pool.setQueueCapacity(size);
-        pool.initialize();
+        LocalDate localDate=LocalDate.now().plusDays(7L);
+        Date date = DateUtils.localDateToDate(localDate);
+        allTaskForRun=allTaskForRun.stream().filter(o->!date.equals(o.getUseDate())).collect(Collectors.toList());
         for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
-            CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo), pool);
+            CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo), taskExecutorConfig.getAsyncExecutor());
         }
     }
 
     @Scheduled(cron = "0/1 31-59 18 * * ?")
     public void doSingleSnatch() {
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
-        if (ObjectUtils.isEmpty(allTaskForRun)) {
-            return;
-        }
-        ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
-        pool.setThreadNamePrefix("singleDoSnatchingProcessor-");
-        pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());//拒绝策略
-        int size = allTaskForRun.size();
-        pool.setMaxPoolSize(size);
-        pool.setCorePoolSize(size);
-        pool.setQueueCapacity(size);
-        pool.initialize();
         for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
-            CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo), pool);
+            CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo), taskExecutorConfig.getAsyncExecutor());
         }
     }
 
     @Scheduled(cron = "0/1 * 8-17,19-22 * * ?")
     public void doSingleSnatchOtherTime() {
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
-        if (ObjectUtils.isEmpty(allTaskForRun)) {
-            return;
-        }
-        ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
-        pool.setThreadNamePrefix("singleDoSnatchingProcessor-");
-        pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());//拒绝策略
-        int size = allTaskForRun.size();
-        pool.setMaxPoolSize(size);
-        pool.setCorePoolSize(size);
-        pool.setQueueCapacity(size);
-        pool.initialize();
         for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
-            CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo), pool);
+            CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo), taskExecutorConfig.getAsyncExecutor());
         }
     }
 
-    @Scheduled(cron = "0/30 * 8-17,19-22 * * ?")
+    @Scheduled(cron = "0/30 * 8-22 * * ?")
     public void updateOrderPayStatus() {
         try {
             RestTemplate restTemplate = TemplateUtil.initSSLTemplate();
