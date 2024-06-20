@@ -130,8 +130,11 @@ public class JntTicketServiceImpl implements DoSnatchTicketService {
                 JSONObject session = sessions.getJSONObject(i);
                 String eventsSessionId = session.getString("eventssessionid");
                 if(session!=null&&session.getIntValue("remaining_check")==1) {
-                    sessionList.add(eventsSessionId);
-                    sessionMap.put(eventsSessionId, sessions.getJSONObject(i));
+                    String summary = session.getString("summary");
+                    if(summary.contains("09:00-10:00")||summary.contains("08:00-09:00")) {
+                        sessionList.add(eventsSessionId);
+                        sessionMap.put(eventsSessionId, sessions.getJSONObject(i));
+                    }
                 }
             }
         }
@@ -550,4 +553,5 @@ public class JntTicketServiceImpl implements DoSnatchTicketService {
         headers.set("Sec-Fetch-Dest", "empty");
         return headers;
     }
+
 }
