@@ -54,7 +54,7 @@ public class DoJntSnatchingSchedule {
         }
     }
 
-    @Scheduled(cron = "0/2 30-35 12 * * ?")
+    @Scheduled(cron = "0/2 30-32 12 * * ?")
     public void doJntTicketSnatch(){
         List<DoSnatchInfo> doSnatchInfos = jntTicketServiceImpl.getDoSnatchInfos();
         if(ObjectUtils.isEmpty(doSnatchInfos)){
