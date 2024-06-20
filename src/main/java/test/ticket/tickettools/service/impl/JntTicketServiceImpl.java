@@ -130,7 +130,7 @@ public class JntTicketServiceImpl implements DoSnatchTicketService {
                 JSONObject session = sessions.getJSONObject(i);
                 String eventsSessionId = session.getString("eventssessionid");
                 if(session!=null&&session.getIntValue("remaining_check")==1) {
-                    sessionList.add(0, eventsSessionId);
+                    sessionList.add(eventsSessionId);
                     sessionMap.put(eventsSessionId, sessions.getJSONObject(i));
                 }
             }
