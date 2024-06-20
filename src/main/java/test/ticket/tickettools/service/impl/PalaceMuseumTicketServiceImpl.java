@@ -201,8 +201,6 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
         String getTicketGridUrl = "https://lotswap.dpm.org.cn/lotsapi/merchant/api/merchantParkTicketGridNew?date=%s&merchantParkInfoId=11324&currPage=1&pageSize=200&merchantInfoId=2655&playDate=%s&businessType=park";
         //提交订单
         String createUrl = "https://lotswap.dpm.org.cn/dubboApi/trade-core/tradeCreateService/create?sign=%s&timestamp=%s";
-        //记录有票的具体日期
-        JSONArray parkFsyyDetailDTOs = new JSONArray();
         try {
             JSONObject currentParkFsyyDetail = new JSONObject();
             RestTemplate restTemplate = ObjectUtils.isEmpty(doSnatchInfo.getIp()) ? TemplateUtil.initSSLTemplate() : TemplateUtil.initSSLTemplateWithProxy(doSnatchInfo.getIp(), doSnatchInfo.getPort());
@@ -241,6 +239,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
                 return;
             }
             boolean haveTicket = false;
+            String session = doSnatchInfo.getSession();
             outLoop:
             for (int i = 0; i < data.size(); i++) {
                 JSONObject item = data.getJSONObject(i);
@@ -251,31 +250,20 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
                             for (int j = 0; j < parkFsyyDetailDTOS.size(); j++) {
                                 JSONObject parkFsyyDetailJson = parkFsyyDetailDTOS.getJSONObject(j);
                                 if (parkFsyyDetailJson.getIntValue("stockNum") == 1 && parkFsyyDetailJson.getIntValue("totalNum") == 1) {
-                                    Integer session = doSnatchInfo.getSession();
                                     //判断是否对上下午有要求
                                     if (ObjectUtils.isEmpty(session)) {
                                         haveTicket = true;
-                                        parkFsyyDetailDTOs.add(parkFsyyDetailJson);
                                         currentParkFsyyDetail = parkFsyyDetailJson;
                                         break outLoop;
                                     } else {
-                                        //上午票
-                                        if (doSnatchInfo.getSession() == 0) {
-                                            if (StrUtil.equals("上午", parkFsyyDetailJson.getString("fsTimeName"))) {
-                                                haveTicket = true;
-                                                parkFsyyDetailDTOs.add(parkFsyyDetailJson);
-                                                currentParkFsyyDetail = parkFsyyDetailJson;
-                                                break outLoop;
-                                            }
+                                        if(session.split(",").length>1){
+                                            haveTicket = true;
+                                            currentParkFsyyDetail = parkFsyyDetailJson;
+                                            break outLoop;
                                         }
-                                        //下午票
-                                        if (doSnatchInfo.getSession() == 1) {
-                                            if (StrUtil.equals("下午", parkFsyyDetailJson.getString("fsTimeName"))) {
+                                        if (doSnatchInfo.getSession().contains(parkFsyyDetailJson.getString("fsTimeName"))) {
                                                 haveTicket = true;
-                                                parkFsyyDetailDTOs.add(parkFsyyDetailJson);
                                                 currentParkFsyyDetail = parkFsyyDetailJson;
-                                                break outLoop;
-                                            }
                                         }
                                     }
                                 }

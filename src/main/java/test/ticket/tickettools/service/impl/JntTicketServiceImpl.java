@@ -86,7 +86,7 @@ public class JntTicketServiceImpl implements DoSnatchTicketService {
         if(ObjectUtils.isEmpty(authorization)){
             authorization= getCookie(doSnatchInfo.getAccount(), doSnatchInfo.getPwd(), doSnatchInfo.getIp(), doSnatchInfo.getPort());
         }
-        Map<String, JSONObject> sessionMap = new HashMap();
+        //Map<String, JSONObject> sessionMap = new HashMap();
         HttpHeaders headers = new HttpHeaders();
         headers.set("Accept-Encoding", "gzip, deflate, br");
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -120,116 +120,122 @@ public class JntTicketServiceImpl implements DoSnatchTicketService {
             }
         }
         Date useDate = doSnatchInfo.getUseDate();
+        String taskSession = doSnatchInfo.getSession();
         SimpleDateFormat simpleDateFormat=new SimpleDateFormat("yyyy-MM-dd");
         String formatDate=simpleDateFormat.format(useDate);
-        List<String> sessionList = new ArrayList();
+        JSONObject currentSession=new JSONObject();
         if (StrUtil.equals(queryRes.getString("code"), "A00006")) {
             JSONObject useDateTickInfo = queryRes.getJSONObject(formatDate);
             JSONArray sessions = useDateTickInfo.getJSONArray("sessions");
             for (int i = 0; i < sessions.size(); i++) {
                 JSONObject session = sessions.getJSONObject(i);
-                String eventsSessionId = session.getString("eventssessionid");
                 if(session!=null&&session.getIntValue("remaining_check")==1) {
                     String summary = session.getString("summary");
-                    if(summary.contains("09:00-10:00")||summary.contains("08:00-09:00")) {
-                        sessionList.add(eventsSessionId);
-                        sessionMap.put(eventsSessionId, sessions.getJSONObject(i));
+                    if(ObjectUtils.isEmpty(taskSession)){
+                        currentSession=sessions.getJSONObject(i);
+                        break;
+                    }else{
+                        if(taskSession.split(",").length>3){
+                            currentSession=sessions.getJSONObject(i);
+                            break;
+                        }
+                        if(doSnatchInfo.getSession().contains(summary.split(" ")[1])) {
+                            currentSession=sessions.getJSONObject(i);
+                            break;
+                        }
                     }
                 }
             }
         }
         //查询余票信息
-        log.info("场馆信息:{}",sessionMap);
+        log.info("场馆信息:{}",currentSession);
         String referer = "https://jnt.mfu.com.cn/page/tg/editorder/%s?date=%s&begintime=%s&endtime=%s&booking_including_self=0&maxnums=60&minnums=10";
         headers.set("M-Lang","zh");
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         TaskEntity taskEntity=new TaskEntity();
         taskEntity.setId(doSnatchInfo.getTaskId());
         taskEntity.setDone(true);
-        for (Map.Entry<String, JSONObject> sessionEntity : sessionMap.entrySet()) {
-            try {
-                Thread.sleep(RandomUtil.randomInt(2000,4000));
-                log.info("当前session:{}", sessionEntity.getKey());
-                String key = sessionEntity.getKey();
-                JSONObject value = sessionEntity.getValue();
-                String format = String.format(referer, key, formatDate, value.getString("begintime"), value.getString("endtime"));
-                headers.set("Referer", format);
-                //校验姓名和身份证号
-                Map<String, String> currentIdNameMap = doSnatchInfo.getIdNameMap();
-                for (String name : currentIdNameMap.values()) {
-                    String reqParam = "str=" + name;
-                    headers.set("Content-Length", String.valueOf(customURLEncode(reqParam, "utf-8").getBytes(StandardCharsets.UTF_8).length));
-                    HttpEntity checkNameEntity = new HttpEntity<>(reqParam, headers);
-                    JSONObject response = TemplateUtil.getResponse(restTemplate, checkNameUrl, HttpMethod.POST, checkNameEntity);
-                    String code = response.getString("code");
-                    if (!StrUtil.equals("A00006", code)&&!StrUtil.equals("A00004", code)) {
-                        log.info("姓名-{}校验不通过:{}", name, response);
-                        TaskEntity updateTaskEntity=new TaskEntity();
-                        updateTaskEntity.setId(doSnatchInfo.getTaskId());
-                        updateTaskEntity.setUserInfoId(doSnatchInfo.getUserInfoId());
-                        runTaskCache.remove(doSnatchInfo.getTaskId());
-                        return;
-                    }
-                }
-                String idNums = String.join(",", currentIdNameMap.keySet());
-                String idParamForm = MessageFormat.format("eventssessionid={0}&usertype=tg&idnums={1}", key, idNums);
-                headers.set("Content-Length", String.valueOf(customURLEncode(idParamForm, "utf-8").getBytes(StandardCharsets.UTF_8).length));
-                HttpEntity checkIdEntity = new HttpEntity<>(idParamForm, headers);
-                JSONObject checkIdRes = TemplateUtil.getResponse(restTemplate, checkIdUrl, HttpMethod.POST, checkIdEntity);
-                String checkIdResCode = checkIdRes.getString("code");
-                if (!StrUtil.equals("A00006", checkIdResCode)&&!StrUtil.equals("A00004", checkIdResCode)) {
-                    log.info("身份证校验不通过:{}", checkIdRes);
-                    TaskEntity updateTaskEntity=new TaskEntity();
+        try {
+            //log.info("当前session:{}", sessionEntity.getKey());
+            String eventsSessionId = currentSession.getString("eventssessionid");
+            //JSONObject value = sessionEntity.getValue();
+            String format = String.format(referer, eventsSessionId, formatDate, currentSession.getString("begintime"), currentSession.getString("endtime"));
+            headers.set("Referer", format);
+            //校验姓名和身份证号
+            Map<String, String> currentIdNameMap = doSnatchInfo.getIdNameMap();
+            for (String name : currentIdNameMap.values()) {
+                String reqParam = "str=" + name;
+                headers.set("Content-Length", String.valueOf(customURLEncode(reqParam, "utf-8").getBytes(StandardCharsets.UTF_8).length));
+                HttpEntity checkNameEntity = new HttpEntity<>(reqParam, headers);
+                JSONObject response = TemplateUtil.getResponse(restTemplate, checkNameUrl, HttpMethod.POST, checkNameEntity);
+                String code = response.getString("code");
+                if (!StrUtil.equals("A00006", code) && !StrUtil.equals("A00004", code)) {
+                    log.info("姓名-{}校验不通过:{}", name, response);
+                    TaskEntity updateTaskEntity = new TaskEntity();
                     updateTaskEntity.setId(doSnatchInfo.getTaskId());
                     updateTaskEntity.setUserInfoId(doSnatchInfo.getUserInfoId());
-                    break;
+                    runTaskCache.remove(doSnatchInfo.getTaskId());
+                    return;
                 }
-                //提交订单
-                String submitBodyFormat = MessageFormat.format("usertype=tg&eventssessionid={0}&bookingdata={1}", key, customURLEncode(buildParam(doSnatchInfo.getIdNameMap()).toJSONString(), "utf-8"));
-                headers.set("Content-Length", String.valueOf(submitBodyFormat.getBytes(StandardCharsets.UTF_8).length));
-                headers.set("Accept-Language","zh-CN,zh-Hans;q=0.9");
-                HttpEntity submitEntity = new HttpEntity<>(submitBodyFormat, headers);
-                Thread.sleep(RandomUtil.randomInt(1000,3000));
-                JSONObject submitRes = TemplateUtil.getResponse(restTemplate, submitUrl, HttpMethod.POST, submitEntity);
-                log.info("账号{}提单请求结果:{}", doSnatchInfo.getAccount(),submitRes);
+            }
+            String idNums = String.join(",", currentIdNameMap.keySet());
+            String idParamForm = MessageFormat.format("eventssessionid={0}&usertype=tg&idnums={1}", eventsSessionId, idNums);
+            headers.set("Content-Length", String.valueOf(customURLEncode(idParamForm, "utf-8").getBytes(StandardCharsets.UTF_8).length));
+            HttpEntity checkIdEntity = new HttpEntity<>(idParamForm, headers);
+            JSONObject checkIdRes = TemplateUtil.getResponse(restTemplate, checkIdUrl, HttpMethod.POST, checkIdEntity);
+            String checkIdResCode = checkIdRes.getString("code");
+            if (!StrUtil.equals("A00006", checkIdResCode) && !StrUtil.equals("A00004", checkIdResCode)) {
+                log.info("身份证校验不通过:{}", checkIdRes);
+                TaskEntity updateTaskEntity = new TaskEntity();
+                updateTaskEntity.setId(doSnatchInfo.getTaskId());
+                updateTaskEntity.setUserInfoId(doSnatchInfo.getUserInfoId());
+                return;
+            }
+            //提交订单
+            String submitBodyFormat = MessageFormat.format("usertype=tg&eventssessionid={0}&bookingdata={1}", eventsSessionId, customURLEncode(buildParam(doSnatchInfo.getIdNameMap()).toJSONString(), "utf-8"));
+            headers.set("Content-Length", String.valueOf(submitBodyFormat.getBytes(StandardCharsets.UTF_8).length));
+            headers.set("Accept-Language", "zh-CN,zh-Hans;q=0.9");
+            HttpEntity submitEntity = new HttpEntity<>(submitBodyFormat, headers);
+            Thread.sleep(RandomUtil.randomInt(2000, 3000));
+            JSONObject submitRes = TemplateUtil.getResponse(restTemplate, submitUrl, HttpMethod.POST, submitEntity);
+            log.info("账号{}提单请求结果:{}", doSnatchInfo.getAccount(), submitRes);
+            if (StrUtil.equals(submitRes.getString("code"), "A00006")) {
+                taskDao.updateTask(taskEntity);
+                taskDetailDao.updateByTaskId(doSnatchInfo.getTaskId());
+                SendMessageUtil.send(ChannelEnum.MFU.getDesc(), formatDate, currentSession.getString("summary"), doSnatchInfo.getAccount(), String.join(",", doSnatchInfo.getIdNameMap().values()));
+                return;
+            }
+            if (StrUtil.equals(submitRes.getString("code"), "A00013")) {
+                check(submitRes.getString("captcha_type"), restTemplate, headers);
+                submitRes = TemplateUtil.getResponse(restTemplate, submitUrl, HttpMethod.POST, submitEntity);
+                log.info("账号{}提单请求结果:{}", doSnatchInfo.getAccount(), submitRes);
                 if (StrUtil.equals(submitRes.getString("code"), "A00006")) {
                     taskDao.updateTask(taskEntity);
                     taskDetailDao.updateByTaskId(doSnatchInfo.getTaskId());
-                    SendMessageUtil.send(ChannelEnum.MFU.getDesc(),formatDate,value.getString("summary"),doSnatchInfo.getAccount(),String.join(",",doSnatchInfo.getIdNameMap().values()));
-                    break;
+                    SendMessageUtil.send(ChannelEnum.MFU.getDesc(), formatDate, currentSession.getString("summary"), doSnatchInfo.getAccount(), String.join(",", doSnatchInfo.getIdNameMap().values()));
+                    return;
                 }
-                if (StrUtil.equals(submitRes.getString("code"), "A00013")) {
-                    check(submitRes.getString("captcha_type"), restTemplate, headers);
+                if (StrUtil.equals("A00004", submitRes.getString("code"))) {
+                    String cookie = getCookie(doSnatchInfo.getAccount(), doSnatchInfo.getPwd(), doSnatchInfo.getIp(), doSnatchInfo.getPort());
+                    if (ObjectUtils.isEmpty(cookie)) {
+                        runTaskCache.remove(doSnatchInfo.getTaskId());
+                        return;
+                    }
+                    headers.set("cookie", cookie);
+                    submitEntity = new HttpEntity<>(submitBodyFormat, headers);
                     submitRes = TemplateUtil.getResponse(restTemplate, submitUrl, HttpMethod.POST, submitEntity);
-                    log.info("账号{}提单请求结果:{}", doSnatchInfo.getAccount(),submitRes);
+                    log.info("账号{}提单请求结果:{}", doSnatchInfo.getAccount(), submitRes);
                     if (StrUtil.equals(submitRes.getString("code"), "A00006")) {
                         taskDao.updateTask(taskEntity);
                         taskDetailDao.updateByTaskId(doSnatchInfo.getTaskId());
-                        SendMessageUtil.send(ChannelEnum.MFU.getDesc(),formatDate,value.getString("summary"),doSnatchInfo.getAccount(),String.join(",",doSnatchInfo.getIdNameMap().values()));
-                        break;
-                    }
-                    if(StrUtil.equals("A00004", submitRes.getString("code"))){
-                        String cookie = getCookie(doSnatchInfo.getAccount(), doSnatchInfo.getPwd(), doSnatchInfo.getIp(), doSnatchInfo.getPort());
-                        if(ObjectUtils.isEmpty(cookie)){
-                            runTaskCache.remove(doSnatchInfo.getTaskId());
-                            return;
-                        }
-                        headers.set("cookie",cookie);
-                        submitEntity = new HttpEntity<>(submitBodyFormat, headers);
-                        submitRes = TemplateUtil.getResponse(restTemplate, submitUrl, HttpMethod.POST, submitEntity);
-                        log.info("账号{}提单请求结果:{}", doSnatchInfo.getAccount(),submitRes);
-                        if (StrUtil.equals(submitRes.getString("code"), "A00006")) {
-                            taskDao.updateTask(taskEntity);
-                            taskDetailDao.updateByTaskId(doSnatchInfo.getTaskId());
-                            SendMessageUtil.send(ChannelEnum.MFU.getDesc(),formatDate,value.getString("summary"),doSnatchInfo.getAccount(),String.join(",",doSnatchInfo.getIdNameMap().values()));
-                            break;
-                        }
+                        SendMessageUtil.send(ChannelEnum.MFU.getDesc(), formatDate, currentSession.getString("summary"), doSnatchInfo.getAccount(), String.join(",", doSnatchInfo.getIdNameMap().values()));
+                        return;
                     }
                 }
-            } catch (Exception e) {
-                runTaskCache.remove(doSnatchInfo.getTaskId());
-                log.info("账号{}doSnatchingJnt出错了:{}",doSnatchInfo.getAccount(),e);
             }
+        } catch (Exception e) {
+            runTaskCache.remove(doSnatchInfo.getTaskId());
+            log.info("账号{}doSnatchingJnt出错了:{}", doSnatchInfo.getAccount(), e);
         }
         runTaskCache.remove(doSnatchInfo.getTaskId());
     }

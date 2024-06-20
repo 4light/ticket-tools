@@ -18,17 +18,25 @@
         </el-select>
       </el-form-item>
       <el-form-item label="场次" v-if="form.channel==2">
-        <el-checkbox-group v-model="session">
-          <el-checkbox label="0">上午</el-checkbox>
-          <el-checkbox label="1">下午</el-checkbox>
+        <el-checkbox-group v-model="checkedSession">
+          <el-checkbox label="上午">上午</el-checkbox>
+          <el-checkbox label="下午">下午</el-checkbox>
         </el-checkbox-group>
       </el-form-item>
       <el-form-item label="场次" v-if="form.channel==3">
         <el-checkbox-group v-model="checkedSession"
                            :min="0"
-                           :max="1"
+                           :max="3"
         >
-          <el-checkbox v-for="(session,index) in chnMuSessions" :label="index" :key="index">{{session}}</el-checkbox>
+          <el-checkbox v-for="(session,index) in chnMuSessions" :label="session" :key="session">{{session}}</el-checkbox>
+        </el-checkbox-group>
+      </el-form-item>
+      <el-form-item label="场次" v-if="form.channel==1">
+        <el-checkbox-group v-model="checkedSession"
+                           :min="0"
+                           :max="4"
+        >
+          <el-checkbox v-for="(session,index) in jntMuSessions" :label="session" :key="session">{{session}}</el-checkbox>
         </el-checkbox-group>
       </el-form-item>
       <el-form-item label="账号">
@@ -172,7 +180,8 @@ export default {
       showUserList: false,
       session: ["0", "1"],
       checkedSession:[],
-      chnMuSessions:["09:00-11:00","11:00-13:30","13:30-16:00"]
+      chnMuSessions:["09:00-11:00","11:00-13:30","13:30-16:00"],
+      jntMuSessions:["08:00-09:00","09:00-10:00","10:00-11:00","11:00-12:00"]
     }
   },
   /* watch: {
@@ -221,25 +230,14 @@ export default {
       this.showUserList = true
     },
     onSubmit() {
-      this.form.session=23
+      this.form.session="23"
       this.form.venue=1
       if (this.form.channel == 0 && this.userList.length > 15) {
         this.$alert("最多只能添加15条，请检查", "添加失败")
         return
       }
-      if (this.form.channel == 2) {
-        if (this.session.length == 1) {
-          this.form.session = parseInt(this.session[0])
-        } else {
-          this.form.session = null
-        }
-      }
-      if(this.form.channel == 3){
-        if(this.checkedSession.length>0){
-          this.form.session=this.checkedSession[0]+1
-        }else{
-          this.form.session=null
-        }
+      if(this.form.channel != 0){
+        this.form.session=this.checkedSession.join(",")
       }
       this.form.userInfoId=this.currentUserInfoId
       this.form.userList = this.userList
@@ -282,10 +280,12 @@ export default {
           this.edit()
           this.changeChannel()
           this.currentUserInfoId=this.form.userInfoId
+          this.checkedSession=this.form.session.split(",")
         }
       })
     },
     changeChannel() {
+      this.checkedSession=[]
       this.currentUserInfoId=null
       let newUserIdList = []
       for (let o of this.userIdList) {

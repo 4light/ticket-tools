@@ -11,7 +11,7 @@ public class DoSnatchInfo {
     private String loginPhone;
     private String authorization;
     private Date useDate;
-    private Integer session;
+    private String session;
     private Map<String,String> IdNameMap;
     private Long userInfoId;
     private String ip;
@@ -69,11 +69,11 @@ public class DoSnatchInfo {
         this.useDate = useDate;
     }
 
-    public Integer getSession() {
+    public String getSession() {
         return session;
     }
 
-    public void setSession(Integer session) {
+    public void setSession(String session) {
         this.session = session;
     }
 

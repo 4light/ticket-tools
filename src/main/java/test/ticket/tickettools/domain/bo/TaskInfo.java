@@ -16,7 +16,7 @@ public class TaskInfo implements Serializable {
     //场馆
     private Integer venue;
     //场次
-    private Integer session;
+    private String session;
     private Date useDate;
     //来源 0:页面 1：插件
     private Integer source;
@@ -65,11 +65,11 @@ public class TaskInfo implements Serializable {
         this.venue = venue;
     }
 
-    public Integer getSession() {
+    public String getSession() {
         return session;
     }
 
-    public void setSession(Integer session) {
+    public void setSession(String session) {
         this.session = session;
     }
 

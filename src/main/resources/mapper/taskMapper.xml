@@ -14,7 +14,7 @@
             <arg column="user_id" javaType="java.lang.Long" jdbcType="BIGINT"/>
             <arg column="channel" javaType="java.lang.Integer" jdbcType="INTEGER"/>
             <arg column="venue" javaType="java.lang.Integer" jdbcType="INTEGER"/>
-            <arg column="session" javaType="java.lang.Integer" jdbcType="INTEGER"/>
+            <arg column="session" javaType="java.lang.String" jdbcType="INTEGER"/>
             <arg column="yn" javaType="java.lang.Boolean" jdbcType="BIT"/>
             <arg column="user_name" javaType="java.lang.String" jdbcType="VARCHAR"/>
             <arg column="account" javaType="java.lang.String" jdbcType="VARCHAR"/>
@@ -37,7 +37,7 @@
         values (#{id,jdbcType=BIGINT}, #{loginPhone,jdbcType=VARCHAR}, #{ip,jdbcType=VARCHAR},
                 #{useDate,jdbcType=DATE}, #{auth,jdbcType=VARCHAR}, #{createDate,jdbcType=TIMESTAMP},
                 #{updateDate,jdbcType=TIMESTAMP}, #{userId,jdbcType=BIGINT}, #{channel,jdbcType=INTEGER},
-                #{venue,jdbcType=INTEGER}, #{session,jdbcType=INTEGER},#{account,jdbcType=VARCHAR},
+                #{venue,jdbcType=INTEGER}, #{session,jdbcType=VARCHAR},#{account,jdbcType=VARCHAR},
                 #{userInfoId,jdbcType=BIGINT},#{pwd,jdbcType=VARCHAR},#{creator,jdbcType=VARCHAR},#{operator,jdbcType=VARCHAR})
     </insert>
     <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
@@ -115,6 +115,9 @@
             </if>
             <if test='userId!=null'>
                 user_id = #{userId},
+            </if>
+            <if test='session!=null'>
+                session = #{session},
             </if>
             <if test='useDate!=null'>
                 use_date = #{useDate},

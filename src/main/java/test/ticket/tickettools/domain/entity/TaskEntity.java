@@ -27,7 +27,7 @@ public class TaskEntity {
     //场馆
     private Integer venue;
     //场次 故宫0：上午 1：下午
-    private Integer session;
+    private String session;
 
     //删除标识
     private Boolean yn;
@@ -48,7 +48,7 @@ public class TaskEntity {
     public TaskEntity() {
     }
 
-    public TaskEntity(Long id, String loginPhone, String ip, Date useDate, String auth, Boolean done, Date createDate, Date updateDate, Long userId, Integer channel, Integer venue, Integer session, Boolean yn, String userName, String account, String nickName, Integer port, Long userInfoId, String pwd, String creator,String operator) {
+    public TaskEntity(Long id, String loginPhone, String ip, Date useDate, String auth, Boolean done, Date createDate, Date updateDate, Long userId, Integer channel, Integer venue, String session, Boolean yn, String userName, String account, String nickName, Integer port, Long userInfoId, String pwd, String creator,String operator) {
         this.id = id;
         this.loginPhone = loginPhone;
         this.ip = ip;
@@ -160,11 +160,11 @@ public class TaskEntity {
         this.venue = venue;
     }
 
-    public Integer getSession() {
+    public String getSession() {
         return session;
     }
 
-    public void setSession(Integer session) {
+    public void setSession(String session) {
         this.session = session;
     }
 

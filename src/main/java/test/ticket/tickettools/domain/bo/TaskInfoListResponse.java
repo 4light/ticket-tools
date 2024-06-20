@@ -24,6 +24,7 @@ public class TaskInfoListResponse implements Serializable {
     private Boolean childrenTicket;
     private Long ticketId;
     private String account;
+    private String accountName;
     private Integer channel;
     private Long orderId;
     private String orderNumber;
@@ -133,6 +134,14 @@ public class TaskInfoListResponse implements Serializable {
 
     public void setAccount(String account) {
         this.account = account;
+    }
+
+    public String getAccountName() {
+        return accountName;
+    }
+
+    public void setAccountName(String accountName) {
+        this.accountName = accountName;
     }
 
     public Integer getChannel() {

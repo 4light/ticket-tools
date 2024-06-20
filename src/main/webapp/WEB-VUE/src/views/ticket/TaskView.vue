@@ -53,7 +53,7 @@
         >
         </el-table-column>
         <el-table-column
-          prop="account"
+          prop="accountName"
           label="账号">
         </el-table-column>
         <el-table-column

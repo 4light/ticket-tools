@@ -131,7 +131,7 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
             Date useDate = doSnatchInfo.getUseDate();
             String formatDate = DateUtils.dateToStr(useDate, "yyyy-MM-dd");
             Map<String, String> idNameMap = doSnatchInfo.getIdNameMap();
-            Integer session = doSnatchInfo.getSession();
+            String session = doSnatchInfo.getSession();
             //获取所有信息
             RestTemplate restTemplate = ObjectUtils.isEmpty(doSnatchInfo.getIp()) ? TemplateUtil.initSSLTemplate() : TemplateUtil.initSSLTemplateWithProxyAuth(doSnatchInfo.getIp(), doSnatchInfo.getPort());
             HttpHeaders headers = new HttpHeaders();
@@ -171,17 +171,15 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
                                 hallScheduleId = scheduleTicketJson.getIntValue("hallScheduleId");
                                 break;
                             } else {
-                                if (session == 1 && StrUtil.equals("09:00-11:00", scheduleName)) {
+                                if(session.split(",").length>2){
                                     hallId = scheduleTicketJson.getIntValue("hallId");
                                     hallScheduleId = scheduleTicketJson.getIntValue("hallScheduleId");
+                                    break;
                                 }
-                                if (session == 2 && StrUtil.equals("11:00-13:30", scheduleName)) {
+                                if (session.contains(scheduleName)) {
                                     hallId = scheduleTicketJson.getIntValue("hallId");
                                     hallScheduleId = scheduleTicketJson.getIntValue("hallScheduleId");
-                                }
-                                if (session == 3 && StrUtil.equals("13:30-16:00", scheduleName)) {
-                                    hallId = scheduleTicketJson.getIntValue("hallId");
-                                    hallScheduleId = scheduleTicketJson.getIntValue("hallScheduleId");
+                                    break;
                                 }
                             }
                         }

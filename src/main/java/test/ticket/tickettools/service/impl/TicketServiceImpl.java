@@ -266,7 +266,8 @@ public class TicketServiceImpl implements TicketService {
                 taskInfoListResponse.setId(taskDetailEntity.getId());
                 taskInfoListResponse.setAuthorization(accountInfoEntity.getHeaders());
                 //使用名字好区分
-                taskInfoListResponse.setAccount(accountInfoEntity ==null?null: accountInfoEntity.getUserName());
+                taskInfoListResponse.setAccountName(accountInfoEntity ==null?null: accountInfoEntity.getUserName());
+                taskInfoListResponse.setAccount(taskEntity.getAccount());
                 taskInfoListResponse.setUseDate(taskEntity.getUseDate());
                 taskInfoListResponse.setUserName(taskDetailEntity.getUserName());
                 taskInfoListResponse.setIDCard(taskDetailEntity.getIDCard());
@@ -404,7 +405,7 @@ public class TicketServiceImpl implements TicketService {
             for (TaskDetailEntity taskDetailEntity : taskDetailEntities) {
                 DoSnatchInfo doSnatchInfo = new DoSnatchInfo();
                 doSnatchInfo.setTaskId(entity.getId());
-                doSnatchInfo.setUserId(Long.valueOf(accountInfoEntity.getChannelUserId()));
+                doSnatchInfo.setUserId(accountInfoEntity.getChannelUserId()==null?null:Long.valueOf(accountInfoEntity.getChannelUserId()));
                 doSnatchInfo.setAccount(entity.getAccount());
                 doSnatchInfo.setAuthorization(accountInfoEntity.getHeaders());
                 doSnatchInfo.setUseDate(entity.getUseDate());
@@ -453,7 +454,7 @@ public class TicketServiceImpl implements TicketService {
             headers.set("cookie", "SL_G_WPT_TO=zh; SL_GWPT_Show_Hide_tmp=1; SL_wptGlobTipTmp=1");
             headers.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
             HttpEntity entity = new HttpEntity<>(headers);
-            long userId = doSnatchInfo.getUserId();
+            Long userId = doSnatchInfo.getUserId();
             String phone = doSnatchInfo.getAccount();
             //获取场次下余票
             /*ResponseEntity getPriceByScheduleRes = restTemplate.exchange(formatGetHallUrl, HttpMethod.GET, entity, String.class);
@@ -596,7 +597,15 @@ public class TicketServiceImpl implements TicketService {
                 for (Map.Entry<String, String> entry : nameIDMap.entrySet()) {
                     HttpEntity addEntity = new HttpEntity<>(buildAddParam(entry.getKey(),entry.getValue(), userId), headers);
                     //restTemplate.exchange(addUrl, HttpMethod.POST, addEntity, String.class);
-                    TemplateUtil.getResponse(restTemplate,addUrl,HttpMethod.POST,addEntity);
+                    JSONObject response = TemplateUtil.getResponse(restTemplate, addUrl, HttpMethod.POST, addEntity);
+                    if(ObjectUtils.isEmpty(response)||response.getIntValue("code")!=200){
+                        if(!msgCache.containsKey(doSnatchInfo.getTaskId())) {
+                            WebSocketServer.sendInfo(socketMsg("抢票异常", "账号:" + doSnatchInfo.getAccount() + "登录态异常", 0), null);
+                        }
+                        msgCache.put(doSnatchInfo.getTaskId(),true);
+                        runTaskCache.remove(taskId);
+                        return;
+                    }
                 }
                 //ResponseEntity<JSONObject> getCheckImagRes = restTemplate.exchange(getCheckImagUrl, HttpMethod.GET, entity, JSONObject.class);
                 //JSONObject getCheckImageJson = getCheckImagRes.getBody();
@@ -869,7 +878,7 @@ public class TicketServiceImpl implements TicketService {
      * @param phone
      * @return
      */
-    public Object buildParam(String captchaToken, Integer childTicketNum, String point, Integer hallScheduleId, Date useDate, Integer priceId, Integer childrenPriceId, Integer discountPriceId, Integer olderTicketPriceId, String phone, Map<String, String> iDMap) {
+    public Object buildParam(String captchaToken, Integer childTicketNum, String point, String hallScheduleId, Date useDate, Integer priceId, Integer childrenPriceId, Integer discountPriceId, Integer olderTicketPriceId, String phone, Map<String, String> iDMap) {
         JSONObject param = new JSONObject();
         param.put("captchaToken", captchaToken);
         param.put("childTicketNum", childTicketNum);
@@ -890,7 +899,7 @@ public class TicketServiceImpl implements TicketService {
             ticketInfo.put("certificateInfo", entry.getKey());
             ticketInfo.put("cinemaFlag", 0);
             ticketInfo.put("hallId", 1);
-            ticketInfo.put("hallScheduleId", hallScheduleId);
+            ticketInfo.put("hallScheduleId", Integer.valueOf(hallScheduleId));
             if (ageForIdCard > 0 && ageForIdCard <= 8) {
                 ticketInfo.put("isChildFreeTicket", 1);
             } else {
