@@ -341,7 +341,7 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
         httpHeaders.set("Referer", "https://servicewechat.com/wx9e2927dd595b0473/73/page-frame.html");
         httpHeaders.set("Accept-Encoding", "gzip, deflate, br");
         httpHeaders.set("Accept-Language", "zh-CN,zh;q=0.9");
-        RestTemplate restTemplate = TemplateUtil.initSSLTemplate();
+        RestTemplate restTemplate = TemplateUtil.initSSLTemplateWithProxyAuth(ip,port);
         HttpEntity httpEntity = new HttpEntity(httpHeaders);
         ResponseEntity getCheckTimeRes = restTemplate.exchange("http://vv.video.qq.com/checktime?otype=json", HttpMethod.GET, httpEntity, String.class);
         return getCheckTimeRes.getBody().toString();
