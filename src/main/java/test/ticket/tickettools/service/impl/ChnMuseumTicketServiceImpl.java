@@ -149,7 +149,6 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
                 runTaskCache.remove(taskId);
                 return;
             }
-            log.info("获取配置信息:{}", getAllConfigRes);
             JSONObject getAllConfigData = getAllConfigRes.getJSONObject("data");
             JSONArray calendarTicketPoolsByDate = getAllConfigData == null ? null : getAllConfigData.getJSONArray("calendarTicketPoolsByDate");
             if (ObjectUtils.isEmpty(calendarTicketPoolsByDate)) {
@@ -157,6 +156,7 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
                 runTaskCache.remove(taskId);
                 return;
             }
+            log.info("获取日期下余票信息:{}", getAllConfigRes);
             for (int i = 0; i < calendarTicketPoolsByDate.size(); i++) {
                 JSONObject calendarTicketInfo = calendarTicketPoolsByDate.getJSONObject(i);
                 if (StrUtil.equals(formatDate, calendarTicketInfo.getString("currentDate"))) {
