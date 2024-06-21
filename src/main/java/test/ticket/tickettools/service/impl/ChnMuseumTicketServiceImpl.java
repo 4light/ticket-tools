@@ -124,7 +124,7 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
         int hallScheduleId = 1;
         int priceId = 8;
         try {
-            Thread.sleep(RandomUtil.randomInt(2000, 6000));
+            Thread.sleep(RandomUtil.randomInt(2000, 4000));
             boolean hasTicket = false;
             String getPriceByScheduleIdUrl = "https://wxmini.chnmuseum.cn/prod-api/pool/ingore/getPriceByScheduleId?hallId=%s&openPerson=1&queryDate=%s&saleMode=1&scheduleId=%s&p=wxmini";
             String getBlockUrl = "https://wxmini.chnmuseum.cn/prod-api/pool/getBlock?nonce=%s&platform=2&docType=1&p=wxmini";
@@ -156,7 +156,6 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
                 runTaskCache.remove(taskId);
                 return;
             }
-            log.info("获取日期下余票信息:{}", getAllConfigRes);
             for (int i = 0; i < calendarTicketPoolsByDate.size(); i++) {
                 JSONObject calendarTicketInfo = calendarTicketPoolsByDate.getJSONObject(i);
                 if (StrUtil.equals(formatDate, calendarTicketInfo.getString("currentDate"))) {
@@ -200,6 +199,7 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
                 }
             }
             if (hasTicket) {
+                log.info("获取到余票");
                 JSONObject checkLeaderInfoParam = getCheckLeaderInfoParam(idNameMap, formatDate, hallId, hallScheduleId, priceId);
                 headers.setContentLength(JSON.toJSONString(checkLeaderInfoParam).getBytes(StandardCharsets.UTF_8).length);
                 HttpEntity checkLeaderInfoEntity = new HttpEntity(checkLeaderInfoParam, headers);
