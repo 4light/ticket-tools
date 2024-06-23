@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-form :inline="true" :model="queryParam" style="margin-top: 2em">
+    <el-form :inline="true" :model="queryParam">
       <el-form-item label="渠道">
         <el-select v-model="queryParam.channel" clearable>
           <el-option
