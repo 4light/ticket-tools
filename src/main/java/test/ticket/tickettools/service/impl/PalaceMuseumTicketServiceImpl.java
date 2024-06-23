@@ -78,7 +78,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
                 initTaskCache.remove(taskId);
                 return;
             }
-            ProxyInfo proxy = ProxyUtil.getProxy();
+            ProxyInfo proxy = ProxyUtil.getProxyList(1).get(0);
             unDoneTask.setIp(proxy.getIp());
             unDoneTask.setPort(proxy.getPort());
             taskDao.updateTask(unDoneTask);
@@ -93,7 +93,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
             headers.setContentType(MediaType.APPLICATION_JSON);
             Integer integer = taskDao.updateTask(unDoneTask);
             if (integer > 0) {
-                RestTemplate restTemplate = TemplateUtil.initSSLTemplateWithProxy(proxy.getIp(), proxy.getPort());
+                RestTemplate restTemplate = TemplateUtil.initSSLTemplateWithProxyAuth(proxy.getIp(), proxy.getPort());
                 HttpEntity getUsersEntity = new HttpEntity<>(headers);
                 JSONObject getUsersRes = TemplateUtil.getResponse(restTemplate, getUsersUrl, HttpMethod.GET, getUsersEntity);
                 if (ObjectUtils.isEmpty(getUsersRes) && StrUtil.equals("success", getUsersRes.getString("message"))) {
@@ -109,7 +109,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
                     for (int i = 0; i < userList.size(); i++) {
                         JSONObject user = userList.getJSONObject(i);
                         String id = user.getString("id");
-                        Thread.sleep(RandomUtil.randomInt(2000, 5000));
+                        Thread.sleep(RandomUtil.randomInt(3000, 5000));
                         JSONObject response = TemplateUtil.getResponse(restTemplate, delUserUrl + id, HttpMethod.DELETE, delUserEntity);
                         log.info("删除成员结果:{}", response);
                         if (ObjectUtils.isEmpty(response) && StrUtil.equals("success", response.getString("message"))) {
@@ -124,7 +124,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
                     String bodyFormat = MessageFormat.format("id=&name={0}&idCard={1}&type=0&cipherText=0", URLEncoder.encode(taskDetailEntity.getUserName(), "utf-8"), taskDetailEntity.getIDCard());
                     headers.set("Content-Length", String.valueOf(customURLEncode(bodyFormat, "utf-8").getBytes(StandardCharsets.UTF_8).length));
                     HttpEntity addUserEntity = new HttpEntity<>(bodyFormat, headers);
-                    Thread.sleep(RandomUtil.randomInt(2000, 4000));
+                    Thread.sleep(RandomUtil.randomInt(4000, 5000));
                     JSONObject response = TemplateUtil.getResponse(restTemplate, addUserUrl, HttpMethod.POST, addUserEntity);
                     log.info("添加成员结果:{}", response);
                     if (ObjectUtils.isEmpty(response) && StrUtil.equals("success", response.getString("message"))) {
@@ -203,7 +203,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
         String createUrl = "https://lotswap.dpm.org.cn/dubboApi/trade-core/tradeCreateService/create?sign=%s&timestamp=%s";
         try {
             JSONObject currentParkFsyyDetail = new JSONObject();
-            RestTemplate restTemplate = ObjectUtils.isEmpty(doSnatchInfo.getIp()) ? TemplateUtil.initSSLTemplate() : TemplateUtil.initSSLTemplateWithProxy(doSnatchInfo.getIp(), doSnatchInfo.getPort());
+            RestTemplate restTemplate = ObjectUtils.isEmpty(doSnatchInfo.getIp()) ? TemplateUtil.initSSLTemplate() : TemplateUtil.initSSLTemplateWithProxyAuth(doSnatchInfo.getIp(), doSnatchInfo.getPort());
             //RestTemplate restTemplate=TemplateUtil.initSSLTemplate();
             HttpHeaders headers = new HttpHeaders();
             String headerStr = doSnatchInfo.getHeaders();
@@ -224,7 +224,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
             int monthValue = localDate.getMonthValue();
             String month = monthValue > 10 ? String.valueOf(monthValue) : "0" + monthValue;
             String formatQueryImperialPalaceTicketsUrl = String.format(queryImperialPalaceTicketsUrl, now.getYear(), month);
-            Thread.sleep(RandomUtil.randomInt(2000, 5000));
+            Thread.sleep(RandomUtil.randomInt(4000, 7000));
             JSONObject responseJson = TemplateUtil.getResponse(restTemplate, formatQueryImperialPalaceTicketsUrl, HttpMethod.GET, entity);
             if (ObjectUtils.isEmpty(responseJson) || responseJson.getIntValue("status") != 200) {
                 log.info("responseJson:{}", responseJson);
@@ -354,7 +354,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
             JSONObject checkUserBody = buildCheckUserParam(doSnatchInfo.getIdNameMap(), formatDate, typeTicketMap);
             log.info("校验身份信息入参：{}", JSON.toJSONString(checkUserBody));
             HttpEntity checkUserEntity = new HttpEntity<>(checkUserBody, headers);
-            Thread.sleep(RandomUtil.randomInt(3000, 5000));
+            Thread.sleep(RandomUtil.randomInt(4000, 5000));
             JSONObject checkUserBodyJson = TemplateUtil.getResponse(restTemplate, checkUserUrl, HttpMethod.POST, checkUserEntity);
             JSONObject checkUserData = checkUserBodyJson.getJSONObject("data");
             log.info("身份验证信息:{}", checkUserData);

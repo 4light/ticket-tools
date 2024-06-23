@@ -56,13 +56,15 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
         TaskEntity taskEntity = new TaskEntity();
         taskEntity.setChannel(ChannelEnum.CHNMU.getCode());
         List<TaskEntity> unDoneTasks = taskDao.getUnDoneTasks(taskEntity);
-        for (TaskEntity unDoneTask : unDoneTasks) {
+        List<ProxyInfo> proxys = ProxyUtil.getProxy(unDoneTasks.size());
+        for (int i = 0; i < unDoneTasks.size(); i++) {
+            TaskEntity unDoneTask = unDoneTasks.get(i);
+            ProxyInfo proxyInfo = proxys.get(i);
             if (!ObjectUtils.isEmpty(unDoneTask.getIp()) && !ObjectUtils.isEmpty(unDoneTask.getPort())) {
                 return;
             }
-            ProxyInfo proxy = ProxyUtil.getProxy();
-            unDoneTask.setIp(proxy.getIp());
-            unDoneTask.setPort(proxy.getPort());
+            unDoneTask.setIp(proxyInfo.getIp());
+            unDoneTask.setPort(proxyInfo.getPort());
             taskDao.updateTask(unDoneTask);
         }
     }
@@ -124,7 +126,7 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
         int hallScheduleId = 1;
         int priceId = 8;
         try {
-            Thread.sleep(RandomUtil.randomInt(2000, 4000));
+            Thread.sleep(RandomUtil.randomInt(5000, 7000));
             boolean hasTicket = false;
             String getPriceByScheduleIdUrl = "https://wxmini.chnmuseum.cn/prod-api/pool/ingore/getPriceByScheduleId?hallId=%s&openPerson=1&queryDate=%s&saleMode=1&scheduleId=%s&p=wxmini";
             String getBlockUrl = "https://wxmini.chnmuseum.cn/prod-api/pool/getBlock?nonce=%s&platform=2&docType=1&p=wxmini";
@@ -198,6 +200,7 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
                     }
                 }
             }
+            log.info("国博获取到余票：{}",hasTicket);
             if (hasTicket) {
                 log.info("获取到余票");
                 JSONObject checkLeaderInfoParam = getCheckLeaderInfoParam(idNameMap, formatDate, hallId, hallScheduleId, priceId);
@@ -248,7 +251,6 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
                     return;
                 }
                 log.info("获取图片坐标：{}", getPointRes);
-
                 JSONObject getPointData = getPointRes.getJSONObject("data");
                 String pointStr = getPointData.getString("data");
                 String[] split = pointStr.split(",");
@@ -261,6 +263,7 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
                 checkLeaderInfoParam.put("scanToken", null);
                 headers.setContentLength(JSON.toJSONString(checkLeaderInfoParam).getBytes(StandardCharsets.UTF_8).length);
                 headers.set("Host-Ip", EncDecUtil.doAES(doSnatchInfo.getIp(), "AyrKJRXPO3nR5Abc"));
+                log.info("header:{}", headers);
                 HttpEntity placeOrderEntity = new HttpEntity(checkLeaderInfoParam, headers);
                 JSONObject placeOrderRes = TemplateUtil.getResponse(restTemplate, placeOrderUrl, HttpMethod.POST, placeOrderEntity);
                 if (ObjectUtils.isEmpty(placeOrderRes) || !StrUtil.equals("操作成功", getBlockRes.getString("msg"))) {

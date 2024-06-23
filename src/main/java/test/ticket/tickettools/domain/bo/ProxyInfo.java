@@ -6,6 +6,8 @@ public class ProxyInfo{
     private String ip;
     private Integer port;
 
+
+
     public ProxyInfo(String ip, Integer port) {
         this.ip = ip;
         this.port = port;

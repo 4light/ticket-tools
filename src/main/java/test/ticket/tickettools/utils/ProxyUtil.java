@@ -22,7 +22,7 @@ public class ProxyUtil {
     //获取白名单列表
     private static String getWriteListUrl = "https://wapi.http.linkudp.com/index/index/white_list?neek=2430132&appkey=e7f7cd7830d1aff6f58ef5864c1e4e88";
 
-    public static ProxyInfo getProxy() {
+    public static List<ProxyInfo> getProxy(Integer num) {
         try {
             //循环10次
             for (int i = 0; i < 10; i++) {
@@ -30,7 +30,7 @@ public class ProxyUtil {
                 RestTemplate restTemplate = TemplateUtil.initSSLTemplate();
                 HttpHeaders proxyHeaders = new HttpHeaders();
                 proxyHeaders.setContentType(MediaType.APPLICATION_JSON);
-                JSONObject response = TemplateUtil.getResponse(restTemplate, "http://webapi.http.zhimacangku.com/getip?neek=d1fa042275328b9a&num=1&type=2&time=2&pro=0&city=0&yys=0&port=11&pack=0&ts=1&ys=0&cs=1&lb=1&sb=&pb=45&mr=3&regions=110000,130000,120000,210000,370000,140000,410000&username=chukou01&spec=1", HttpMethod.GET, new HttpEntity<>(proxyHeaders));
+                JSONObject response = TemplateUtil.getResponse(restTemplate, "http://webapi.http.zhimacangku.com/getip?neek=d1fa042275328b9a&num="+num+"&type=2&time=2&pro=0&city=0&yys=0&port=11&pack=0&ts=1&ys=0&cs=1&lb=1&sb=&pb=45&mr=3&regions=110000,130000,120000,210000,370000,140000,410000&username=chukou01&spec=1", HttpMethod.GET, new HttpEntity<>(proxyHeaders));
                 if (response.getIntValue("code") != 0) {
                     System.out.println("获取代理异常:{}" + JSON.toJSONString(response));
                     //添加白名单
@@ -77,7 +77,12 @@ public class ProxyUtil {
                         System.out.println("代理数据异常:{}" + JSON.toJSONString(data));
                         continue;
                     }
-                    return new ProxyInfo(data.getJSONObject(0).getString("ip"),data.getJSONObject(0).getIntValue("port"));
+                    List<ProxyInfo> proxyInfos=new ArrayList<>();
+                    for (int j = 0; j < data.size(); j++) {
+                        ProxyInfo proxyInfo=new ProxyInfo(data.getJSONObject(j).getString("ip"),data.getJSONObject(j).getIntValue("port"));
+                        proxyInfos.add(proxyInfo);
+                    }
+                    return proxyInfos;
                 }
             }
         } catch (Exception e) {

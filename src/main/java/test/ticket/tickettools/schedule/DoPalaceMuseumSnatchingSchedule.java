@@ -7,10 +7,13 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.ObjectUtils;
 import test.ticket.tickettools.domain.bo.DoSnatchInfo;
+import test.ticket.tickettools.domain.bo.ProxyInfo;
 import test.ticket.tickettools.domain.entity.TaskEntity;
 import test.ticket.tickettools.service.DoSnatchTicketService;
+import test.ticket.tickettools.utils.ProxyUtil;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -22,7 +25,7 @@ public class DoPalaceMuseumSnatchingSchedule {
     @Resource
     DoSnatchTicketService palaceMuseumTicketServiceImpl;
 
-    @Scheduled(cron = "0/8 58 19 * * ?")
+    @Scheduled(cron = "0/1 59 19 * * ?")
     public void initData() {
         List<TaskEntity> allUndoneTask = palaceMuseumTicketServiceImpl.getAllUndoneTask();
         if (ObjectUtils.isEmpty(allUndoneTask)) {
@@ -42,7 +45,7 @@ public class DoPalaceMuseumSnatchingSchedule {
         }palaceMuseumTicketServiceImpl.initData(null);
     }
 
-    @Scheduled(cron = "0/1 02-10 20 * * ?")
+    @Scheduled(cron = "0/1 01-10 20 * * ?")
     public void doPalaceMuseumTicketSnatch() {
         List<DoSnatchInfo> doSnatchInfos = palaceMuseumTicketServiceImpl.getDoSnatchInfos();
         if (ObjectUtils.isEmpty(doSnatchInfos)) {
