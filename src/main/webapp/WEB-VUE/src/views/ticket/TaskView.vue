@@ -41,7 +41,7 @@
         :data="taskData"
         ref="multipleTable"
         border
-        height="80vh"
+        height="77vh"
         style="width: 100%; margin-top: 20px"
         :span-method="objectSpanMethod"
         @selection-change="handleSelectionChange"
