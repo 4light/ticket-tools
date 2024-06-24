@@ -21,4 +21,5 @@ public interface TaskDetailDao {
     Integer initTaskDetail(@Param("list")List<TaskDetailEntity> taskDetailIds);
     Integer updateByTaskId(Long id);
     Integer updateEntityByTaskId(TaskDetailEntity taskDetailEntity);
+    Integer deleteByTaskIdAndCardId(TaskDetailEntity taskDetailEntity);
 }

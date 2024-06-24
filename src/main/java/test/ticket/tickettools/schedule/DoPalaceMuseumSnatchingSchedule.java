@@ -13,6 +13,7 @@ import test.ticket.tickettools.service.DoSnatchTicketService;
 import test.ticket.tickettools.utils.ProxyUtil;
 
 import javax.annotation.Resource;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -42,8 +43,9 @@ public class DoPalaceMuseumSnatchingSchedule {
         for (TaskEntity taskEntity : allUndoneTask) {
             CompletableFuture.runAsync(() ->palaceMuseumTicketServiceImpl.initData(taskEntity), pool);
 
-        }palaceMuseumTicketServiceImpl.initData(null);
+        }
     }
+
 
     @Scheduled(cron = "0/1 01-10 20 * * ?")
     public void doPalaceMuseumTicketSnatch() {

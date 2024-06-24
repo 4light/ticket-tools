@@ -69,7 +69,7 @@ public class WebSocketServer {
             //从set中删除
             subOnlineCount();
         }
-        log.info("用户退出:" + userId + ",当前在线人数为:" + getOnlineCount());
+        //log.info("用户退出:" + userId + ",当前在线人数为:" + getOnlineCount());
     }
 
     /**
@@ -130,7 +130,7 @@ public class WebSocketServer {
     /**
      * 广播通知所有用户
      **/
-    public static void sendInfo(String message, String userId) {
+    public static void sendInfo(String message, String user) {
         /*log.info("发送消息到:" + userId + "，报文:" + message);
         if (StringUtils.isNotBlank(userId) && webSocketMap.containsKey(userId)) {
             webSocketMap.get(userId).sendMessage(message);
@@ -138,7 +138,9 @@ public class WebSocketServer {
             log.error("用户" + userId + ",不在线！");
         }*/
         for (Map.Entry<String, WebSocketServer> stringWebSocketServerEntry : webSocketMap.entrySet()) {
-            stringWebSocketServerEntry.getValue().sendMessage(message);
+            if(stringWebSocketServerEntry.getKey().contains(user)) {
+                stringWebSocketServerEntry.getValue().sendMessage(message);
+            }
         }
     }
 

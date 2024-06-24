@@ -7,6 +7,7 @@ import java.util.Map;
 public class DoSnatchInfo {
     private Long taskId;
     private List<Long> taskDetailIds;
+    private String creator;
     private Long userId;
     private String loginPhone;
     private String authorization;
@@ -35,6 +36,14 @@ public class DoSnatchInfo {
 
     public void setTaskDetailIds(List<Long> taskDetailIds) {
         this.taskDetailIds = taskDetailIds;
+    }
+
+    public String getCreator() {
+        return creator;
+    }
+
+    public void setCreator(String creator) {
+        this.creator = creator;
     }
 
     public Long getUserId() {

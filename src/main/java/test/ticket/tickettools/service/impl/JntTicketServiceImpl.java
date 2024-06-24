@@ -311,6 +311,7 @@ public class JntTicketServiceImpl implements DoSnatchTicketService {
         List<DoSnatchInfo> doSnatchInfoList = new ArrayList<>();
         for (TaskEntity unDoneTask : unDoneTasks) {
             DoSnatchInfo doSnatchInfo = new DoSnatchInfo();
+            doSnatchInfo.setCreator(unDoneTask.getCreator());
             doSnatchInfo.setTaskId(unDoneTask.getId());
             doSnatchInfo.setUserInfoId(unDoneTask.getUserInfoId());
             doSnatchInfo.setAccount(unDoneTask.getAccount());

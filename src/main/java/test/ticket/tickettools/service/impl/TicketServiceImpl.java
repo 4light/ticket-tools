@@ -368,6 +368,7 @@ public class TicketServiceImpl implements TicketService {
             Map<String, String> idNameMap = taskDetailEntities.stream()
                     .collect(Collectors.toMap(TaskDetailEntity::getIDCard, TaskDetailEntity::getUserName));
             doSnatchInfo.setTaskId(id);
+            doSnatchInfo.setCreator(entity.getCreator());
             doSnatchInfo.setUserId(Long.valueOf(accountInfoEntity.getChannelUserId()));
             doSnatchInfo.setAccount(entity.getAccount());
             doSnatchInfo.setAuthorization(accountInfoEntity.getHeaders());
@@ -404,6 +405,7 @@ public class TicketServiceImpl implements TicketService {
             }
             for (TaskDetailEntity taskDetailEntity : taskDetailEntities) {
                 DoSnatchInfo doSnatchInfo = new DoSnatchInfo();
+                doSnatchInfo.setCreator(entity.getCreator());
                 doSnatchInfo.setTaskId(entity.getId());
                 doSnatchInfo.setUserId(accountInfoEntity.getChannelUserId()==null?null:Long.valueOf(accountInfoEntity.getChannelUserId()));
                 doSnatchInfo.setAccount(entity.getAccount());
@@ -437,10 +439,10 @@ public class TicketServiceImpl implements TicketService {
     @Override
     public void snatchingTicket(DoSnatchInfo doSnatchInfo) {
         Long taskId = doSnatchInfo.getTaskId();
-        if(runTaskCache.containsKey(taskId)){
+        /*if(runTaskCache.containsKey(taskId)){
             return;
         }
-        runTaskCache.put(taskId,true);
+        runTaskCache.put(taskId,true);*/
         String getHallUrl = "https://pcticket.cstm.org.cn/prod-api/pool/ingore/getHall?saleMode=1&openPerson=1&queryDate=%s";
         Map<String, String> nameIDMap = doSnatchInfo.getIdNameMap();
         String formatGetHallUrl = String.format(getHallUrl, DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"));
@@ -462,7 +464,7 @@ public class TicketServiceImpl implements TicketService {
             JSONObject getPriceByScheduleJson = TemplateUtil.getResponse(restTemplate,formatGetHallUrl,HttpMethod.GET,entity);
             if(!ObjectUtils.isEmpty(getPriceByScheduleJson)&&getPriceByScheduleJson.getIntValue("code")==401){
                 if(!msgCache.containsKey(doSnatchInfo.getTaskId())) {
-                    WebSocketServer.sendInfo(socketMsg("抢票异常", "账号:" + doSnatchInfo.getAccount() + "登录态异常", 0), null);
+                    WebSocketServer.sendInfo(socketMsg("抢票异常", "账号:" + doSnatchInfo.getAccount() + "登录态异常", 0), doSnatchInfo.getCreator());
                 }
                 msgCache.put(doSnatchInfo.getTaskId(),true);
             }
@@ -473,10 +475,12 @@ public class TicketServiceImpl implements TicketService {
                 runTaskCache.remove(taskId);
                 return;
             }
+            int ticketPoolNum=0;
             JSONArray priceTicketPoolVOS = new JSONArray();
             for (int i = 0; i < getPriceByScheduleData.size(); i++) {
                 JSONObject priceByScheduleJson = getPriceByScheduleData.getJSONObject(i);
                 if (priceByScheduleJson.getIntValue("hallId") == 1) {
+                    ticketPoolNum=priceByScheduleJson.getInteger("ticketPool");
                     JSONArray scheduleTicketPoolVOS = priceByScheduleJson.getJSONArray("scheduleTicketPoolVOS");
                     for (int j = 0; j < scheduleTicketPoolVOS.size(); j++) {
                         priceTicketPoolVOS = scheduleTicketPoolVOS.getJSONObject(j).getJSONArray("priceTicketPoolVOS");
@@ -553,7 +557,7 @@ public class TicketServiceImpl implements TicketService {
                     olderPriceId = obj.getInteger("priceId");
                 }
             }
-            for (Map.Entry<String, Integer> priceNameCountEntry : priceNameCountMap.entrySet()) {
+            /*for (Map.Entry<String, Integer> priceNameCountEntry : priceNameCountMap.entrySet()) {
                 if ("normalTicket".equals(priceNameCountEntry.getKey())) {
                     flag = flag && ticketPool >= priceNameCountEntry.getValue();
                     if (flag) {
@@ -590,9 +594,10 @@ public class TicketServiceImpl implements TicketService {
                         }
                     }
                 }
-            }
+            }*/
             //余票充足
-            if (flag) {
+            if (ticketPoolNum>=doSnatchInfo.getIdNameMap().size()) {
+                log.info("获取到余票数据:{},抢票人数量:{}",ticketPoolNum,doSnatchInfo.getIdNameMap().size());
                 //几个人添加几次
                 for (Map.Entry<String, String> entry : nameIDMap.entrySet()) {
                     HttpEntity addEntity = new HttpEntity<>(buildAddParam(entry.getKey(),entry.getValue(), userId), headers);
@@ -600,7 +605,8 @@ public class TicketServiceImpl implements TicketService {
                     JSONObject response = TemplateUtil.getResponse(restTemplate, addUrl, HttpMethod.POST, addEntity);
                     if(ObjectUtils.isEmpty(response)||response.getIntValue("code")!=200){
                         if(!msgCache.containsKey(doSnatchInfo.getTaskId())) {
-                            WebSocketServer.sendInfo(socketMsg("抢票异常", "账号:" + doSnatchInfo.getAccount() + "登录态异常", 0), null);
+                            WebSocketServer.sendInfo(socketMsg("抢票异常", "账号:" + doSnatchInfo.getAccount() + "登录态异常", 0), doSnatchInfo.getCreator());
+                            SendMessageUtil.send(ChannelEnum.CSTM.getDesc(),DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"),"账号：",doSnatchInfo.getAccount(),"登录态异常");
                         }
                         msgCache.put(doSnatchInfo.getTaskId(),true);
                         runTaskCache.remove(taskId);
@@ -634,9 +640,10 @@ public class TicketServiceImpl implements TicketService {
                     //String body = exchange.getBody();
                     //JSONObject bodyJson = JSON.parseObject(body);
                     JSONObject bodyJson = TemplateUtil.getResponse(restTemplate,shoppingCartUrl,HttpMethod.POST,shoppingCartUrlEntity);
+                    log.info("提交订单结果：{}", bodyJson);
                     if (!ObjectUtils.isEmpty(bodyJson) && (bodyJson.getIntValue("code") == 550 || bodyJson.getIntValue("code") == 503)) {
                         if(!msgCache.containsKey(doSnatchInfo.getTaskId())) {
-                            WebSocketServer.sendInfo(socketMsg("抢票异常", "账号:"+doSnatchInfo.getAccount()+","+bodyJson.getString("msg"), 0), null);
+                            WebSocketServer.sendInfo(socketMsg("抢票异常", "账号:"+doSnatchInfo.getAccount()+","+bodyJson.getString("msg"), 0), doSnatchInfo.getCreator());
                         }
                         msgCache.put(doSnatchInfo.getTaskId(),true);
                         runTaskCache.remove(taskId);
@@ -706,8 +713,8 @@ public class TicketServiceImpl implements TicketService {
                             }
                         }
                         taskDetailDao.updateTaskDetailBath(taskDetailEntities);
-                        //SendMessageUtil.send(ChannelEnum.CSTM.getDesc(),DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"),"主场馆",doSnatchInfo.getAccount(),String.join(",",doSnatchInfo.getIdNameMap().values()));
-                        WebSocketServer.sendInfo(socketMsg("抢票成功", String.valueOf(nameIDMap.values()), 5000), null);
+                        SendMessageUtil.send(ChannelEnum.CSTM.getDesc(),DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"),"主场馆",doSnatchInfo.getAccount(),String.join(",",doSnatchInfo.getIdNameMap().values()));
+                        WebSocketServer.sendInfo(socketMsg("抢票成功", String.valueOf(nameIDMap.values()), 5000), doSnatchInfo.getCreator());
                     }
                     /*if (!ObjectUtils.isEmpty(bodyJson) && bodyJson.getIntValue("code") == 550) {
                         if(bodyJson.getString("msg").contains("已有订单")){

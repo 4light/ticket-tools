@@ -1,5 +1,7 @@
 package test.ticket.tickettools.service.impl;
 
+import cn.hutool.core.date.DateUnit;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
@@ -24,6 +26,8 @@ import test.ticket.tickettools.utils.*;
 
 import javax.annotation.Resource;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -56,19 +60,36 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
         TaskEntity taskEntity = new TaskEntity();
         taskEntity.setChannel(ChannelEnum.CHNMU.getCode());
         List<TaskEntity> unDoneTasks = taskDao.getUnDoneTasks(taskEntity);
-        List<ProxyInfo> proxys = ProxyUtil.getProxy(unDoneTasks.size());
+        List<ProxyInfo> proxys = ProxyUtil.getProxyList(unDoneTasks.size());
         for (int i = 0; i < unDoneTasks.size(); i++) {
             TaskEntity unDoneTask = unDoneTasks.get(i);
             ProxyInfo proxyInfo = proxys.get(i);
-            if (!ObjectUtils.isEmpty(unDoneTask.getIp()) && !ObjectUtils.isEmpty(unDoneTask.getPort())) {
-                return;
+            if(!ObjectUtils.isEmpty(unDoneTask.getUpdateDate())) {
+                if (DateUtil.between(unDoneTask.getUpdateDate(), new Date(), DateUnit.MINUTE)>5) {
+                    if (!ObjectUtils.isEmpty(unDoneTask.getIp()) && !ObjectUtils.isEmpty(unDoneTask.getPort())) {
+                        return;
+                    }
+                    unDoneTask.setIp(proxyInfo.getIp());
+                    unDoneTask.setPort(proxyInfo.getPort());
+                    unDoneTask.setUpdateDate(new Date());
+                    taskDao.updateTask(unDoneTask);
+                }
+            }else{
+                unDoneTask.setIp(proxyInfo.getIp());
+                unDoneTask.setPort(proxyInfo.getPort());
+                unDoneTask.setUpdateDate(new Date());
+                taskDao.updateTask(unDoneTask);
             }
-            unDoneTask.setIp(proxyInfo.getIp());
-            unDoneTask.setPort(proxyInfo.getPort());
-            taskDao.updateTask(unDoneTask);
         }
     }
 
+    public static void main(String[] args) {
+        LocalDateTime localDate = LocalDateTime.now().plusDays(1L);
+
+        System.out.println(localDate);
+        long l = DateUtil.between(new Date(), DateUtils.localDateToDate(localDate), DateUnit.MINUTE);
+        System.out.println(l);
+    }
     @Override
     public List<TaskEntity> getAllUndoneTask() {
         return null;
@@ -91,6 +112,7 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
                 continue;
             }
             DoSnatchInfo doSnatchInfo = new DoSnatchInfo();
+            doSnatchInfo.setCreator(unDoneTask.getCreator());
             doSnatchInfo.setTaskId(unDoneTask.getId());
             doSnatchInfo.setUserInfoId(unDoneTask.getUserInfoId());
             AccountInfoEntity accountInfoEntity = accountInfoDao.selectById(unDoneTask.getUserInfoId());
@@ -216,7 +238,6 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
                 headers.remove("Content-Length");
                 String checkTime = getCheckTime(headerJson.getString("User-Agent"), doSnatchInfo.getIp(), doSnatchInfo.getPort());
                 log.info("getCheckTime:{}", checkTime);
-                String ip = checkTime.split("\"")[9];
                 String data = doSnatchInfo.getChannelUserId() + ":" + checkTime.substring(26, 36) + "000" + ":" + DateUtils.dateToStr(doSnatchInfo.getUseDate(), "yyyy/MM/dd") + ":" + hallId + ":" + hallScheduleId + ":2";
                 String nonce = doAES(data, "AyrKJRXPO3nR5Abc");
                 String formatUrl = String.format(getBlockUrl, nonce);

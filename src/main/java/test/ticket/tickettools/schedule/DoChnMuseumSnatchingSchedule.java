@@ -12,6 +12,7 @@ import test.ticket.tickettools.service.DoSnatchTicketService;
 import test.ticket.tickettools.utils.ProxyUtil;
 
 import javax.annotation.Resource;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -24,13 +25,16 @@ public class DoChnMuseumSnatchingSchedule {
     @Resource
     DoSnatchTicketService chnMuseumTicketServiceImpl;
 
-    //@Scheduled(cron = "0/2 04 19 * * ?")
+    @Scheduled(cron = "0 0/4 16-17 * * ?")
     public void initData() {
+        LocalDateTime localDateTime=LocalDateTime.now();
+        if(localDateTime.getHour()>17&&localDateTime.getMinute()>30){
+            return;
+        }
         chnMuseumTicketServiceImpl.initData(null);
     }
 
     @Scheduled(cron = "0/1 01-30 17 * * ?")
-    //@Scheduled(cron = "0/2 * 8-22 * * ?")
     public void doPalaceMuseumTicketSnatch() {
         List<DoSnatchInfo> doSnatchInfos = chnMuseumTicketServiceImpl.getDoSnatchInfos();
         if (ObjectUtils.isEmpty(doSnatchInfos)) {

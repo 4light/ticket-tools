@@ -33,12 +33,12 @@
     <insert id="insertBatch" parameterType="java.util.List">
         insert into task_detail (task_id, user_name,
         ID_card, user_phone, age,
-        create_date, update_date)
+        create_date, update_date,payment)
         VALUES
         <foreach collection="list" item="item" index="index" separator=",">
             (#{item.taskId,jdbcType=BIGINT}, #{item.userName,jdbcType=VARCHAR},
             #{item.IDCard,jdbcType=VARCHAR}, #{item.userPhone,jdbcType=VARCHAR}, #{item.age,jdbcType=INTEGER},
-            #{item.createDate,jdbcType=TIMESTAMP}, #{item.updateDate,jdbcType=TIMESTAMP}
+            #{item.createDate,jdbcType=TIMESTAMP}, #{item.updateDate,jdbcType=TIMESTAMP},#{payment,jdbcType=BIT}
             )
         </foreach>
     </insert>
@@ -176,5 +176,9 @@
     <update id="deleteByTaskId" parameterType="java.lang.Long">
         update task_detail set yn=1
         where task_id = #{taskId,jdbcType=BIGINT}
+    </update>
+    <update id="deleteByTaskIdAndCardId" parameterType="test.ticket.tickettools.domain.entity.TaskDetailEntity">
+        update task_detail set yn=1
+        where ID_card = #{IDCard} and task_id = #{taskId,jdbcType=BIGINT}
     </update>
 </mapper>
