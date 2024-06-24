@@ -271,7 +271,7 @@ export default {
   },
   methods: {
     initWebSocket() {
-      let userName=localStorage.getItem("userName")+Math.ceil(Math.random() * 20)
+      let userName=localStorage.getItem("user")+Math.ceil(Math.random() * 20)
       let ws = `ws://42.51.40.37/ticket/api/pushMessage/${userName}`
       //let ws = `ws://localhost:8082/ticket/api/pushMessage/${userName}`
       this.websock = new WebSocket(ws)

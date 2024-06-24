@@ -38,6 +38,7 @@ export default {
       }).then(res=>{
         store.commit("setToken",res.headers.authorization)
         localStorage.setItem("authorization",res.headers.authorization)
+        localStorage.setItem("user",res.data.userName)
         store.commit("setUserInfo",res.data)
         this.$router.push("/task/list")
         this.$notify.success({
