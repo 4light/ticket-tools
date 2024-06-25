@@ -38,7 +38,7 @@
         <foreach collection="list" item="item" index="index" separator=",">
             (#{item.taskId,jdbcType=BIGINT}, #{item.userName,jdbcType=VARCHAR},
             #{item.IDCard,jdbcType=VARCHAR}, #{item.userPhone,jdbcType=VARCHAR}, #{item.age,jdbcType=INTEGER},
-            #{item.createDate,jdbcType=TIMESTAMP}, #{item.updateDate,jdbcType=TIMESTAMP},#{payment,jdbcType=BIT}
+            #{item.createDate,jdbcType=TIMESTAMP}, #{item.updateDate,jdbcType=TIMESTAMP},#{item.payment,jdbcType=BIT}
             )
         </foreach>
     </insert>
