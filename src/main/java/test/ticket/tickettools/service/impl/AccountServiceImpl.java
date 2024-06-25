@@ -104,6 +104,7 @@ public class AccountServiceImpl implements AccountService {
             }
             log.info("获取到的用户信息:{}", response);
             data = response.getJSONObject("data");
+            proxyHeadersJson.put("mpOpenId",data.getString("openId"));
             accountInfoEntity.setChannel(ChannelEnum.LOTS.getCode());
             String account = data.getString("mobile") == null ? data.getString("email") : data.getString("mobile");
             accountInfoEntity.setAccount(account);

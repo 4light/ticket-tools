@@ -209,6 +209,11 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
             HttpHeaders headers = new HttpHeaders();
             String headerStr = doSnatchInfo.getHeaders();
             JSONObject headerJson = JSON.parseObject(headerStr);
+            headerJson.remove("Cookie");
+            headerJson.remove("Authorization");
+            headerJson.remove("Host-Ip");
+            headerJson.remove("If-Modified-Since");
+            headerJson.remove("Postman-Token");
             LocalDate now = LocalDate.now();
             for (Map.Entry<String, Object> headerEntry : headerJson.entrySet()) {
                 headers.set(headerEntry.getKey(), headerEntry.getValue().toString());
@@ -383,9 +388,15 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
             String signStr = "VDsdxfwljhy#@!94857access-token=" + accessToken + ts + "AAXY";
             String sign = DigestUtils.md5Hex(signStr);
             JSONObject jsonObject = buildCreateParam(mpOpenId, checkUserBody, doSnatchInfo, modelCodeTicketInfoMap);
-            headers.setContentLength(JSON.toJSONString(jsonObject).getBytes(StandardCharsets.UTF_8).length);
+            headers.setContentLength(Integer.valueOf(JSON.toJSONString(jsonObject).getBytes(StandardCharsets.UTF_8).length));
+            headerJson.remove("Cookie");
+            headerJson.remove("Authorization");
+            headerJson.remove("Host-Ip");
+            headerJson.remove("If-Modified-Since");
+            headerJson.remove("Postman-Token");
             HttpEntity addTicketQueryEntity = new HttpEntity<>(jsonObject, headers);
             String formatCreateUrl = String.format(createUrl, sign, timestamp);
+            log.info("header:{}",headers);
             Thread.sleep(RandomUtil.randomInt(3000, 5000));
             log.info("提交订单入参：{}", JSON.toJSONString(jsonObject));
             JSONObject createRes = TemplateUtil.getResponse(restTemplate, formatCreateUrl, HttpMethod.POST, addTicketQueryEntity);
