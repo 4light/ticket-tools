@@ -109,7 +109,7 @@ public class DoSnatchingSchedule {
         }
     }
 
-    @Scheduled(cron = "0/30 * 7-22 * * ?")
+    @Scheduled(cron = "0/30 * * * * ?")
     public void updateOrderPayStatus() {
         try {
             RestTemplate restTemplate = TemplateUtil.initSSLTemplate();
