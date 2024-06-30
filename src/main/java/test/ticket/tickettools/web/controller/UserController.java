@@ -24,6 +24,7 @@ public class UserController extends BaseController{
     }
     @PostMapping(value = "/user/list/all")
     public ServiceResponse<List<QueryUserInfoParam>> getAllUser(@RequestBody QueryUserInfoParam queryUserInfoParam) {
+        queryUserInfoParam.setCurrentUser(currentUser);
         return userServiceImpl.selectAll(queryUserInfoParam);
     }
     @PostMapping(value = "/user/add")

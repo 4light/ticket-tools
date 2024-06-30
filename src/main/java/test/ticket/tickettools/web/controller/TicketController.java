@@ -52,13 +52,25 @@ public class TicketController  extends BaseController{
     }
 
     @GetMapping(value = "/get/detail")
-    public ServiceResponse addTask(@RequestParam Long taskId) {
-        return ticketServiceImpl.getTask(taskId);
+    public ServiceResponse getTask(@RequestParam Long taskId,@RequestParam Boolean yn) {
+        return ticketServiceImpl.getTask(taskId,yn);
     }
 
     @GetMapping(value = "/delete")
-    public ServiceResponse delete(@RequestParam Long taskId) {
-        return ticketServiceImpl.delete(taskId);
+    public ServiceResponse delete(@RequestParam Long taskId,@RequestParam Boolean yn) {
+        return ticketServiceImpl.delete(taskId,yn);
+    }
+
+    @GetMapping(value = "/operator/detail")
+    public ServiceResponse operatorDetail(@RequestParam Long id,@RequestParam Boolean yn) {
+        TaskDetailEntity taskDetailEntity=new TaskDetailEntity();
+        taskDetailEntity.setId(id);
+        taskDetailEntity.setYn(yn);
+        Boolean res = ticketServiceImpl.updateTaskDetail(taskDetailEntity);
+        if(res){
+            return ServiceResponse.createBySuccessMessgge("更新成功");
+        }
+        return ServiceResponse.createByErrorMessage("更新失败");
     }
 
 

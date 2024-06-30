@@ -258,7 +258,7 @@ public class JntTicketServiceImpl implements DoSnatchTicketService {
                 AccountInfoEntity userInfo = new AccountInfoEntity();
                 userInfo.setChannel(ChannelEnum.MFU.getCode());
                 userInfo.setStatus(false);
-                List<AccountInfoEntity> select = accountInfoDao.select(userInfo);
+                List<AccountInfoEntity> select = accountInfoDao.selectList(userInfo);
                 accountInfoEntity = select.get((int) (select.size() * Math.random()));
             } else {
                 accountInfoEntity = accountInfoDao.selectById(unDoneTask.getUserInfoId());

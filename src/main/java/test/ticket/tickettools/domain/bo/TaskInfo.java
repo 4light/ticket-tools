@@ -9,6 +9,7 @@ import java.util.List;
 public class TaskInfo implements Serializable {
     private static final long serialVersionUID = 2517797866070411812L;
     private Long id;
+    private String taskName;
     private String account;
     private String auth;
     //渠道
@@ -31,6 +32,14 @@ public class TaskInfo implements Serializable {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getTaskName() {
+        return taskName;
+    }
+
+    public void setTaskName(String taskName) {
+        this.taskName = taskName;
     }
 
     public String getAccount() {

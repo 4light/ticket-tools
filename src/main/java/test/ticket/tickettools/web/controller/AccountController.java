@@ -65,11 +65,9 @@ public class AccountController extends BaseController{
         return loginService.login(logInCSTMParam);
     }
 
-    @GetMapping(value = "/test/jnt")
-    public ServiceResponse test() {
-        //JntTicketServiceImpl.doSnatchingJnt();
-        loginService.longinCSTM("18310327323");
-        return ServiceResponse.createBySuccess();
+    @GetMapping(value = "/account/check")
+    public ServiceResponse check() {
+        return accountServiceImpl.accountCheckAuth(currentUser);
     }
 
 }

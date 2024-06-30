@@ -9,8 +9,8 @@ import java.util.Date;
 public class TaskInfoListResponse implements Serializable {
     private static final long serialVersionUID = 5742328233333096415L;
     private Long taskId;
+    private String taskName;
     private Long id;
-    private String loginPhone;
     private String authorization;
     @JsonFormat(pattern = "yyyy-MM-dd", timezone="GMT+8")
     private Date useDate;
@@ -30,6 +30,12 @@ public class TaskInfoListResponse implements Serializable {
     private String orderNumber;
     private Integer price;
     private Long userInfoId;
+    private String ext;
+    private String creator;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone="GMT+8")
+    private Date createDate;
+    private Boolean taskYn;
+    private Boolean taskDetailYn;
 
 
     public Long getTaskId() {
@@ -40,6 +46,15 @@ public class TaskInfoListResponse implements Serializable {
         this.taskId = taskId;
     }
 
+
+    public String getTaskName() {
+        return taskName;
+    }
+
+    public void setTaskName(String taskName) {
+        this.taskName = taskName;
+    }
+
     public Long getId() {
         return id;
     }
@@ -48,13 +63,6 @@ public class TaskInfoListResponse implements Serializable {
         this.id = id;
     }
 
-    public String getLoginPhone() {
-        return loginPhone;
-    }
-
-    public void setLoginPhone(String loginPhone) {
-        this.loginPhone = loginPhone;
-    }
 
     public String getAuthorization() {
         return authorization;
@@ -182,5 +190,46 @@ public class TaskInfoListResponse implements Serializable {
 
     public void setUserInfoId(Long userInfoId) {
         this.userInfoId = userInfoId;
+    }
+
+    public String getExt() {
+        return ext;
+    }
+
+    public void setExt(String ext) {
+        this.ext = ext;
+    }
+
+    public String getCreator() {
+        return creator;
+    }
+
+    public void setCreator(String creator) {
+        this.creator = creator;
+    }
+
+    public Date getCreateDate() {
+        return createDate;
+    }
+
+    public void setCreateDate(Date createDate) {
+        this.createDate = createDate;
+    }
+
+    public Boolean getTaskYn() {
+        return taskYn;
+    }
+
+    public void setTaskYn(Boolean taskYn) {
+        this.taskYn = taskYn;
+    }
+
+    public Boolean getTaskDetailYn() {
+        return taskDetailYn;
+    }
+
+
+    public void setTaskDetailYn(Boolean taskDetailYn) {
+        this.taskDetailYn = taskDetailYn;
     }
 }

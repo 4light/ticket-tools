@@ -21,9 +21,9 @@ public interface TicketService {
 
     ServiceResponse<PageableResponse<TaskInfoListResponse>> queryTask(QueryTaskInfo queryTaskInfo);
 
-    ServiceResponse<TaskInfo> getTask(Long taskId);
+    ServiceResponse<TaskInfo> getTask(Long taskId,Boolean yn);
 
-    ServiceResponse delete(Long taskId);
+    ServiceResponse delete(Long taskId,Boolean yn);
 
     List<TaskDetailEntity> selectUnpaid();
 

@@ -9,7 +9,7 @@ import java.util.List;
 public interface AccountInfoDao {
     Integer insertOrUpdate(AccountInfoEntity accountInfoEntity);
     Integer insert(AccountInfoEntity accountInfoEntity);
-    List<AccountInfoEntity> select(AccountInfoEntity accountInfoEntity);
+    List<AccountInfoEntity> selectList(AccountInfoEntity accountInfoEntity);
     AccountInfoEntity selectById(Long id);
     Integer del(Long id);
     Integer updateByChannelAccount(AccountInfoEntity accountInfoEntity);

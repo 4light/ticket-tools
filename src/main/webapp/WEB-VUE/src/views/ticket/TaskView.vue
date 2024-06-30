@@ -30,10 +30,43 @@
         >
         </el-date-picker>
       </el-form-item>
+      <el-form-item label="游客姓名">
+        <el-input v-model="queryParam.userName"></el-input>
+      </el-form-item>
+      <el-form-item label="状态">
+        <el-select v-model="queryParam.yn" clearable>
+          <el-option
+            v-for="item in ynList"
+            :key="item.id"
+            :label="item.label"
+            :value="item.id">
+          </el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="出票情况">
+        <el-select v-model="queryParam.done" clearable>
+          <el-option
+            v-for="item in doneList"
+            :key="item.id"
+            :label="item.label"
+            :value="item.id">
+          </el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="支付状态">
+        <el-select v-model="queryParam.payment" clearable>
+          <el-option
+            v-for="item in paymentList"
+            :key="item.id"
+            :label="item.label"
+            :value="item.id">
+          </el-option>
+        </el-select>
+      </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="onSubmit" size="small" round>查询</el-button>
         <el-button type="primary" @click="addTask" size="small" round>新建任务</el-button>
-        <!--        <el-button type="primary" @click="getMsg" size="small" round>查询验证码</el-button>-->
+        <el-button type="primary" @click="initSearch" size="small" round>重置搜索</el-button>
       </el-form-item>
     </el-form>
     <div>
@@ -42,14 +75,17 @@
         ref="multipleTable"
         border
         height="77vh"
-        style="width: 100%; margin-top: 20px"
+        style="width: 100%; margin-top: 10px"
         :span-method="objectSpanMethod"
         @selection-change="handleSelectionChange"
+        class="currentTable"
       >
+<!--              :row-class-name="tableCellStyle"
+  -->
         <el-table-column
           prop="taskId"
           label="任务Id"
-          :width="80"
+          width="60"
         >
         </el-table-column>
         <el-table-column
@@ -70,7 +106,14 @@
           label="姓名">
           <template slot-scope="{ row }">
             <div>{{ row.userName }}
-            <el-link type="success" @click="ticketInspectionCode(row.orderNumber,row.userName)" v-if="row.childrenTicket&&row.channel==0&&row.orderNumber!=null">二维码</el-link>
+              <el-link type="success" @click="ticketInspectionCode(row.orderNumber,row.userName)"
+                       v-if="row.childrenTicket&&row.channel==0&&row.orderNumber!=null">二维码
+              </el-link>
+              <span v-if="row.ext!=null">
+                <el-tooltip class="item" effect="dark" :content="row.ext" placement="top-start">
+                  <el-icon class="el-icon-warning-outline"></el-icon>
+                </el-tooltip>
+              </span>
             </div>
           </template>
         </el-table-column>
@@ -79,9 +122,29 @@
           label="身份证号">
         </el-table-column>
         <el-table-column
+          :width="50"
+          label="状态">
+          <template slot-scope="scope">
+            <div>
+              <span v-if="scope.row.taskDetailYn==false" style="color: #7bc749">正常</span>
+              <span v-if="scope.row.taskDetailYn==true" style="color: #f56c6c">禁用</span>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="creator"
+          label="创建人"
+        >
+        </el-table-column>
+        <el-table-column
+          prop="createDate"
+          label="创建时间"
+        >
+        </el-table-column>
+        <el-table-column
           prop="price"
           label="票价"
-          :width="80"
+          :width="50"
         >
         </el-table-column>
         <el-table-column
@@ -115,16 +178,24 @@
           </template>
         </el-table-column>
         <el-table-column
+          type="index"
+          label="序号"
+          width="50">
+        </el-table-column>
+        <el-table-column
           type="selection"
           width="55">
         </el-table-column>
         <el-table-column label="操作" prop="option">
           <template slot-scope="scope">
             <el-link
-              type="primary" @click="getTask(scope.row.taskId)">编辑
+              type="primary" @click="getTask(scope.row)">编辑
             </el-link>
             <el-link
-              type="danger" @click="deleteTask(scope.row.taskId)">删除
+              type="danger" @click="operatorTask(scope.row.taskId,true)" v-if="scope.row.taskYn==false">禁用
+            </el-link>
+            <el-link
+              type="success" @click="operatorTask(scope.row.taskId,false)" v-if="scope.row.taskYn==true">启用
             </el-link>
             <el-link type="success" @click="pay" v-if="scope.row.channel==0||scope.row.channel==2">支付</el-link>
             <el-link
@@ -166,42 +237,72 @@
       :before-close="closeTicketInspectionImg"
     >
       <div id="ticketInspectionImg" style="text-align: center" v-if="showImg">
-        <p style="font-size: medium; font-weight: bolder;margin-bottom: 5px">{{this.currentUserName}}</p>
+        <p style="font-size: medium; font-weight: bolder;margin-bottom: 5px">{{ this.currentUserName }}</p>
       </div>
     </el-dialog>
     <audio
       ref="audio"
     >
-      <source src="../../../static/ding.mp3" />
+      <source src="../../../static/ding.mp3"/>
     </audio>
   </div>
 </template>
 
 <script>
-import taskEditView from "./TaskEditView"
-import QRCode from 'qrcodejs2';
-import {get,post} from '../../request'
-
+import taskEditView from './TaskEditView'
+import QRCode from 'qrcodejs2'
+import {get, post} from '../../request'
 
 export default {
-  name: "TaskView",
+  name: 'TaskView',
   components: {
     taskEditView
   },
-  created() {
+  created () {
     this.currentUser = Date.now()
     this.initWebSocket()
   },
-  mounted() {
+  mounted () {
     this.onSubmit()
     this.getUserIdList()
   },
-  data() {
+  data () {
     return {
+      ynList: [
+        {
+          id: 0,
+          label: '启用'
+        }, {
+          id: 1,
+          label: '禁用'
+        }
+      ],
+      doneList: [
+        {
+          id: 0,
+          label: '未抢到'
+        }, {
+          id: 1,
+          label: '已抢到'
+        }
+      ],
+      paymentList: [
+        {
+          id: 0,
+          label: '未支付'
+        }, {
+          id: 1,
+          label: '已支付'
+        }
+      ],
       queryParam: {
         channel: '',
         phone: '',
-        useDate: ''
+        useDate: '',
+        yn: 0,
+        done: null,
+        payment: null,
+        userName: ''
       },
       taskData: [],
       page: {
@@ -210,55 +311,55 @@ export default {
         total: 0
       },
       showDialog: false,
-      msg: "",
+      msg: '',
       websocketCount: -1,
       //查询条件
       queryCondition: {
-        type: "message",
+        type: 'message',
       },
       ticketId: [],
       selectTicket: [],
       payInfo: {},
-      payUrl: "",
+      payUrl: '',
       showPayDialog: false,
       taskInfo: {},
       number: 0,
       currentUser: '',
       channelObj: {
-        "0": "科技馆",
-        "1": "毛纪",
-        "2": "故宫",
-        "3": "国博",
+        '0': '科技馆',
+        '1': '毛纪',
+        '2': '故宫',
+        '3': '国博',
       },
       channelList: [
         {
-          "id": 0,
-          "channelName": "科技馆"
+          'id': 0,
+          'channelName': '科技馆'
         },
         {
-          "id": 1,
-          "channelName": "毛纪"
+          'id': 1,
+          'channelName': '毛纪'
         },
         {
-          "id": 2,
-          "channelName": "故宫"
+          'id': 2,
+          'channelName': '故宫'
         },
         {
-          "id": 3,
-          "channelName": "国博"
+          'id': 3,
+          'channelName': '国博'
         }
       ],
       showPayPic: false,
       userIdList: [],
-      showTicketInspectionImg:false,
-      showImg:false,
-      currentUserName:""
+      showTicketInspectionImg: false,
+      showImg: false,
+      currentUserName: ''
     }
   },
   watch: {
     showPayDialog: function () {
       setTimeout(() => {
-        this.qrcode();
+        this.qrcode()
       }, 1000)
       /*      //materielId为需要监听的data
             this.$nextTick(function () {
@@ -270,8 +371,19 @@ export default {
     }
   },
   methods: {
-    initWebSocket() {
-      let userName=localStorage.getItem("user")
+    initSearch () {
+      this.queryParam = {
+        channel: '',
+        phone: '',
+        useDate: '',
+        yn: 0,
+        done: null,
+        payment: null,
+        userName: ''
+      }
+    },
+    initWebSocket () {
+      let userName = localStorage.getItem('user')
       let ws = `ws://42.51.40.37/ticket/api/pushMessage/${userName}`
       //let ws = `ws://localhost:8082/ticket/api/pushMessage/${userName}`
       this.websock = new WebSocket(ws)
@@ -281,19 +393,19 @@ export default {
       this.websock.onclose = this.websocketClose
     },
     // websocket连接后发送数据(send发送)
-    websocketOnOpen() {
+    websocketOnOpen () {
       console.log('websock已打开')
     },
     // 连接建立失败重连
-    websocketOnError() {
+    websocketOnError () {
       this.$notify.error({
         title: 'scoket异常',
-        message: "scoket连接失败，请刷新页面",
+        message: 'scoket连接失败，请刷新页面',
         duration: 2000
-      });
+      })
     },
     // 数据接收
-    websocketOnMessage(e) {
+    websocketOnMessage (e) {
       let res = JSON.parse(e.data)
       this.$notify({
         title: res.title,
@@ -301,33 +413,33 @@ export default {
         message: res.msg,
         duration: res.time,
         type: 'plain'
-      });
-      if(res){
+      })
+      if (res) {
         this.doDing()
       }
       this.onSubmit()
     },
     // 数据发送
-    websocketSend(Data) {
+    websocketSend (Data) {
       this.websock.send(Data)
     },
-    doDing(){
-      this.$refs.audio.play();
+    doDing () {
+      this.$refs.audio.play()
     },
     // 关闭
-    websocketClose(e) {
+    websocketClose (e) {
       this.initWebSocket()
       console.log('断开连接', e)
     },
-    onSubmit() {
+    onSubmit () {
       this.queryParam.page = this.page
-      post('/ticket/task/list',this.queryParam).then(res => {
+      post('/ticket/task/list', this.queryParam).then(res => {
         if (res.status != 0) {
           this.$notify.error({
             title: '查询失败',
             message: res.msg,
             duration: 2000
-          });
+          })
         } else {
           this.taskData = res.data.list
           this.page.total = res.data.total
@@ -335,83 +447,83 @@ export default {
         }
       })
     },
-    getUserIdList() {
+    getUserIdList () {
       let queryParam = {
         userName: '',
         account: ''
       }
-      post('/ticket/account/list',queryParam).then(res => {
+      post('/ticket/account/list', queryParam).then(res => {
         if (res.status != 0) {
           this.$notify.error({
             title: '查询用户列表失败',
             message: res.msg,
             duration: 2000
-          });
+          })
         } else {
           this.userIdList = res.data
         }
       })
     },
-    addTask() {
+    addTask () {
       this.showDialog = true
       setTimeout(() => {
         this.$refs.taskEditView.getUserIdList()
       }, 1000)
     },
-    mergeCol(id, rowIndex) {
+    mergeCol (id, rowIndex) {
       // 合并单元格
       // id：属性名
       // rowIndex：行索引值
-      var idName = this.taskData[rowIndex][id]; // 获取当前单元格的值
+      var idName = this.taskData[rowIndex][id] // 获取当前单元格的值
       if (rowIndex > 0) {
         // 判断是不是第一行
         // eslint-disable-next-line eqeqeq
         if (this.taskData[rowIndex][id] != this.taskData[rowIndex - 1][id]) {
           // 先判断当前单元格的值是不是和上一行的值相等
-          var i = rowIndex;
-          var num = 0; // 定义一个变量i，用于记录行索引值并进行循环，num用于计数
+          var i = rowIndex
+          var num = 0 // 定义一个变量i，用于记录行索引值并进行循环，num用于计数
           while (i < this.taskData.length) {
             // 当索引值小于table的数组长度时，循环执行
             if (this.taskData[i][id] === idName) {
               // 判断循环的单元格的值是不是和当前行的值相等
-              i++; // 如果相等，则索引值加1
-              num++; // 合并的num计数加1
+              i++ // 如果相等，则索引值加1
+              num++ // 合并的num计数加1
             } else {
-              i = this.taskData.length; // 如果不相等，将索引值设置为table的数组长度，跳出循环
+              i = this.taskData.length // 如果不相等，将索引值设置为table的数组长度，跳出循环
             }
           }
           this.number = num
           return {
             rowspan: num, // 最终将合并的行数返回
             colspan: 1,
-          };
+          }
         } else {
           return {
             rowspan: 0, // 如果相等，则将rowspan设置为0
             colspan: 1,
-          };
+          }
         }
       } else {
         // 如果是第一行，则直接返回
-        let i = rowIndex;
-        let num = 0;
+        let i = rowIndex
+        let num = 0
         while (i < this.taskData.length) {
           // 当索引值小于table的数组长度时，循环执行
           if (this.taskData[i][id] === idName) {
-            i++;
-            num++;
+            i++
+            num++
           } else {
-            i = this.taskData.length;
+            i = this.taskData.length
           }
         }
         this.number = num
         return {
           rowspan: num,
           colspan: 1,
-        };
+        }
       }
     },
-    objectSpanMethod({row, column, rowIndex, columnIndex}) {
+    objectSpanMethod ({row, column, rowIndex, columnIndex}) {
       // 合并单元格
       switch (
         columnIndex // 将列索引作为判断值
@@ -421,73 +533,80 @@ export default {
           return this.mergeCol("account", rowIndex);
         case 1:
           return this.mergeCol("account", rowIndex);*/
-        case 11:
-          return this.mergeCol("taskId", rowIndex)
+        case 15:
+          return this.mergeCol('taskId', rowIndex)
       }
     },
-    handleSizeChange(val) {
+    handleSizeChange (val) {
       this.page.pageSize = val
       this.onSubmit()
     },
-    handleCurrentChange(val) {
+    handleCurrentChange (val) {
       this.page.pageNum = val
       this.onSubmit()
     },
-    getTask(taskId) {
-      get("/ticket/get/detail",
+    getTask (row) {
+      get('/ticket/get/detail',
         {
-          taskId: taskId
+          taskId: row.taskId,
+          yn: row.taskYn
         }
       ).then(res => {
         this.taskInfo = res.data
         setTimeout(() => {
-          this.$refs.taskEditView.getUserIdList();
+          this.$refs.taskEditView.getUserIdList()
           //this.$refs.taskEditView.edit();
         }, 200)
         this.showDialog = true
       })
     },
-    deleteTask(taskId) {
-      get('/ticket/delete',{
-        taskId: taskId
-      }
+    operatorTask (taskId, yn) {
+      get('/ticket/delete', {
+          taskId: taskId,
+          yn: yn
+        }
       ).then(res => {
         if (res.status != 0) {
           this.$notify.error({
-            title: '删除失败',
+            title: '失败',
             message: res.msg,
             duration: 2000
-          });
+          })
         } else {
           this.onSubmit()
           this.$notify.success({
-            title: '删除成功',
+            title: '成功',
             duration: 1000
-          });
+          })
         }
       })
     },
-    getMsg() {
+    tableCellStyle ({row, rowIndex}) {
+      if (row.channel == 0 && row.done && !row.payment) {
+        return 'success-row'
+      }
+    },
+    getMsg () {
       if (!this.queryParam.loginPhone) {
-        this.$alert("请输入电话号")
+        this.$alert('请输入电话号')
         return
       }
-      get("/ticket/phone/msg",
+      get('/ticket/phone/msg',
         {
           phoneNum: this.queryParam.loginPhone
         }
       ).then(res => {
-        this.$alert(res.data.data, "短信内容", {
+        this.$alert(res.data.data, '短信内容', {
           confirmButtonText: '确定',
         })
       })
     },
-    closeDialog() {
+    closeDialog () {
       this.showDialog = false
-      this.taskInfo= {"userList":[]}
+      this.taskInfo = {'userList': []}
       this.onSubmit()
     },
-    handleSelectionChange(val) {
+    handleSelectionChange (val) {
       this.selectTicket = val
       let currentTaskId = 0
       for (let item of this.selectTicket) {
@@ -499,16 +618,16 @@ export default {
           return;
         }*/
         if (item.taskId != currentTaskId) {
-          this.$alert("只能选择同一个批次下的订单!")
-          let lastElement = val[val.length - 1];
-          this.$refs.multipleTable.toggleRowSelection(lastElement, false);
+          this.$alert('只能选择同一个批次下的订单!')
+          let lastElement = val[val.length - 1]
+          this.$refs.multipleTable.toggleRowSelection(lastElement, false)
           val.pop()
           this.selectTicket = val
-          break;
+          break
         }
       }
     },
-    qrcode() {  // 前端根据 URL 生成微信支付二维码
+    qrcode () {  // 前端根据 URL 生成微信支付二维码
       return new QRCode('qrcodeImg', {
         width: 250,
         height: 250,
@@ -517,21 +636,21 @@ export default {
         colorLight: '#fff'
       })
     },
-    ticketInspectionCode(ticketNum,userName) {  // 前端根据 URL 生成微信支付二维码
-      this.showTicketInspectionImg=true
-      this.showImg=true
-      this.currentUserName=userName
-      setTimeout(()=>{
+    ticketInspectionCode (ticketNum, userName) {  // 前端根据 URL 生成微信支付二维码
+      this.showTicketInspectionImg = true
+      this.showImg = true
+      this.currentUserName = userName
+      setTimeout(() => {
         return new QRCode('ticketInspectionImg', {
           width: 200,
           height: 200,
           text: ticketNum
         })
-      },1500)
+      }, 1500)
     },
-    pay() {
+    pay () {
       this.showPayPic = false
-      this.payUrl = ""
+      this.payUrl = ''
       let payParam = {}
       let ticketList = []
       let taskDetailIds = []
@@ -556,63 +675,65 @@ export default {
       payParam.ticketInfoList = ticketList
       payParam.childTicketNum = childrenCount
       payParam.ticketNum = this.selectTicket.length
-      post("/ticket/pay", payParam).then(res => {
+      post('/ticket/pay', payParam).then(res => {
         if (res.status != 0) {
           this.$notify.error({
             title: '失败',
             message: res.msg,
             duration: 2000
-          });
+          })
         } else {
-          if (res.data && res.data != "") {
-            this.showPayDialog = true;
+          if (res.data && res.data != '') {
+            this.showPayDialog = true
             this.payUrl = res.data
-            this.showPayDialog = true;
+            this.showPayDialog = true
             this.showPayPic = true
             this.qrcode(this.payUrl)
-          }else{
+          } else {
             this.$notify.success({
               title: '成功',
-              message: "免费票无需支付",
+              message: '免费票无需支付',
               duration: 2000
-            });
+            })
           }
         }
       })
     },
-    init() {
+    init () {
       if (this.selectTicket.length <= 0) {
-        this.$alert("需勾选要重置的订单")
-        return;
+        this.$alert('需勾选要重置的订单')
+        return
       }
-      let intiParam={}
+      let intiParam = {}
       let req = []
       let currentTaskId
       for (let item of this.selectTicket) {
-        currentTaskId=item.taskId
+        currentTaskId = item.taskId
         let payParam = {}
         payParam.id = item.id
+        payParam.ticketId = item.ticketId
+        payParam.userName = item.userName
         req.push(payParam)
       }
-      intiParam.taskId=currentTaskId
-      intiParam.taskDetailEntityList=req
-      post("/ticket/init/task", intiParam).then(res => {
+      intiParam.taskId = currentTaskId
+      intiParam.taskDetailEntityList = req
+      post('/ticket/init/task', intiParam).then(res => {
         if (res.status != 0) {
           this.$notify.error({
             title: '失败',
             message: res.msg,
             duration: 2000
-          });
+          })
         } else {
           this.$notify.success({
             title: '重置成功',
             duration: 1000
-          });
+          })
           this.onSubmit()
         }
       })
     },
-    addDate(row) {
+    addDate (row) {
       let nowDate = row.updateDate
       if (!nowDate || row.channel == 3) {
         return
@@ -625,37 +746,43 @@ export default {
       if (row.channel == 0) {
         newDate = current.setMinutes(current.getMinutes() + 15)
       }
-      let rd = new Date(newDate);
-      let y = rd.getFullYear();
-      let M = rd.getMonth() + 1;
-      let d = rd.getDate();
-      let H = rd.getHours();
+      let rd = new Date(newDate)
+      let y = rd.getFullYear()
+      let M = rd.getMonth() + 1
+      let d = rd.getDate()
+      let H = rd.getHours()
       let m = rd.getMinutes()
       let s = rd.getSeconds()
       if (M < 10) {
-        M = "0" + M;
+        M = '0' + M
       }
       if (d < 10) {
-        d = "0" + d;
+        d = '0' + d
       }
       if (row.channel != 1) {
-        return (y + "-" + M + "-" + d + " " + H + ":" + m + ":" + s)
+        return (y + '-' + M + '-' + d + ' ' + H + ':' + m + ':' + s)
       }
-      return ""
+      return ''
     },
-    closePayDialog(){
-      this.showPayPic=false
-      this.showPayDialog=false
+    closePayDialog () {
+      this.showPayPic = false
+      this.showPayDialog = false
       this.onSubmit()
     },
-    closeTicketInspectionImg(){
-      this.showImg=false
-      this.showTicketInspectionImg=false
+    closeTicketInspectionImg () {
+      this.showImg = false
+      this.showTicketInspectionImg = false
     }
   }
 }
 </script>
 
-<style scoped>
+<style>
+.el-table .success-row {
+  background: #dcf1cf;
+}
 
+.el-table .error-row {
+  background: coral;
+}
 </style>

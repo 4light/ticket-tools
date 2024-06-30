@@ -8,6 +8,7 @@ public class QueryUserInfoParam implements Serializable {
     private String nickName;
     private String userName;
     private String loginUser;
+    private String currentUser;
     private PageParam page;
 
     public Long getId() {
@@ -40,6 +41,14 @@ public class QueryUserInfoParam implements Serializable {
 
     public void setLoginUser(String loginUser) {
         this.loginUser = loginUser;
+    }
+
+    public String getCurrentUser() {
+        return currentUser;
+    }
+
+    public void setCurrentUser(String currentUser) {
+        this.currentUser = currentUser;
     }
 
     public PageParam getPage() {

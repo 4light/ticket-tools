@@ -38,9 +38,9 @@ public class SendMessageUtil {
             //设置消息类型
             //定义文本内容
             OapiRobotSendRequest.Markdown markdown = new OapiRobotSendRequest.Markdown();
-            markdown.setTitle("抢票结果通知");
-            markdown.setText("### " + channel+"抢票结果通知 \n"
-                    +"#### 购票账号:"+account+"\n"
+            markdown.setTitle("任务执行结果通知");
+            markdown.setText("### " + channel+"任务结果通知 \n"
+                    +"#### 任务账号:"+account+"\n"
                     +"#### 日期:"+userDate+"\n"
                     +"#### 场次:"+session+"\n"
                     +"#### 游客姓名:"+user);

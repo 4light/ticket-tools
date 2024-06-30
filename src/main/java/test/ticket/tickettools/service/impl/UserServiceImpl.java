@@ -1,5 +1,6 @@
 package test.ticket.tickettools.service.impl;
 
+import cn.hutool.core.util.StrUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -71,8 +72,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ServiceResponse<List<QueryUserInfoParam>> selectAll(QueryUserInfoParam queryUserInfoParam) {
+        UserEntity byUsername = userDao.findByUsername(queryUserInfoParam.getCurrentUser());
         UserEntity userEntity=new UserEntity();
-        userEntity.setUserName(queryUserInfoParam.getUserName());
+        if(StrUtil.equals(byUsername.getRole(),"admin")){
+            userEntity.setUserName(queryUserInfoParam.getUserName());
+        }else{
+            userEntity.setUserName(queryUserInfoParam.getCurrentUser());
+        }
         userEntity.setNickName(queryUserInfoParam.getNickName());
         List<UserEntity> select = userDao.select(userEntity);
         List<QueryUserInfoParam> result=new ArrayList<>();

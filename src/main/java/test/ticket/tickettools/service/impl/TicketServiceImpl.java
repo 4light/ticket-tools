@@ -1,5 +1,6 @@
 package test.ticket.tickettools.service.impl;
 
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import org.bytedeco.opencv.global.opencv_core;
 import org.bytedeco.opencv.global.opencv_imgcodecs;
@@ -74,6 +75,11 @@ public class TicketServiceImpl implements TicketService {
     //提交订单
     private static String placeOrderUrl = "https://pcticket.cstm.org.cn/prod-api/config/orderRule/placeOrder";
     private static String wxPayForPcUrl = "https://pcticket.cstm.org.cn/prod-api/order/OrderInfo/wxPayForPc";
+
+
+    private String getPlaceMuUserInfoUrl ="https://lotswap.dpm.org.cn/lotsapi/leaguer/api/userLeaguer/manage/leaguerInfo?cipherText=0&merchantId=2655&merchantInfoId=2655";
+    private String getChnMuUserInfoUrl ="https://uu.chnmuseum.cn/prod-api/getUserInfoToIndividual2Mini?p=wxmini";
+
 
     private static List<String> doneList = new ArrayList<>();
     private static Map<Long,Object> runTaskCache=new ConcurrentHashMap<>();
@@ -154,6 +160,7 @@ public class TicketServiceImpl implements TicketService {
             taskEntity.setCreateDate(new Date());
             taskEntity.setAuth(taskInfo.getAuth());
             taskEntity.setUserInfoId(taskInfo.getUserInfoId());
+            taskEntity.setTaskName(taskInfo.getTaskName());
             Integer insert = taskDao.insert(taskEntity);
             if (insert > 0) {
                 List<TaskDetailEntity> userList = taskInfo.getUserList();
@@ -174,6 +181,7 @@ public class TicketServiceImpl implements TicketService {
             }
         } else {
             taskEntity.setUpdateDate(new Date());
+            taskEntity.setTaskName(taskInfo.getTaskName());
             taskEntity.setAccount(accountInfoEntity.getAccount());
             taskEntity.setPwd(accountInfoEntity.getPwd());
             taskEntity.setUserInfoId(userInfoId);
@@ -191,11 +199,14 @@ public class TicketServiceImpl implements TicketService {
                             deleteList.add(allEntity);
                         }
                     });
-                    taskDetailDao.deleteTaskDetailBath(deleteList);
+                    if(deleteList.size()>0){
+                        taskDetailDao.deleteTaskDetailBath(deleteList);
+                    }
                 }
                 if (!ObjectUtils.isEmpty(addList)) {
                     addList.forEach(o -> {
                         o.setCreateDate(new Date());
+                        o.setPayment(false);
                         o.setTaskId(taskEntity.getId());
                     });
                     taskDetailDao.insertBatch(addList);
@@ -211,16 +222,41 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     public ServiceResponse initTask(InitTaskParam initTaskParam) {
+        String cancelTicketUrl="https://pcticket.cstm.org.cn/prod-api/order/ticketInfo/removeForShopping/";
         TaskEntity taskEntity=new TaskEntity();
         taskEntity.setDone(false);
         taskEntity.setId(initTaskParam.getTaskId());
         taskEntity.setUpdateDate(new Date());
         taskDao.updateTask(taskEntity);
-        Integer res = taskDetailDao.initTaskDetail(initTaskParam.getTaskDetailEntityList());
-        if (res > 0) {
-            return ServiceResponse.createBySuccess();
+        List<TaskDetailEntity> taskDetailEntityList = initTaskParam.getTaskDetailEntityList();
+        TaskEntity queryEntity=new TaskEntity();
+        queryEntity.setId(initTaskParam.getTaskId());
+        TaskEntity currentTask = taskDao.queryTask(queryEntity);
+        AccountInfoEntity accountInfoEntity = accountInfoDao.selectById(currentTask.getUserInfoId());
+        HttpHeaders headers=getHeader(accountInfoEntity.getHeaders());
+        RestTemplate restTemplate=TemplateUtil.initSSLTemplate();
+        HttpEntity entity=new HttpEntity(headers);
+        List<String> failTicket=new ArrayList<>();
+        for (TaskDetailEntity taskDetailEntity : taskDetailEntityList) {
+            Long ticketId = taskDetailEntity.getTicketId();
+            Long id = taskDetailEntity.getId();
+            if(!ObjectUtils.isEmpty(ticketId)&&ticketId!=0&&!ObjectUtils.isEmpty(id)){
+                JSONObject response = TemplateUtil.getResponse(restTemplate, cancelTicketUrl + ticketId, HttpMethod.DELETE, entity);
+                if(!ObjectUtils.isEmpty(response)&&response.getIntValue("code")==200){
+                    log.info("删除购物车订单结果:{}",response);
+                    taskDetailEntity.setPrice(null);
+                    taskDetailEntity.setDone(false);
+                    //successEntities.add(taskDetailEntity);
+                    taskDetailDao.updateTaskDetail(taskDetailEntity);
+                }else{
+                    failTicket.add(taskDetailEntity.getUserName());
+                }
+            }
         }
-        return ServiceResponse.createByErrorMessage("重置失败");
+        if(ObjectUtils.isEmpty(failTicket)){
+                return ServiceResponse.createBySuccessMessgge("重置成功");
+        }
+        return ServiceResponse.createByErrorMessage("以下人员重置失败:"+String.join(",",failTicket));
     }
 
     @Override
@@ -248,6 +284,7 @@ public class TicketServiceImpl implements TicketService {
         query.setAccount(queryTaskInfo.getAccount());
         query.setUseDate(queryTaskInfo.getUseDate());
         query.setUserInfoId(queryTaskInfo.getUserInfoId());
+        query.setYn(queryTaskInfo.getYn());
         UserEntity byUsername = userDao.findByUsername(queryTaskInfo.getCreator());
         if(!StrUtil.equals("admin",byUsername.getRole())){
             query.setCreator(queryTaskInfo.getCreator());
@@ -258,15 +295,22 @@ public class TicketServiceImpl implements TicketService {
             Long id = taskEntity.getId();
             Long userInfoId = taskEntity.getUserInfoId();
             AccountInfoEntity accountInfoEntity = accountInfoDao.selectById(userInfoId);
-            List<TaskDetailEntity> taskDetailEntities = taskDetailDao.selectByTaskId(id);
+            TaskDetailEntity queryEntity=new TaskDetailEntity();
+            queryEntity.setTaskId(id);
+            queryEntity.setDone(queryTaskInfo.getDone());
+            queryEntity.setPayment(queryTaskInfo.getPayment());
+            queryEntity.setUserName(queryTaskInfo.getUserName());
+            List<TaskDetailEntity> taskDetailEntities = taskDetailDao.selectByEntity(queryEntity);
             for (TaskDetailEntity taskDetailEntity : taskDetailEntities) {
                 TaskInfoListResponse taskInfoListResponse = new TaskInfoListResponse();
                 taskInfoListResponse.setTaskId(id);
+                taskInfoListResponse.setTaskName(taskEntity.getTaskName());
                 taskInfoListResponse.setAccount(ObjectUtils.isEmpty(accountInfoEntity) ? null : accountInfoEntity.getUserName());
                 taskInfoListResponse.setId(taskDetailEntity.getId());
                 taskInfoListResponse.setAuthorization(accountInfoEntity.getHeaders());
                 //使用名字好区分
                 taskInfoListResponse.setAccountName(accountInfoEntity ==null?null: accountInfoEntity.getUserName());
+                taskInfoListResponse.setTaskYn(taskEntity.getYn());
                 taskInfoListResponse.setAccount(taskEntity.getAccount());
                 taskInfoListResponse.setUseDate(taskEntity.getUseDate());
                 taskInfoListResponse.setUserName(taskDetailEntity.getUserName());
@@ -281,6 +325,10 @@ public class TicketServiceImpl implements TicketService {
                 taskInfoListResponse.setOrderNumber(taskDetailEntity.getOrderNumber());
                 taskInfoListResponse.setPrice(taskDetailEntity.getPrice());
                 taskInfoListResponse.setUserInfoId(taskEntity.getUserInfoId());
+                taskInfoListResponse.setExt(taskDetailEntity.getExt());
+                taskInfoListResponse.setCreator(taskEntity.getCreator());
+                taskInfoListResponse.setCreateDate(taskEntity.getCreateDate());
+                taskInfoListResponse.setTaskDetailYn(taskDetailEntity.getYn());
                 list.add(taskInfoListResponse);
             }
         }
@@ -288,9 +336,12 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
-    public ServiceResponse<TaskInfo> getTask(Long taskId) {
+    public ServiceResponse<TaskInfo> getTask(Long taskId,Boolean yn) {
         TaskInfo taskInfo = new TaskInfo();
-        TaskEntity taskEntity = taskDao.selectByPrimaryKey(taskId);
+        TaskEntity query=new TaskEntity();
+        query.setId(taskId);
+        query.setYn(yn);
+        TaskEntity taskEntity = taskDao.queryTask(query);
         taskInfo.setId(taskEntity.getId());
         taskInfo.setAuth(taskEntity.getAuth());
         taskInfo.setChannel(taskEntity.getChannel());
@@ -299,15 +350,18 @@ public class TicketServiceImpl implements TicketService {
         taskInfo.setSession(taskEntity.getSession());
         taskInfo.setVenue(taskEntity.getVenue());
         taskInfo.setUserInfoId(taskEntity.getUserInfoId());
-        taskInfo.setUserList(taskDetailDao.selectByTaskId(taskId));
+        taskInfo.setUserList(taskDetailDao.queryAllTaskDetailById(taskId));
         return ServiceResponse.createBySuccess(taskInfo);
     }
 
 
     @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRED)
     @Override
-    public ServiceResponse delete(Long taskId) {
-        Integer integer = taskDao.deleteByPrimaryKey(taskId);
+    public ServiceResponse delete(Long taskId,Boolean yn) {
+        TaskEntity taskEntity=new TaskEntity();
+        taskEntity.setId(taskId);
+        taskEntity.setYn(yn);
+        Integer integer = taskDao.updateTask(taskEntity);
         if (integer > 0) {
             Integer res = taskDetailDao.deleteByTaskId(taskId);
             if (res > 0) {
@@ -337,7 +391,7 @@ public class TicketServiceImpl implements TicketService {
     public ServiceResponse getPhoneMsg(String phoneNum) {
         AccountInfoEntity accountInfoEntity = new AccountInfoEntity();
         accountInfoEntity.setPhoneNum(phoneNum);
-        return ServiceResponse.createBySuccess(accountInfoDao.select(accountInfoEntity).get(0).getAccount());
+        return ServiceResponse.createBySuccess(accountInfoDao.selectList(accountInfoEntity).get(0).getAccount());
     }
 
     @Override
@@ -448,13 +502,7 @@ public class TicketServiceImpl implements TicketService {
         String formatGetHallUrl = String.format(getHallUrl, DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"));
         RestTemplate restTemplate=TemplateUtil.initSSLTemplate();
         try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("authority", "pcticket.cstm.org.cn");
-            headers.set("accept", "application/json");
-            headers.set("authorization", doSnatchInfo.getAuthorization());
-            headers.set("cookie", "SL_G_WPT_TO=zh; SL_GWPT_Show_Hide_tmp=1; SL_wptGlobTipTmp=1");
-            headers.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
+            HttpHeaders headers = getHeader(doSnatchInfo.getAuthorization());
             HttpEntity entity = new HttpEntity<>(headers);
             Long userId = doSnatchInfo.getUserId();
             String phone = doSnatchInfo.getAccount();
@@ -607,6 +655,13 @@ public class TicketServiceImpl implements TicketService {
                         if(!msgCache.containsKey(doSnatchInfo.getTaskId())) {
                             WebSocketServer.sendInfo(socketMsg("抢票异常", "账号:" + doSnatchInfo.getAccount() + "登录态异常", 0), doSnatchInfo.getCreator());
                             SendMessageUtil.send(ChannelEnum.CSTM.getDesc(),DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"),"账号：",doSnatchInfo.getAccount(),"登录态异常");
+                            List<Long> taskDetailIds = doSnatchInfo.getTaskDetailIds();
+                            for (Long taskDetailId : taskDetailIds) {
+                                TaskDetailEntity taskDetailEntity=new TaskDetailEntity();
+                                taskDetailEntity.setId(taskDetailId);
+                                taskDetailEntity.setExt(response.getString("msg"));
+                                taskDetailDao.updateTaskDetail(taskDetailEntity);
+                            }
                         }
                         msgCache.put(doSnatchInfo.getTaskId(),true);
                         runTaskCache.remove(taskId);
@@ -640,10 +695,16 @@ public class TicketServiceImpl implements TicketService {
                     //String body = exchange.getBody();
                     //JSONObject bodyJson = JSON.parseObject(body);
                     JSONObject bodyJson = TemplateUtil.getResponse(restTemplate,shoppingCartUrl,HttpMethod.POST,shoppingCartUrlEntity);
-                    log.info("提交订单结果：{}", bodyJson);
                     if (!ObjectUtils.isEmpty(bodyJson) && (bodyJson.getIntValue("code") == 550 || bodyJson.getIntValue("code") == 503)) {
                         if(!msgCache.containsKey(doSnatchInfo.getTaskId())) {
-                            WebSocketServer.sendInfo(socketMsg("抢票异常", "账号:"+doSnatchInfo.getAccount()+","+bodyJson.getString("msg"), 0), doSnatchInfo.getCreator());
+                            //WebSocketServer.sendInfo(socketMsg("抢票异常", "账号:"+doSnatchInfo.getAccount()+","+bodyJson.getString("msg"), 0), doSnatchInfo.getCreator());
+                            List<Long> taskDetailIds = doSnatchInfo.getTaskDetailIds();
+                            for (Long taskDetailId : taskDetailIds) {
+                                TaskDetailEntity taskDetailEntity=new TaskDetailEntity();
+                                taskDetailEntity.setId(taskDetailId);
+                                taskDetailEntity.setExt("购票账号："+doSnatchInfo.getAccount()+"。"+bodyJson.getString("msg"));
+                                taskDetailDao.updateTaskDetail(taskDetailEntity);
+                            }
                         }
                         msgCache.put(doSnatchInfo.getTaskId(),true);
                         runTaskCache.remove(taskId);
@@ -707,6 +768,7 @@ public class TicketServiceImpl implements TicketService {
                                         taskDetailEntity.setTicketId(item.getLongValue("id"));
                                         taskDetailEntity.setDone(true);
                                         taskDetailEntity.setPrice(item.getIntValue("sourcePrice"));
+                                        taskDetailEntity.setExt(null);
                                         taskDetailEntities.add(taskDetailEntity);
                                     }
                                 });
@@ -734,7 +796,7 @@ public class TicketServiceImpl implements TicketService {
                     }
                 }else{
                         if(!msgCache.containsKey(doSnatchInfo.getTaskId())) {
-                            WebSocketServer.sendInfo(socketMsg("抢票异常", "账号:" + doSnatchInfo.getAccount() + "."+getCheckImageJson.getString("msg"), 0), null);
+                            //WebSocketServer.sendInfo(socketMsg("抢票异常", "账号:" + doSnatchInfo.getAccount() + "."+getCheckImageJson.getString("msg"), 0), null);
                         }
                         msgCache.put(doSnatchInfo.getTaskId(),true);
                 }
@@ -1011,5 +1073,17 @@ public class TicketServiceImpl implements TicketService {
         param.put("name", name);
         param.put("userId", userId);
         return param;
+    }
+
+
+    private HttpHeaders getHeader(String auth){
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("authority", "pcticket.cstm.org.cn");
+        headers.set("accept", "application/json");
+        headers.set("authorization", auth);
+        headers.set("cookie", "SL_G_WPT_TO=zh; SL_GWPT_Show_Hide_tmp=1; SL_wptGlobTipTmp=1");
+        headers.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
+        return headers;
     }
 }

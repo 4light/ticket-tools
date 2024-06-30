@@ -7,6 +7,8 @@ public class TaskEntity {
 
     private Long id;
 
+    private String taskName;
+
     private String loginPhone;
 
     private String ip;
@@ -48,8 +50,9 @@ public class TaskEntity {
     public TaskEntity() {
     }
 
-    public TaskEntity(Long id, String loginPhone, String ip, Date useDate, String auth, Boolean done, Date createDate, Date updateDate, Long userId, Integer channel, Integer venue, String session, Boolean yn, String userName, String account, String nickName, Integer port, Long userInfoId, String pwd, String creator,String operator) {
+    public TaskEntity(Long id,String taskName, String loginPhone, String ip, Date useDate, String auth, Boolean done, Date createDate, Date updateDate, Long userId, Integer channel, Integer venue, String session, Boolean yn, String userName, String account, String nickName, Integer port, Long userInfoId, String pwd, String creator,String operator) {
         this.id = id;
+        this.taskName=taskName;
         this.loginPhone = loginPhone;
         this.ip = ip;
         this.useDate = useDate;
@@ -78,6 +81,14 @@ public class TaskEntity {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getTaskName() {
+        return taskName;
+    }
+
+    public void setTaskName(String taskName) {
+        this.taskName = taskName;
     }
 
     public String getLoginPhone() {

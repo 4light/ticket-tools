@@ -111,7 +111,7 @@ public class LoginService {
             //等待获取短信验证码
             while (true) {
                 try {
-                    List<AccountInfoEntity> result = accountInfoDao.select(accountInfoEntity);
+                    List<AccountInfoEntity> result = accountInfoDao.selectList(accountInfoEntity);
                     if (ObjectUtils.isEmpty(result)||ObjectUtils.isEmpty(result.get(0).getUpdateDate())) {
                         continue;
                     }

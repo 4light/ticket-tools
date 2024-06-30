@@ -3,9 +3,9 @@
     <el-form ref="form" :model="form" label-width="80px">
       <!--      <el-form-item label="手机号">
               <el-input v-model="form.loginPhone" style="width: 30%"></el-input>
-            </el-form-item>
-            <el-form-item label="请求头">
-              <el-input v-model="form.auth" type="textarea" style="width: 30%"></el-input>
+            </el-form-item>-->
+      <!--      <el-form-item label="任务名称">
+              <el-input v-model="form.taskName" style="width: 35%"></el-input>
             </el-form-item>-->
       <el-form-item label="渠道">
         <el-select v-model="form.channel" @change="changeChannel">
@@ -28,7 +28,8 @@
                            :min="0"
                            :max="3"
         >
-          <el-checkbox v-for="(session,index) in chnMuSessions" :label="session" :key="session">{{session}}</el-checkbox>
+          <el-checkbox v-for="(session,index) in chnMuSessions" :label="session" :key="session">{{ session }}
+          </el-checkbox>
         </el-checkbox-group>
       </el-form-item>
       <el-form-item label="场次" v-if="form.channel==1">
@@ -36,7 +37,8 @@
                            :min="0"
                            :max="4"
         >
-          <el-checkbox v-for="(session,index) in jntMuSessions" :label="session" :key="session">{{session}}</el-checkbox>
+          <el-checkbox v-for="(session,index) in jntMuSessions" :label="session" :key="session">{{ session }}
+          </el-checkbox>
         </el-checkbox-group>
       </el-form-item>
       <el-form-item label="账号">
@@ -106,8 +108,17 @@
                 <el-button
                   round
                   size="mini"
-                  title="已支付"
-                  type="primary" @click="deleteUser(scope.$index)">删除
+                  type="primary" @click="deleteUser(scope.$index)" v-if="!scope.row.id">删除
+                </el-button>
+                <el-button
+                  round
+                  size="mini"
+                  type="primary" @click="operatorUser(scope.row)" v-if="scope.row.id&&scope.row.yn==false">禁用
+                </el-button>
+                <el-button
+                  round
+                  size="mini"
+                  type="primary" @click="operatorUser(scope.row)" v-if="scope.row.id&&scope.row.yn!=false">启用
                 </el-button>
               </template>
             </el-table-column>
@@ -116,7 +127,7 @@
       </el-form-item>
       <el-form-item>
         <el-button type="warning" @click="close" round style="margin-left: 31vw">取消</el-button>
-        <el-button type="primary" @click="onSubmit" round >保存</el-button>
+        <el-button type="primary" @click="onSubmit" round>保存</el-button>
       </el-form-item>
     </el-form>
   </div>
@@ -124,122 +135,123 @@
 
 <script>
 
-import {get,post} from '../../request'
+import {get, post} from '../../request'
 
 export default {
-  name: "TaskEditView",
+  name: 'TaskEditView',
   props: {
     taskInfo: {}
   },
-  data() {
+  data () {
     return {
       form: {
-        "userId": null,
-        "channel": null,
-        "venue": 1,
-        "session": 23,
-        "userInfoId": null,
-        "source": 0
+        'taskName': null,
+        'userId': null,
+        'channel': null,
+        'venue': 1,
+        'session': 23,
+        'userInfoId': null,
+        'source': 0
       },
-      currentUserInfoId:null,
+      currentUserInfoId: null,
       channelList: [
         {
-          "id": 0,
-          "channelName": "科技馆"
+          'id': 0,
+          'channelName': '科技馆'
         },
         {
-          "id": 1,
-          "channelName": "毛纪"
+          'id': 1,
+          'channelName': '毛纪'
         },
         {
-          "id": 2,
-          "channelName": "故宫"
+          'id': 2,
+          'channelName': '故宫'
         },
         {
-          "id": 3,
-          "channelName": "国博"
+          'id': 3,
+          'channelName': '国博'
         }
       ],
       userIdList: [],
       currentUserIdList: [],
       venueList: [
         {
-          "id": 1,
-          "venueName": "主展厅"
+          'id': 1,
+          'venueName': '主展厅'
         }
       ],
       sessionList: [
         {
-          "id": 23,
-          "sessionName": "全天场"
+          'id': 23,
+          'sessionName': '全天场'
         }
       ],
       isAddUser: false,
-      userText: "",
+      userText: '',
       userList: [],
       showUserList: false,
-      session: ["0", "1"],
-      checkedSession:[],
-      chnMuSessions:["09:00-11:00","11:00-13:30","13:30-16:00"],
-      jntMuSessions:["08:00-09:00","09:00-10:00","10:00-11:00","11:00-12:00"]
+      session: ['0', '1'],
+      checkedSession: [],
+      chnMuSessions: ['09:00-11:00', '11:00-13:30', '13:30-16:00'],
+      jntMuSessions: ['08:00-09:00', '09:00-10:00', '10:00-11:00', '11:00-12:00']
     }
   },
   /* watch: {
      'userText': 'getNewData',
    },*/
   methods: {
-    edit() {
-      if(Object.keys(this.taskInfo).length<=0){
+    edit () {
+      if (Object.keys(this.taskInfo).length <= 0) {
         return
       }
-      if(this.taskInfo.channel==2){
-        if(this.taskInfo.session) {
+      if (this.taskInfo.channel == 2) {
+        if (this.taskInfo.session) {
           let currentSession = []
           currentSession.push(this.taskInfo.session.toString())
           this.session = currentSession
         }
       }
-      if(this.taskInfo.channel==3){
-        let currentSession=[]
+      if (this.taskInfo.channel == 3) {
+        let currentSession = []
         currentSession.push(this.taskInfo.session)
-        this.checkedSession=currentSession
+        this.checkedSession = currentSession
       }
       this.form = this.taskInfo
       this.userList = this.taskInfo.userList
       this.showUserList = true
     },
-    addUser() {
+    addUser () {
       this.isAddUser = true
-      this.userText = ""
+      this.userText = ''
     },
-    ok() {
-      let regex = /(.+?)\s+(.+)/g;
-      let list = [];
-      let match;
+    ok () {
+      let regex = /(.+?)\s+(.+)/g
+      let list = []
+      let match
       while ((match = regex.exec(this.userText)) !== null) {
-        let name = match[1];
-        let id = match[2];
+        let name = match[1]
+        let id = match[2]
         let obj = {
           userName: name,
           IDCard: id.toUpperCase()
-        };
-        list.push(obj);
+        }
+        list.push(obj)
       }
       this.userList = this.userList.concat(list)
       this.isAddUser = false
       this.showUserList = true
     },
-    onSubmit() {
-      this.form.session="23"
-      this.form.venue=1
+    onSubmit () {
+      this.form.session = '23'
+      this.form.venue = 1
       if (this.form.channel == 0 && this.userList.length > 15) {
-        this.$alert("最多只能添加15条，请检查", "添加失败")
+        this.$alert('最多只能添加15条，请检查', '添加失败')
         return
       }
-      if(this.form.channel != 0){
-        this.form.session=this.checkedSession.join(",")
+      if (this.form.channel != 0) {
+        this.form.session = this.checkedSession.join(',')
       }
-      this.form.userInfoId=this.currentUserInfoId
+      this.form.userInfoId = this.currentUserInfoId
       this.form.userList = this.userList
       post('/ticket/add/taskInfo', this.form).then(res => {
         if (res.status != 0) {
@@ -247,46 +259,70 @@ export default {
             title: '保存失败',
             message: res.msg,
             duration: 2000
-          });
+          })
         } else {
           this.$notify.success({
             title: '保存成功',
             duration: 1000
-          });
+          })
           this.close()
         }
       })
     },
-    deleteUser(index) {
+    deleteUser (index) {
       this.userList.splice(index, 1)
     },
-    close() {
-      this.$emit("close")
+    operatorUser (row) {
+      let operatorYn=row.yn
+      get('/ticket/operator/detail', {
+          id: row.id,
+          yn: !operatorYn
+        }
+      ).then(res => {
+        if (res.status != 0) {
+          this.$notify.error({
+            title: '失败',
+            message: res.msg,
+            duration: 2000
+          })
+        } else {
+          this.$notify.success({
+            title: '成功',
+            duration: 1000
+          })
+          row.yn=!operatorYn
+          console.log(11111)
+          return row
+        }
+      })
     },
-    getUserIdList() {
+    close () {
+      this.$emit('close')
+    },
+    getUserIdList () {
       let queryParam = {
         userName: '',
         account: ''
       }
-      post('/ticket/account/list',queryParam).then(res => {
+      post('/ticket/account/list', queryParam).then(res => {
         if (res.status != 0) {
           this.$notify.error({
             title: '查询失败',
             message: res.msg,
             duration: 2000
-          });
+          })
         } else {
           this.userIdList = res.data
           this.edit()
           this.changeChannel()
-          this.currentUserInfoId=this.form.userInfoId
-          this.checkedSession=this.form.session.split(",")
+          this.currentUserInfoId = this.form.userInfoId
+          this.checkedSession = this.form.session.split(',')
         }
       })
     },
-    changeChannel() {
-      this.checkedSession=[]
-      this.currentUserInfoId=null
+    changeChannel () {
+      this.checkedSession = []
+      this.currentUserInfoId = null
       let newUserIdList = []
       for (let o of this.userIdList) {
         if (o.channel == this.form.channel) {

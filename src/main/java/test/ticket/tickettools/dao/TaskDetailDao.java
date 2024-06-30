@@ -12,6 +12,7 @@ public interface TaskDetailDao {
     Integer insertBatch(List<TaskDetailEntity> taskDetailEntityList);
     Integer updateTaskDetail(TaskDetailEntity taskDetailEntity);
     List<TaskDetailEntity> selectByTaskId(Long id);
+    List<TaskDetailEntity> queryAllTaskDetailById(Long id);
     List<TaskDetailEntity> selectUnpaid();
     List<TaskDetailEntity> selectByEntity(TaskDetailEntity entity);
     List<TaskDetailEntity> selectByTaskIdLimit(Long id);

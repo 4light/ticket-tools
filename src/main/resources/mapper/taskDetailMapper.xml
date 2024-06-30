@@ -19,6 +19,7 @@
             <arg column="yn" javaType="java.lang.Boolean" jdbcType="BIT"/>
             <arg column="order_id" javaType="java.lang.Long" jdbcType="BIGINT"/>
             <arg column="price" javaType="java.lang.Integer" jdbcType="INTEGER"/>
+            <arg column="ext" javaType="java.lang.String" jdbcType="VARCHAR"/>
         </constructor>
     </resultMap>
     <insert id="insert" parameterType="test.ticket.tickettools.domain.entity.TaskDetailEntity">
@@ -71,7 +72,10 @@
                     order_id = #{entity.orderId},
                 </if>
                 <if test='entity.price!=null'>
-                    price = #{entity.price}
+                    price = #{entity.price},
+                </if>
+                <if test='entity.ext!=null'>
+                    ext = #{entity.ext}
                 </if>
             </set>
             <where>
@@ -99,6 +103,11 @@
         from task_detail
         where task_id = ${id} and yn=0
     </select>
+    <select id="queryAllTaskDetailById" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        select *
+        from task_detail
+        where task_id = #{id}
+    </select>
     <select id="selectUnpaid" resultMap="BaseResultMap">
         select *
         from task_detail
@@ -109,9 +118,22 @@
             resultMap="BaseResultMap">
         select *
         from task_detail
-        where task_id = ${taskId}
-          and done = ${done}
-          and yn=0
+        <where>
+            <if test="taskId!=null">
+                and task_id = #{taskId}
+            </if>
+            <if test="yn!=null">
+                and yn = #{yn}
+            </if>
+            <if test="done!=null">
+                and done = #{done}
+            </if>
+            <if test="payment!=null">
+                and payment = #{payment}
+            </if><if test="userName!=null and userName!=''">
+                and user_name = #{userName}
+            </if>
+        </where>
     </select>
     <select id="selectByTaskIdLimit" parameterType="java.lang.Long" resultMap="BaseResultMap">
         select *
@@ -125,6 +147,9 @@
             <if test='payment!=null'>
                 payment = #{payment},
             </if>
+            <if test='done!=null'>
+                done = #{done},
+            </if>
             <if test='updateDate!=null'>
                 update_date = #{updateDate},
             </if>
@@ -132,7 +157,13 @@
                 ticket_id = #{ticketId},
             </if>
             <if test='orderNumber!=null'>
-                order_number = #{orderNumber}
+                order_number = #{orderNumber},
+            </if>
+            <if test='ext!=null'>
+                ext = #{ext},
+            </if>
+            <if test='yn!=null'>
+                yn = #{yn}
             </if>
         </set>
         where id = #{id}
@@ -166,6 +197,7 @@
             update_date = null,
             ticket_id = null,
             children_ticket = 0,
+            price=null,
             order_number = null
         </set>
         where id IN

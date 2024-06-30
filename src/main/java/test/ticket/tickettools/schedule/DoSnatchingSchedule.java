@@ -94,15 +94,21 @@ public class DoSnatchingSchedule {
         }
     }
 
-    @Scheduled(cron = "0/1 * 7-17,19-22 * * ?")
+   @Scheduled(cron = "0/1 * 7-17 * * ?")
     public void doSingleSnatchOtherTime() {
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
         for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
             CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo), taskExecutorConfig.getAsyncExecutor());
         }
     }
-
-    @Scheduled(cron = "0/30 * 7-22 * * ?")
+    @Scheduled(cron = "0/1 * 0-6,19-23 * * ?")
+    public void doSingleSnatchOtherTime2() {
+        List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
+        for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
+            CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo), taskExecutorConfig.getAsyncExecutor());
+        }
+    }
+    @Scheduled(cron = "0/30 * * * * ?")
     public void updateOrderPayStatus() {
         try {
             RestTemplate restTemplate = TemplateUtil.initSSLTemplate();

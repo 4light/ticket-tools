@@ -17,7 +17,7 @@
           </el-option>
         </el-select>
       </el-form-item>
-      <el-form-item label="所有者">
+<!--      <el-form-item label="所有者">
         <el-select v-model="queryParam.belongUser" clearable>
           <el-option
             v-for="item in ownerList"
@@ -26,22 +26,35 @@
             :value="item.id">
           </el-option>
         </el-select>
-      </el-form-item>
+      </el-form-item>-->
       <el-form-item>
         <el-button type="primary" @click="queryUser" size="small" round>查询</el-button>
         <el-button type="primary" @click="addUser" size="small" round>新建账号</el-button>
+        <el-button type="primary" @click="checkUserAuth" size="small" round :loading="check">检查登录态</el-button>
       </el-form-item>
     </el-form>
     <div>
       <el-table
         :data="userData"
         border
-        height="80vh"
+        height="75vh"
         style="width: 100%; margin-top: 20px"
       >
         <el-table-column
+        type="index"
+        label="序号"
+        width="50">
+      </el-table-column>
+        <el-table-column
           prop="userName"
-          label="姓名">
+          label="账号名称">
+          <template slot-scope="scope">
+            <div>{{ scope.row.userName }}
+              <span v-if="scope.row.check==false" style="color: #f56c6c">
+                {{ scope.row.checkMsg }}
+              </span>
+            </div>
+          </template>
         </el-table-column>
         <el-table-column
           prop="channel"
@@ -143,7 +156,7 @@
         <el-form-item label="图形验证码:">
           <el-col :span="12">
           <el-input v-model="accountLoginInfo.captchaImage" placeholder="图形验证码" clearable></el-input>
-          <img :src="accountLoginInfo.captchaImageBase64">
+          <el-image :src="accountLoginInfo.captchaImageBase64" @click="getCaptcha" v-if="showCapt"/>
           </el-col>
         </el-form-item>
         <el-form-item label="短信验证码:" :inline="true">
@@ -165,6 +178,7 @@ export default {
   name: "UserView",
   data() {
     return {
+      check:false,
       queryParam: {
         userName: '',
         account: ''
@@ -211,6 +225,8 @@ export default {
         verificationCode:"",
         uuid:""
       },
+      showCapt:true,
+      checkRes:{}
     }
   },
   mounted() {
@@ -287,11 +303,13 @@ export default {
         }
       })
     },
-    handleSizeChange() {
-
+    handleSizeChange(val) {
+      this.page.pageSize = val
+      this.queryUser()
     },
-    handleCurrentChange() {
-
+    handleCurrentChange(val) {
+      this.page.pageNum = val
+      this.queryUser()
     },
     onSubmit() {
       if (this.formData) {
@@ -328,6 +346,11 @@ export default {
     loginAccount(row){
       this.accountLoginInfo={}
       this.accountLoginInfo.phone=row.account
+      this.getCaptcha()
+    },
+    getCaptcha(){
+      this.showCapt=false
+      this.accountLoginInfo.captchaImageBase64=""
       get("/ticket/account/getCaptcha",null).then(res=>{
         if (res.status != 0) {
           this.$notify.error({
@@ -336,6 +359,7 @@ export default {
             duration: 2000
           });
         } else {
+          this.showCapt=true
           let base64= res.data.captchaImageBase64
           this.accountLoginInfo.captchaImageBase64=`data:image/png;base64,${base64}`
           this.accountLoginInfo.uuid=res.data.uuid
@@ -398,12 +422,41 @@ export default {
           this.showAccountLogin=false
         }
       })
+    },
+    checkUserAuth(){
+      this.check=true
+      this.checkRes={}
+      get("/ticket/account/check",null).then(res=>{
+        if (res.status != 0) {
+          this.$notify.error({
+            title: '失败',
+            message: res.msg,
+            duration: 2000
+          });
+          this.check=false
+        } else {
+          this.checkRes=res.data
+          let newUserData=[]
+          for(let o of this.userData){
+            for(let checkItem of this.checkRes){
+              if(o.id==checkItem.accountId){
+                o.check=checkItem.checkRes
+                o.checkMsg=checkItem.msg
+                newUserData.push(o)
+                continue
+              }
+            }
+          }
+          this.userData=JSON.parse(JSON.stringify(newUserData))
+          this.check=false
+        }
+      })
     }
   }
 }
 </script>
 
-<style scoped>
+<style>
 .inputStyle {
   width: 50%;
 }

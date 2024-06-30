@@ -9,6 +9,7 @@ import java.util.List;
 public interface TaskDao{
     Integer insert(TaskEntity taskEntity);
     TaskEntity selectByPrimaryKey(Long id);
+    TaskEntity queryTask(TaskEntity taskEntity);
     Integer updateTask(TaskEntity taskEntity);
     Integer updateAuthByPhone(TaskEntity taskEntity);
     Integer deleteByPrimaryKey(Long id);

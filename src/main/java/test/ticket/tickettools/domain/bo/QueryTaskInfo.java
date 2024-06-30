@@ -14,6 +14,9 @@ public class QueryTaskInfo {
     private PageParam page;
     private Long userInfoId;
     private String creator;
+    private Boolean yn;
+    private Boolean payment;
+    private String userName;
 
     public String getAccount() {
         return account;
@@ -94,5 +97,29 @@ public class QueryTaskInfo {
 
     public void setCreator(String creator) {
         this.creator = creator;
+    }
+
+    public Boolean getYn() {
+        return yn;
+    }
+
+    public void setYn(Boolean yn) {
+        this.yn = yn;
+    }
+
+    public Boolean getPayment() {
+        return payment;
+    }
+
+    public void setPayment(Boolean payment) {
+        this.payment = payment;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
     }
 }

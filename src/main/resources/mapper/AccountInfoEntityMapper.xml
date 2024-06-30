@@ -76,32 +76,15 @@
             belong_user=
         values (belong_user)
     </insert>
-    <select id="select" parameterType="test.ticket.tickettools.domain.entity.AccountInfoEntity" resultMap="BaseResultMap">
+    <select id="selectList" parameterType="test.ticket.tickettools.domain.entity.AccountInfoEntity" resultMap="BaseResultMap">
         select * from account_info
-        <where>
-            yn=0
-            <if test='account!=null and account!=""'>
-                AND account = #{account}
-            </if>
-            <if test='userName!=null and userName!=""'>
-                AND user_name = #{userName}
-            </if>
-            <if test='channel!=null'>
-                AND channel = #{channel}
-            </if>
-            <if test='status!=null'>
-                AND status = #{status}
-            </if>
-            <if test='channelUserId!=null'>
-                AND channel_user_id = #{channelUserId}
-            </if>
-            <if test='creator!=null'>
-                AND creator = #{creator}
-            </if>
-            <if test='belongUser!=null'>
-                AND belong_user = #{belongUser}
-            </if>
-        </where>
+        where yn=0
+        <if test="creator != null and creator != ''">
+            AND creator = #{creator}
+        </if>
+        <if test="belongUser != null and belongUser != ''">
+            OR (yn = 0 AND belong_user = #{belongUser})
+        </if>
     </select>
     <select id="selectById" parameterType="java.lang.Long" resultMap="BaseResultMap">
         select *

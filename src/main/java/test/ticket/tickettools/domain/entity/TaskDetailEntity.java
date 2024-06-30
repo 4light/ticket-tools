@@ -36,11 +36,16 @@ public class TaskDetailEntity {
 
     private Long orderId;
     private Integer price;
+    private String ext;
 
     public TaskDetailEntity() {
     }
 
-    public TaskDetailEntity(Long id, Long taskId, String userName, String IDCard, String userPhone, Integer age, Date createDate, Date updateDate, Boolean done, Boolean payment, Long ticketId, Boolean childrenTicket, String orderNumber, Boolean yn, Long orderId, Integer price) {
+    public TaskDetailEntity(Long id, Long taskId, String userName,
+                            String IDCard, String userPhone, Integer age,
+                            Date createDate, Date updateDate, Boolean done,
+                            Boolean payment, Long ticketId, Boolean childrenTicket,
+                            String orderNumber, Boolean yn, Long orderId, Integer price,String ext) {
         this.id = id;
         this.taskId = taskId;
         this.userName = userName;
@@ -57,6 +62,7 @@ public class TaskDetailEntity {
         this.yn = yn;
         this.orderId = orderId;
         this.price = price;
+        this.ext=ext;
     }
 
     public Long getId() {
@@ -185,5 +191,13 @@ public class TaskDetailEntity {
 
     public void setPrice(Integer price) {
         this.price = price;
+    }
+
+    public String getExt() {
+        return ext;
+    }
+
+    public void setExt(String ext) {
+        this.ext = ext;
     }
 }

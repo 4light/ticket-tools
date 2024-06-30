@@ -129,7 +129,7 @@ export default {
 
     .main-content {
       .el-scrollbar {
-        height: calc(100vh - 64px - 40px);
+        height: calc(100vh - 64px - 30px);
         .scroll-bar;
 
         .scrollbar {

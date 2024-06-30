@@ -4,6 +4,7 @@
     <resultMap id="BaseResultMap" type="test.ticket.tickettools.domain.entity.TaskEntity">
         <constructor>
             <arg column="id" javaType="java.lang.Long" jdbcType="BIGINT"/>
+            <arg column="task_name" javaType="java.lang.String" jdbcType="VARCHAR"/>
             <arg column="login_phone" javaType="java.lang.String" jdbcType="VARCHAR"/>
             <arg column="ip" javaType="java.lang.String" jdbcType="VARCHAR"/>
             <arg column="use_date" javaType="java.util.Date" jdbcType="DATE"/>
@@ -30,11 +31,11 @@
     </resultMap>
     <insert id="insert" parameterType="test.ticket.tickettools.domain.entity.TaskEntity" useGeneratedKeys="true"
             keyProperty="id">
-        insert into task (id, login_phone, ip,
+        insert into task (id, task_name,login_phone, ip,
                           use_date, auth, create_date,
                           update_date, user_id, channel,
                           venue, session,account,user_info_id,pwd,creator,operator)
-        values (#{id,jdbcType=BIGINT}, #{loginPhone,jdbcType=VARCHAR}, #{ip,jdbcType=VARCHAR},
+        values (#{id,jdbcType=BIGINT}, #{taskName,jdbcType=VARCHAR},#{loginPhone,jdbcType=VARCHAR}, #{ip,jdbcType=VARCHAR},
                 #{useDate,jdbcType=DATE}, #{auth,jdbcType=VARCHAR}, #{createDate,jdbcType=TIMESTAMP},
                 #{updateDate,jdbcType=TIMESTAMP}, #{userId,jdbcType=BIGINT}, #{channel,jdbcType=INTEGER},
                 #{venue,jdbcType=INTEGER}, #{session,jdbcType=VARCHAR},#{account,jdbcType=VARCHAR},
@@ -44,6 +45,18 @@
         select *
         from task
         where id = #{id,jdbcType=BIGINT} and yn =0
+    </select>
+    <select id="queryTask" parameterType="test.ticket.tickettools.domain.entity.TaskEntity" resultMap="BaseResultMap">
+        select *
+        from task
+        <where>
+            <if test="id!=null">
+                and id = #{id,jdbcType=BIGINT}
+            </if>
+            <if test="yn!=null">
+                and yn = #{yn}
+            </if>
+        </where>
     </select>
     <select id="getUnDoneTasks" parameterType="test.ticket.tickettools.domain.entity.TaskEntity" resultMap="BaseResultMap">
         select
@@ -82,6 +95,9 @@
         <if test='loginPhone!=null and loginPhone!=""'>
             AND login_phone = #{loginPhone}
         </if>
+        <if test='taskName!=null and taskName!=""'>
+            AND task_name = #{taskName}
+        </if>
         <if test='useDate!=null'>
             AND use_date = #{useDate}
         </if>
@@ -97,7 +113,9 @@
         <if test='creator!=null'>
             AND creator = #{creator}
         </if>
-        and yn =0
+        <if test='yn!=null'>
+            AND yn = #{yn}
+        </if>
         order by id DESC
     </select>
     <update id="deleteByPrimaryKey" parameterType="java.lang.Long">
@@ -107,6 +125,9 @@
     <update id="updateTask" parameterType="test.ticket.tickettools.domain.entity.TaskEntity">
         update task
         <set>
+            <if test='taskName!=null'>
+                task_name = #{taskName},
+            </if>
             <if test='loginPhone!=null'>
                 login_phone = #{loginPhone},
             </if>
@@ -142,6 +163,9 @@
             </if>
             <if test='pwd!=null'>
                 pwd = #{pwd},
+            </if>
+            <if test='yn!=null'>
+                yn = #{yn},
             </if>
             <if test='operator!=null'>
                 operator = #{operator}
