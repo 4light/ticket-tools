@@ -460,9 +460,4 @@ export default {
 .inputStyle {
   width: 50%;
 }
-img {
-  cursor: pointer;
-  width: 100px;
-  height: 40px;
-}
 </style>
