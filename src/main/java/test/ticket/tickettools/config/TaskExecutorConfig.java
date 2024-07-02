@@ -17,8 +17,8 @@ public class TaskExecutorConfig {
     public ThreadPoolTaskExecutor getAsyncExecutor() {
         ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
         pool.setCorePoolSize(10);//核心线程数
-        pool.setMaxPoolSize(200);//最大线程
-        pool.setQueueCapacity(10);//线程队列
+        pool.setMaxPoolSize(500);//最大线
+        pool.setQueueCapacity(200);//线程队列
         pool.setThreadNamePrefix("DataProcessor-");
         pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());//拒绝策略
         pool.initialize();//线程初始化

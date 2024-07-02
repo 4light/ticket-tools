@@ -1,5 +1,9 @@
 package test.ticket.tickettools.schedule;
 
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.http.HttpResponse;
+import cn.hutool.http.HttpUtil;
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
@@ -18,21 +22,20 @@ import test.ticket.tickettools.dao.TaskDao;
 import test.ticket.tickettools.domain.bo.DoSnatchInfo;
 import test.ticket.tickettools.domain.bo.ServiceResponse;
 import test.ticket.tickettools.domain.bo.TaskInfo;
+import test.ticket.tickettools.domain.constant.RedisKeyEnum;
 import test.ticket.tickettools.domain.entity.AccountInfoEntity;
 import test.ticket.tickettools.domain.entity.TaskDetailEntity;
 import test.ticket.tickettools.domain.entity.TaskEntity;
 import test.ticket.tickettools.service.AccountService;
 import test.ticket.tickettools.service.LoginService;
+import test.ticket.tickettools.service.RedisService;
 import test.ticket.tickettools.service.TicketService;
 import test.ticket.tickettools.utils.DateUtils;
 import test.ticket.tickettools.utils.TemplateUtil;
 
 import javax.annotation.Resource;
 import java.time.LocalDate;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -46,6 +49,7 @@ public class DoSnatchingSchedule {
     private static String searchByOrderNoUrl = "https://pcticket.cstm.org.cn/prod-api/order/OrderInfo/updateSearchByOrderNo";
     private static String searchPersonOrderUrl = "https://pcticket.cstm.org.cn/prod-api/order/OrderInfo/searchPersonOrder/";
     private static RestTemplate restTemplate = new RestTemplate();
+    private static ExecutorService queryExecutor = Executors.newFixedThreadPool(5);
 
     @Resource
     TicketService ticketServiceImpl;
@@ -57,57 +61,86 @@ public class DoSnatchingSchedule {
     LoginService loginService;
     @Resource
     TaskExecutorConfig taskExecutorConfig;
+    @Resource
+    RedisService redisService;
 
     /**
      * 执行放票当天的任务
      */
-    @Scheduled(cron = "0/1 0-30 18 * * ?")
+    @Scheduled(cron = "0/1 0-10 18 * * ?")
     public void doSnatching() {
-        Map<String, DoSnatchInfo> taskForRun = ticketServiceImpl.getTaskForRun();
-        if(ObjectUtils.isEmpty(taskForRun)){
+        LocalDate localDate = LocalDate.now();
+        String getHallUrl = "https://pcticket.cstm.org.cn/prod-api/pool/ingore/getHall?saleMode=1&openPerson=1&queryDate=%s";
+        String formatGetHallUrl = String.format(getHallUrl, DateUtil.format(DateUtils.localDateToDate(localDate.plusDays(7L)), "yyyy/MM/dd"));
+        HttpResponse response = HttpUtil.createGet(formatGetHallUrl).execute();
+        String body = response.body();
+        if (ObjectUtils.isEmpty(body)) {
             return;
         }
-        for (Map.Entry<String, DoSnatchInfo> entity : taskForRun.entrySet()) {
-            CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(entity.getValue()), taskExecutorConfig.getAsyncExecutor());
+        JSONObject bodyJson = JSON.parseObject(body);
+        JSONArray data = bodyJson.getJSONArray("data");
+        boolean haveTicket = false;
+        for (int i = 0; i < data.size(); i++) {
+            if (data.getJSONObject(i).getIntValue("hallId") == 1) {
+                if (data.getJSONObject(i).getIntValue("ticketPool") > 0) {
+                    haveTicket = true;
+                    break;
+                }
+            }
+        }
+        if (haveTicket) {
+            List<DoSnatchInfo> taskForRun = ticketServiceImpl.getTaskForRun();
+            if (ObjectUtils.isEmpty(taskForRun)) {
+                return;
+            }
+            for (DoSnatchInfo doSnatchInfo : taskForRun) {
+                CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo), taskExecutorConfig.getAsyncExecutor());
+            }
         }
     }
 
     /**
      * 去除放票当天的任务需要单个执行的任务
      */
-    @Scheduled(cron = "0/1 0-30 18 * * ?")
+    @Scheduled(cron = "0/2 0-10 18 * * ?")
     public void doSnatchingExcludeTarget() {
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
-        LocalDate localDate=LocalDate.now().plusDays(7L);
+        LocalDate localDate = LocalDate.now().plusDays(7L);
         Date date = DateUtils.localDateToDate(localDate);
-        allTaskForRun=allTaskForRun.stream().filter(o->!date.equals(o.getUseDate())).collect(Collectors.toList());
+        allTaskForRun = allTaskForRun.stream().filter(o -> !date.equals(o.getUseDate())).collect(Collectors.toList());
         for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
             CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo), taskExecutorConfig.getAsyncExecutor());
         }
     }
 
-    @Scheduled(cron = "0/1 31-59 18 * * ?")
+    @Scheduled(cron = "0/2 31-59 18 * * ?")
     public void doSingleSnatch() {
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
         for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
             CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo), taskExecutorConfig.getAsyncExecutor());
         }
+
     }
 
-   @Scheduled(cron = "0/1 * 7-17 * * ?")
+    @Scheduled(cron = "0/2 * 7-17 * * ?")
     public void doSingleSnatchOtherTime() {
-        List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
-        for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
-            CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo), taskExecutorConfig.getAsyncExecutor());
-        }
+
+                List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
+                for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
+                    CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo), taskExecutorConfig.getAsyncExecutor());
+                }
+
     }
-    @Scheduled(cron = "0/1 * 0-6,19-23 * * ?")
+
+    @Scheduled(cron = "0/2 * 0-6,19-23 * * ?")
     public void doSingleSnatchOtherTime2() {
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
         for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
             CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo), taskExecutorConfig.getAsyncExecutor());
         }
+
     }
+
     @Scheduled(cron = "0/30 * * * * ?")
     public void updateOrderPayStatus() {
         try {
@@ -147,7 +180,7 @@ public class DoSnatchingSchedule {
                 }
 
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -207,14 +240,74 @@ public class DoSnatchingSchedule {
         return false;
     }
 
-    private HttpHeaders getHeader(String auth,Long orderId) {
+    private HttpHeaders getHeader(String auth, Long orderId) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("accept", "application/json");
         headers.set("authorization", auth);
-        headers.set("Referer", "https://pcticket.cstm.org.cn/personal/order_detail?orderId="+orderId);
+        headers.set("Referer", "https://pcticket.cstm.org.cn/personal/order_detail?orderId=" + orderId);
         headers.set("Sec-Ch-Ua", "\"Google Chrome\";v=\"125\", \"Chromium\";v=\"125\", \"Not.A/Brand\";v=\"24\"\n");
         headers.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
         return headers;
+    }
+
+    private void runNormal() {
+        List<String> keys = redisService.getList(RedisKeyEnum.NORMAL.getCode());
+        if (ObjectUtils.isEmpty(keys)) {
+            return;
+        }
+        List<String> useDateList = redisService.getList(RedisKeyEnum.USEDATE.getCode());
+        if (ObjectUtils.isEmpty(useDateList)) {
+            return;
+        }
+        log.info("余票日期:{}", useDateList);
+        List<DoSnatchInfo> allTaskForRun = new ArrayList<>();
+        for (String key : keys) {
+            if (ObjectUtils.isEmpty(key)) {
+                continue;
+            }
+            List<String> value = redisService.getList(key);
+            if (ObjectUtils.isEmpty(value)) {
+                continue;
+            }
+            List<DoSnatchInfo> list = value.stream().map(o -> JSON.parseObject(o, DoSnatchInfo.class)).collect(Collectors.toList());
+            for (DoSnatchInfo doSnatchInfo : list) {
+                Date useDate = doSnatchInfo.getUseDate();
+                String dateStr = DateUtils.dateToStr(useDate, "yyyy-MM-dd");
+                if (useDateList.contains(dateStr)) {
+                    allTaskForRun.add(doSnatchInfo);
+                }
+            }
+        }
+        for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
+            CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo), taskExecutorConfig.getAsyncExecutor());
+        }
+    }
+
+    //@Scheduled(cron = "0/1 * * * * ?")
+    static class QueryRes implements Callable<Boolean> {
+        @Override
+        public Boolean call() {
+            HttpResponse response = HttpUtil.createGet("https://pcticket.cstm.org.cn/prod-api/pool/ingore/getCalendar?saleMode=1&openPerson=1").execute();
+            String body = response.body();
+            if (ObjectUtils.isEmpty(body)) {
+                return false;
+            }
+            log.info("查询到结果");
+            JSONObject bodyJson = JSON.parseObject(body);
+            JSONArray data = bodyJson.getJSONArray("data");
+            for (int i = 0; i < data.size(); i++) {
+                JSONObject item = data.getJSONObject(i);
+                JSONArray hallTicketPoolVOS = item.getJSONArray("hallTicketPoolVOS");
+                if (ObjectUtils.isEmpty(hallTicketPoolVOS)) {
+                    continue;
+                }
+                JSONObject hallTicketPoolVO = hallTicketPoolVOS.getJSONObject(0);
+                if (!ObjectUtils.isEmpty(hallTicketPoolVO) && !hallTicketPoolVO.getString("closeContent").contains("暂无余票")) {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 }

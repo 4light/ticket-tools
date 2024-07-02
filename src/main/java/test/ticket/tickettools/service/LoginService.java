@@ -39,6 +39,8 @@ public class LoginService {
 
     @Resource
     AccountInfoDao accountInfoDao;
+    @Resource
+    SyncDataService syncDataService;
 
     public String longinCSTM(String loginPhone) {
         RestTemplate restTemplate = new RestTemplate();
@@ -205,6 +207,8 @@ public class LoginService {
             accountInfoEntity.setHeaders(auth);
             Integer integer = accountInfoDao.updateByChannelAccount(accountInfoEntity);
             if(integer>0){
+                syncDataService.syncNormalData();
+                syncDataService.syncTickingDayData();
                 return ServiceResponse.createBySuccessMessgge("登录态更新成功");
             }
             return ServiceResponse.createByErrorMessage("登录态保存失败");

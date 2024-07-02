@@ -32,8 +32,8 @@ public interface TicketService {
     ServiceResponse addPhoneInfo(AccountInfoEntity accountInfoEntity);
 
     ServiceResponse getPhoneMsg(String phoneNum);
-    //获取需要执行的任务
-    Map<String, DoSnatchInfo> getTaskForRun();
+    //获取发售当天需要执行的任务
+    List<DoSnatchInfo> getTaskForRun();
     //获取所有需要单个执行的任务
     List<DoSnatchInfo> getAllTaskForRun();
     //获取所有未执行完的任务

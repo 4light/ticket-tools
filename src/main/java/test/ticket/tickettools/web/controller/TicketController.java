@@ -1,6 +1,6 @@
 package test.ticket.tickettools.web.controller;
 import cn.hutool.core.date.DateUtil;
-import org.springframework.util.ObjectUtils;
+import cn.hutool.core.util.ObjectUtil;
 import org.springframework.web.bind.annotation.*;
 import test.ticket.tickettools.domain.bo.*;
 import test.ticket.tickettools.domain.entity.AccountInfoEntity;
@@ -10,7 +10,6 @@ import test.ticket.tickettools.service.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -21,6 +20,8 @@ public class TicketController  extends BaseController{
     TicketService ticketServiceImpl;
     @Resource
     DoSnatchTicketService palaceMuseumTicketServiceImpl;
+    @Resource
+    SyncDataService syncDataService;
 
     @PostMapping(value = "/user")
     public ServiceResponse<PageableResponse<TaskInfoListResponse>> getUser(@RequestBody QueryTaskInfo queryTaskInfo) {
@@ -68,6 +69,8 @@ public class TicketController  extends BaseController{
         taskDetailEntity.setYn(yn);
         Boolean res = ticketServiceImpl.updateTaskDetail(taskDetailEntity);
         if(res){
+            syncDataService.syncNormalData();
+            syncDataService.syncTickingDayData();
             return ServiceResponse.createBySuccessMessgge("更新成功");
         }
         return ServiceResponse.createByErrorMessage("更新失败");
@@ -118,9 +121,13 @@ public class TicketController  extends BaseController{
         return ticketServiceImpl.pay(placeOrderInfo);
     }
 
-    @GetMapping(value = "/test")
-    public void sss(){
-        List<DoSnatchInfo> doSnatchInfoList = palaceMuseumTicketServiceImpl.getDoSnatchInfos();
-        doSnatchInfoList.forEach(o->palaceMuseumTicketServiceImpl.doSnatchingTicket(o));
+    @GetMapping(value = "/sync")
+    public void sync(@RequestParam String tag){
+        if(ObjectUtil.equals(tag,"ticketingDay")){
+            syncDataService.syncTickingDayData();
+        }
+        if(ObjectUtil.equals(tag,"normal")){
+            syncDataService.syncNormalData();
+        }
     }
 }

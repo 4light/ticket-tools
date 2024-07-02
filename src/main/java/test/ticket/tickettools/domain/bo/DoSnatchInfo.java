@@ -21,6 +21,8 @@ public class DoSnatchInfo {
     private String pwd;
     private String headers;
     private String channelUserId;
+    //区分是放票日抢票还是普通抢票
+    private String type;
 
     public Long getTaskId() {
         return taskId;
@@ -148,5 +150,13 @@ public class DoSnatchInfo {
 
     public void setChannelUserId(String channelUserId) {
         this.channelUserId = channelUserId;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 }
