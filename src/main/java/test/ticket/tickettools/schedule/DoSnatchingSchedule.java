@@ -341,6 +341,7 @@ public class DoSnatchingSchedule {
                         return true;
                     }
                 }
+                break;
             }
         }
         return false;
