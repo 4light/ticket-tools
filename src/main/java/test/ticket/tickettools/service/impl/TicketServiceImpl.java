@@ -672,7 +672,7 @@ public class TicketServiceImpl implements TicketService {
                 //String body = exchange.getBody();
                 //JSONObject bodyJson = JSON.parseObject(body);
                 JSONObject bodyJson = TemplateUtil.getResponse(restTemplate, shoppingCartUrl, HttpMethod.POST, shoppingCartUrlEntity);
-                log.info("提交订单结果：{}", bodyJson);
+                log.info("账号：{}下游客：{},提交订单结果：{}", doSnatchInfo.getAccount(),doSnatchInfo.getIdNameMap().values(),bodyJson);
                 if (!ObjectUtils.isEmpty(bodyJson) && (bodyJson.getIntValue("code") == 550 || bodyJson.getIntValue("code") == 503)) {
                     if (!msgCache.containsKey(doSnatchInfo.getTaskId())) {
                         //WebSocketServer.sendInfo(socketMsg("抢票异常", "账号:"+doSnatchInfo.getAccount()+","+bodyJson.getString("msg"), 0), doSnatchInfo.getCreator());
