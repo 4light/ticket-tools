@@ -336,7 +336,7 @@ public class DoSnatchingSchedule {
             Date currentDate = item.getDate("currentDate");
             JSONObject hallTicketPoolVO = hallTicketPoolVOS.getJSONObject(0);
             if(ObjectUtil.equals(date,currentDate)) {
-                if (!ObjectUtils.isEmpty(hallTicketPoolVO) && !hallTicketPoolVO.getString("closeContent").contains("暂无余票")) {
+                if (!ObjectUtils.isEmpty(hallTicketPoolVO) && hallTicketPoolVO.getIntValue("ticketPool")>0) {
                     return true;
                 }
             }
