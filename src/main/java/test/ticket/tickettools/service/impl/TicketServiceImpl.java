@@ -430,6 +430,7 @@ public class TicketServiceImpl implements TicketService {
             TaskDetailEntity query = new TaskDetailEntity();
             query.setTaskId(entity.getId());
             query.setDone(false);
+            query.setYn(false);
             List<TaskDetailEntity> taskDetailEntities = taskDetailDao.selectByEntity(query);
             if (ObjectUtils.isEmpty(taskDetailEntities)) {
                 entity.setDone(true);
@@ -476,6 +477,7 @@ public class TicketServiceImpl implements TicketService {
             TaskDetailEntity query = new TaskDetailEntity();
             query.setTaskId(entity.getId());
             query.setDone(false);
+            query.setYn(false);
             List<TaskDetailEntity> taskDetailEntities = taskDetailDao.selectByEntity(query);
             if (ObjectUtils.isEmpty(taskDetailEntities)) {
                 entity.setDone(true);
@@ -630,8 +632,8 @@ public class TicketServiceImpl implements TicketService {
                 JSONObject response = TemplateUtil.getResponse(restTemplate, addUrl, HttpMethod.POST, addEntity);
                 if (ObjectUtils.isEmpty(response) || response.getIntValue("code") != 200) {
                     if (!msgCache.containsKey(doSnatchInfo.getTaskId())) {
-                        WebSocketServer.sendInfo(socketMsg("抢票异常", "账号:" + doSnatchInfo.getAccount() + "登录态异常", 0), doSnatchInfo.getCreator());
-                        SendMessageUtil.send(ChannelEnum.CSTM.getDesc(), DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"), "账号：", doSnatchInfo.getAccount(), "登录态异常");
+                        WebSocketServer.sendInfo(socketMsg("抢票异常", "账号:" + doSnatchInfo.getAccount() + response.getString("msg"), 0), doSnatchInfo.getCreator());
+                        SendMessageUtil.send(ChannelEnum.CSTM.getDesc(), DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"), "账号：", doSnatchInfo.getAccount(), doSnatchInfo.getCreator());
                         List<Long> taskDetailIds = doSnatchInfo.getTaskDetailIds();
                         for (Long taskDetailId : taskDetailIds) {
                             TaskDetailEntity taskDetailEntity = new TaskDetailEntity();
@@ -672,8 +674,8 @@ public class TicketServiceImpl implements TicketService {
                 //String body = exchange.getBody();
                 //JSONObject bodyJson = JSON.parseObject(body);
                 JSONObject bodyJson = TemplateUtil.getResponse(restTemplate, shoppingCartUrl, HttpMethod.POST, shoppingCartUrlEntity);
-                log.info("账号：{}下游客：{},提交订单结果：{}", doSnatchInfo.getAccount(),doSnatchInfo.getIdNameMap().values(),bodyJson);
                 if (!ObjectUtils.isEmpty(bodyJson) && (bodyJson.getIntValue("code") == 550 || bodyJson.getIntValue("code") == 503)) {
+                    log.info("账号：{}下游客：{},提交订单结果：{}", doSnatchInfo.getAccount(),doSnatchInfo.getIdNameMap().values(),bodyJson);
                     if (!msgCache.containsKey(doSnatchInfo.getTaskId())) {
                         //WebSocketServer.sendInfo(socketMsg("抢票异常", "账号:"+doSnatchInfo.getAccount()+","+bodyJson.getString("msg"), 0), doSnatchInfo.getCreator());
                         List<Long> taskDetailIds = doSnatchInfo.getTaskDetailIds();
@@ -697,7 +699,7 @@ public class TicketServiceImpl implements TicketService {
                 //WebSocketServer.sendInfo("余票不足","web");
                 if (!ObjectUtils.isEmpty(bodyJson) && bodyJson.getIntValue("code") == 200) {
                     msgCache.remove(doSnatchInfo.getTaskId());
-                    log.info("提交订单结果：{}", bodyJson);
+                    log.info("账号：{}下游客：{},提交订单结果：{}", doSnatchInfo.getAccount(),doSnatchInfo.getIdNameMap().values(),bodyJson);
                         /*//doneList.addAll(nameIDMap.values());
                         HttpEntity placeOrderEntity = new HttpEntity<>(buildPlaceOrderParam(priceNameCountMap.get("childrenTicket"), useDate, phone, bodyJson.getJSONArray("data").toJavaList(Long.class)), headers);
                         ResponseEntity<String> placeOrderRes = restTemplate.exchange(placeOrderUrl, HttpMethod.POST, placeOrderEntity, String.class);

@@ -129,7 +129,7 @@ public class TemplateUtil {
             }
             return JSON.parseObject(checkUserResBody);
         } catch (Exception e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
         return null;
     }

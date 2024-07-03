@@ -143,7 +143,10 @@ public class DoSnatchingSchedule {
     @Scheduled(cron = "0/1 * 7-17 * * ?")
     public void doSingleSnatchOtherTime() {
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
-        // 将List按useDate字段分组
+        for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
+            CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo), taskExecutorConfig.getAsyncExecutor());
+        }
+        /*// 将List按useDate字段分组
         Map<Date, List<DoSnatchInfo>> mapByUseDate = allTaskForRun.stream()
                 .collect(Collectors.groupingBy(DoSnatchInfo::getUseDate));
         // 对每个useDate异步检查并处理
@@ -164,7 +167,7 @@ public class DoSnatchingSchedule {
                             allOf.thenRun(() -> log.info("日期{}下批次任务执行完成: " , useDate));
                         }
                     });
-        });
+        });*/
         /*for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
             CompletableFuture.runAsync(() -> {
                 Date useDate = doSnatchInfo.getUseDate();
