@@ -109,7 +109,28 @@ public class DoSnatchingSchedule {
         LocalDate localDate = LocalDate.now().plusDays(7L);
         Date date = DateUtils.localDateToDate(localDate);
         allTaskForRun = allTaskForRun.stream().filter(o -> !date.equals(o.getUseDate())).collect(Collectors.toList());
-        for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
+        Map<Date, List<DoSnatchInfo>> mapByUseDate = allTaskForRun.stream()
+                .collect(Collectors.groupingBy(DoSnatchInfo::getUseDate));
+        // 对每个useDate异步检查并处理
+        mapByUseDate.forEach((useDate, doSnatchInfos) -> {
+            CompletableFuture.supplyAsync(() -> haveTicket(useDate), taskExecutorConfig.getAsyncExecutor())
+                    .thenAccept(hasTicket -> {
+                        if (hasTicket) {
+                            // 异步执行抓票操作，并收集所有CompletableFuture
+                            List<CompletableFuture<Void>> futures = doSnatchInfos.stream()
+                                    .map(doSnatchInfo -> CompletableFuture.runAsync(
+                                            () -> ticketServiceImpl.snatchingTicket(doSnatchInfo),
+                                            taskExecutorConfig.getAsyncExecutor()
+                                    ))
+                                    .collect(Collectors.toList());
+
+                            // 使用CompletableFuture.allOf等待所有抓票操作完成
+                            CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+                            allOf.thenRun(() -> log.info("日期{}下批次任务执行完成: " , useDate));
+                        }
+                    });
+        });
+        /*for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
             CompletableFuture.runAsync(() -> {
                 Date useDate = doSnatchInfo.getUseDate();
                 CompletableFuture<Boolean> ticketCheck = CompletableFuture.supplyAsync(() -> haveTicket(useDate), taskExecutorConfig.getAsyncExecutor());
@@ -120,13 +141,34 @@ public class DoSnatchingSchedule {
                     }
                 });
             }, taskExecutorConfig.getAsyncExecutor());
-        }
+        }*/
     }
 
     @Scheduled(cron = "0/2 11-59 18 * * ?")
     public void doSingleSnatch() {
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
-        for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
+        Map<Date, List<DoSnatchInfo>> mapByUseDate = allTaskForRun.stream()
+                .collect(Collectors.groupingBy(DoSnatchInfo::getUseDate));
+        // 对每个useDate异步检查并处理
+        mapByUseDate.forEach((useDate, doSnatchInfos) -> {
+            CompletableFuture.supplyAsync(() -> haveTicket(useDate), taskExecutorConfig.getAsyncExecutor())
+                    .thenAccept(hasTicket -> {
+                        if (hasTicket) {
+                            // 异步执行抓票操作，并收集所有CompletableFuture
+                            List<CompletableFuture<Void>> futures = doSnatchInfos.stream()
+                                    .map(doSnatchInfo -> CompletableFuture.runAsync(
+                                            () -> ticketServiceImpl.snatchingTicket(doSnatchInfo),
+                                            taskExecutorConfig.getAsyncExecutor()
+                                    ))
+                                    .collect(Collectors.toList());
+
+                            // 使用CompletableFuture.allOf等待所有抓票操作完成
+                            CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+                            allOf.thenRun(() -> log.info("日期{}下批次任务执行完成: " , useDate));
+                        }
+                    });
+        });
+        /*for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
             CompletableFuture.runAsync(() -> {
                 Date useDate = doSnatchInfo.getUseDate();
                 CompletableFuture<Boolean> ticketCheck = CompletableFuture.supplyAsync(() -> haveTicket(useDate), taskExecutorConfig.getAsyncExecutor());
@@ -137,7 +179,7 @@ public class DoSnatchingSchedule {
                     }
                 });
             }, taskExecutorConfig.getAsyncExecutor());
-        }
+        }*/
     }
 
     @Scheduled(cron = "0/1 * 7-17 * * ?")
@@ -185,8 +227,11 @@ public class DoSnatchingSchedule {
     @Scheduled(cron = "0/1 * 0-6,19-23 * * ?")
     public void doSingleSnatchOtherTime2() {
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
+        for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
+            CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo), taskExecutorConfig.getAsyncExecutor());
+        }
         // 将List按useDate字段分组
-        Map<Date, List<DoSnatchInfo>> mapByUseDate = allTaskForRun.stream()
+        /*Map<Date, List<DoSnatchInfo>> mapByUseDate = allTaskForRun.stream()
                 .collect(Collectors.groupingBy(DoSnatchInfo::getUseDate));
         // 对每个useDate异步检查并处理
         mapByUseDate.forEach((useDate, doSnatchInfos) -> {
@@ -206,7 +251,7 @@ public class DoSnatchingSchedule {
                             allOf.thenRun(() -> log.info("日期{}下批次任务执行完成: " , useDate));
                         }
                     });
-        });
+        });*/
     }
 
     @Scheduled(cron = "0/30 * * * * ?")
