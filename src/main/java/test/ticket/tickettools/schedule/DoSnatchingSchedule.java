@@ -1,6 +1,7 @@
 package test.ticket.tickettools.schedule;
 
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson.JSON;
@@ -109,7 +110,16 @@ public class DoSnatchingSchedule {
         Date date = DateUtils.localDateToDate(localDate);
         allTaskForRun = allTaskForRun.stream().filter(o -> !date.equals(o.getUseDate())).collect(Collectors.toList());
         for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
-            CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo), taskExecutorConfig.getAsyncExecutor());
+            CompletableFuture.runAsync(() -> {
+                Date useDate = doSnatchInfo.getUseDate();
+                CompletableFuture<Boolean> ticketCheck = CompletableFuture.supplyAsync(() -> haveTicket(useDate), taskExecutorConfig.getAsyncExecutor());
+                // 在检查到有票时立即进行抓票操作
+                ticketCheck.thenAccept(hasTicket -> {
+                    if (hasTicket) {
+                        ticketServiceImpl.snatchingTicket(doSnatchInfo);
+                    }
+                });
+            }, taskExecutorConfig.getAsyncExecutor());
         }
     }
 
@@ -117,26 +127,50 @@ public class DoSnatchingSchedule {
     public void doSingleSnatch() {
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
         for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
-            CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo), taskExecutorConfig.getAsyncExecutor());
+            CompletableFuture.runAsync(() -> {
+                Date useDate = doSnatchInfo.getUseDate();
+                CompletableFuture<Boolean> ticketCheck = CompletableFuture.supplyAsync(() -> haveTicket(useDate), taskExecutorConfig.getAsyncExecutor());
+                // 在检查到有票时立即进行抓票操作
+                ticketCheck.thenAccept(hasTicket -> {
+                    if (hasTicket) {
+                        ticketServiceImpl.snatchingTicket(doSnatchInfo);
+                    }
+                });
+            }, taskExecutorConfig.getAsyncExecutor());
         }
-
     }
 
-    @Scheduled(cron = "0/2 * 7-17 * * ?")
+    @Scheduled(cron = "0/1 * 7-17 * * ?")
     public void doSingleSnatchOtherTime() {
-
-                List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
-                for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
-                    CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo), taskExecutorConfig.getAsyncExecutor());
-                }
-
+        List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
+        for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
+            CompletableFuture.runAsync(() -> {
+                Date useDate = doSnatchInfo.getUseDate();
+                CompletableFuture<Boolean> ticketCheck = CompletableFuture.supplyAsync(() -> haveTicket(useDate), taskExecutorConfig.getAsyncExecutor());
+                // 在检查到有票时立即进行抓票操作
+                ticketCheck.thenAccept(hasTicket -> {
+                    if (hasTicket) {
+                        ticketServiceImpl.snatchingTicket(doSnatchInfo);
+                    }
+                });
+            }, taskExecutorConfig.getAsyncExecutor());
+        }
     }
 
-    @Scheduled(cron = "0/2 * 0-6,19-23 * * ?")
+    @Scheduled(cron = "0/1 * 0-6,19-23 * * ?")
     public void doSingleSnatchOtherTime2() {
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
         for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
-            CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo), taskExecutorConfig.getAsyncExecutor());
+            CompletableFuture.runAsync(() -> {
+                Date useDate = doSnatchInfo.getUseDate();
+                CompletableFuture<Boolean> ticketCheck = CompletableFuture.supplyAsync(() -> haveTicket(useDate), taskExecutorConfig.getAsyncExecutor());
+                // 在检查到有票时立即进行抓票操作
+                ticketCheck.thenAccept(hasTicket -> {
+                    if (hasTicket) {
+                        ticketServiceImpl.snatchingTicket(doSnatchInfo);
+                    }
+                });
+            }, taskExecutorConfig.getAsyncExecutor());
         }
 
     }
@@ -285,29 +319,28 @@ public class DoSnatchingSchedule {
     }
 
     //@Scheduled(cron = "0/1 * * * * ?")
-    static class QueryRes implements Callable<Boolean> {
-        @Override
-        public Boolean call() {
-            HttpResponse response = HttpUtil.createGet("https://pcticket.cstm.org.cn/prod-api/pool/ingore/getCalendar?saleMode=1&openPerson=1").execute();
-            String body = response.body();
-            if (ObjectUtils.isEmpty(body)) {
-                return false;
+    private Boolean haveTicket(Date date) {
+        HttpResponse response = HttpUtil.createGet("https://pcticket.cstm.org.cn/prod-api/pool/ingore/getCalendar?saleMode=1&openPerson=1").execute();
+        String body = response.body();
+        if (ObjectUtils.isEmpty(body)) {
+            return false;
+        }
+        JSONObject bodyJson = JSON.parseObject(body);
+        JSONArray data = bodyJson.getJSONArray("data");
+        for (int i = 0; i < data.size(); i++) {
+            JSONObject item = data.getJSONObject(i);
+            JSONArray hallTicketPoolVOS = item.getJSONArray("hallTicketPoolVOS");
+            if (ObjectUtils.isEmpty(hallTicketPoolVOS)) {
+                continue;
             }
-            log.info("查询到结果");
-            JSONObject bodyJson = JSON.parseObject(body);
-            JSONArray data = bodyJson.getJSONArray("data");
-            for (int i = 0; i < data.size(); i++) {
-                JSONObject item = data.getJSONObject(i);
-                JSONArray hallTicketPoolVOS = item.getJSONArray("hallTicketPoolVOS");
-                if (ObjectUtils.isEmpty(hallTicketPoolVOS)) {
-                    continue;
-                }
-                JSONObject hallTicketPoolVO = hallTicketPoolVOS.getJSONObject(0);
+            Date currentDate = item.getDate("currentDate");
+            JSONObject hallTicketPoolVO = hallTicketPoolVOS.getJSONObject(0);
+            if(ObjectUtil.equals(date,currentDate)) {
                 if (!ObjectUtils.isEmpty(hallTicketPoolVO) && !hallTicketPoolVO.getString("closeContent").contains("暂无余票")) {
                     return true;
                 }
             }
-            return false;
         }
+        return false;
     }
 }
