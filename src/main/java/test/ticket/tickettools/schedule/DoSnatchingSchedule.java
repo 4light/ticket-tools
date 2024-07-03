@@ -329,15 +329,17 @@ public class DoSnatchingSchedule {
         JSONArray data = bodyJson.getJSONArray("data");
         for (int i = 0; i < data.size(); i++) {
             JSONObject item = data.getJSONObject(i);
-            JSONArray hallTicketPoolVOS = item.getJSONArray("hallTicketPoolVOS");
-            if (ObjectUtils.isEmpty(hallTicketPoolVOS)) {
-                continue;
-            }
             Date currentDate = item.getDate("currentDate");
-            JSONObject hallTicketPoolVO = hallTicketPoolVOS.getJSONObject(0);
             if(ObjectUtil.equals(date,currentDate)) {
-                if (!ObjectUtils.isEmpty(hallTicketPoolVO) && hallTicketPoolVO.getIntValue("ticketPool")>0) {
-                    return true;
+                JSONArray hallTicketPoolVOS = item.getJSONArray("hallTicketPoolVOS");
+                if (ObjectUtils.isEmpty(hallTicketPoolVOS)) {
+                    continue;
+                }
+                for (int j = 0; j < hallTicketPoolVOS.size(); j++) {
+                    JSONObject hallTicketPoolVO = hallTicketPoolVOS.getJSONObject(j);
+                    if (hallTicketPoolVO.getIntValue("hallId")==1 && hallTicketPoolVO.getIntValue("ticketPool")>0) {
+                        return true;
+                    }
                 }
             }
         }
