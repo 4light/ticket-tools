@@ -712,7 +712,7 @@ public class TicketServiceImpl implements TicketService {
                                 e.printStackTrace();
                             }
                             return;
-                        }*/
+                        }
                     //放票日
                     if (StrUtil.equals(doSnatchInfo.getType(), RedisKeyEnum.TICKETINGDAY.getCode())) {
                         String key = RedisKeyEnum.TASK.getCode() + ":" + doSnatchInfo.getTaskId();
@@ -738,7 +738,7 @@ public class TicketServiceImpl implements TicketService {
                         String key = doSnatchInfo.getTaskId() + ":" + doSnatchInfo.getTaskDetailIds().get(0);
                         redisService.removeFromList(RedisKeyEnum.NORMAL.getCode(), key);
                         redisService.deleteKey(key);
-                    }
+                    }*/
                     //查询个人订单
                     headers.set("Referer", "https://pcticket.cstm.org.cn/personal/car");
                     HttpEntity searchEntity = new HttpEntity(headers);

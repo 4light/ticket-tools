@@ -103,7 +103,7 @@ public class DoSnatchingSchedule {
     /**
      * 去除放票当天的任务需要单个执行的任务
      */
-    @Scheduled(cron = "0/2 0-10 18 * * ?")
+    @Scheduled(cron = "0/1 0-10 18 * * ?")
     public void doSnatchingExcludeTarget() {
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
         LocalDate localDate = LocalDate.now().plusDays(7L);
@@ -123,7 +123,7 @@ public class DoSnatchingSchedule {
         }
     }
 
-    @Scheduled(cron = "0/2 31-59 18 * * ?")
+    @Scheduled(cron = "0/2 11-59 18 * * ?")
     public void doSingleSnatch() {
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
         for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
