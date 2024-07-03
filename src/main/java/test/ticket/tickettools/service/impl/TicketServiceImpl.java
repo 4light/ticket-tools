@@ -633,7 +633,7 @@ public class TicketServiceImpl implements TicketService {
                 if (ObjectUtils.isEmpty(response) || response.getIntValue("code") != 200) {
                     if (!msgCache.containsKey(doSnatchInfo.getTaskId())) {
                         WebSocketServer.sendInfo(socketMsg("抢票异常", "账号:" + doSnatchInfo.getAccount() + response.getString("msg"), 0), doSnatchInfo.getCreator());
-                        SendMessageUtil.send(ChannelEnum.CSTM.getDesc(), DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"), "账号：", doSnatchInfo.getAccount(), doSnatchInfo.getCreator());
+                        SendMessageUtil.send(ChannelEnum.CSTM.getDesc(), DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"), "账号：", doSnatchInfo.getAccount(), response.getString("msg"));
                         List<Long> taskDetailIds = doSnatchInfo.getTaskDetailIds();
                         for (Long taskDetailId : taskDetailIds) {
                             TaskDetailEntity taskDetailEntity = new TaskDetailEntity();

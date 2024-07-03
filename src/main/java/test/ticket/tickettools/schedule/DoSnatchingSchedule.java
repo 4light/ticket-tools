@@ -70,7 +70,7 @@ public class DoSnatchingSchedule {
      */
     @Scheduled(cron = "0/1 0-10 18 * * ?")
     public void doSnatching() {
-        LocalDate localDate = LocalDate.now();
+        /*LocalDate localDate = LocalDate.now();
         String getHallUrl = "https://pcticket.cstm.org.cn/prod-api/pool/ingore/getHall?saleMode=1&openPerson=1&queryDate=%s";
         String formatGetHallUrl = String.format(getHallUrl, DateUtil.format(DateUtils.localDateToDate(localDate.plusDays(7L)), "yyyy/MM/dd"));
         HttpResponse response = HttpUtil.createGet(formatGetHallUrl).execute();
@@ -97,6 +97,13 @@ public class DoSnatchingSchedule {
             for (DoSnatchInfo doSnatchInfo : taskForRun) {
                 CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo), taskExecutorConfig.getAsyncExecutor());
             }
+        }*/
+        List<DoSnatchInfo> taskForRun = ticketServiceImpl.getTaskForRun();
+        if (ObjectUtils.isEmpty(taskForRun)) {
+            return;
+        }
+        for (DoSnatchInfo doSnatchInfo : taskForRun) {
+            CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo), taskExecutorConfig.getAsyncExecutor());
         }
     }
 
