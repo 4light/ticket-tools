@@ -288,8 +288,12 @@ public class TicketSnatchingSchedule {
                     HttpEntity addEntity = new HttpEntity<>(buildAddParam(entry.getValue(), entry.getKey(), userId), headers);
                     restTemplate.exchange(addUrl, HttpMethod.POST, addEntity, String.class);
                 }
-                ResponseEntity<JSONObject> getCheckImagRes = restTemplate.exchange(getCheckImagUrl, HttpMethod.GET, entity, JSONObject.class);
-                JSONObject getCheckImageJson = getCheckImagRes.getBody();
+                ResponseEntity<String> getCheckImagRes = restTemplate.exchange(getCheckImagUrl, HttpMethod.GET, entity, String.class);
+                String getCheckImageStr = getCheckImagRes.getBody();
+                if(ObjectUtils.isEmpty(getCheckImageStr)||ObjectUtils.nullSafeEquals('}',getCheckImageStr.charAt(getCheckImageStr.length()-1))){
+                    return;
+                }
+                JSONObject getCheckImageJson = JSON.parseObject(getCheckImageStr);
                 if (!StringUtils.isEmpty(getCheckImageJson)) {
                     JSONObject data = getCheckImageJson.getJSONObject("data");
                     String jigsawImageBase64 = data == null ? null : data.getString("jigsawImageBase64");
