@@ -2,6 +2,7 @@ package test.ticket.tickettools.web.controller;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import org.springframework.web.bind.annotation.*;
+import test.ticket.tickettools.dao.TaskDetailDao;
 import test.ticket.tickettools.domain.bo.*;
 import test.ticket.tickettools.domain.entity.AccountInfoEntity;
 import test.ticket.tickettools.domain.entity.TaskDetailEntity;
@@ -19,7 +20,7 @@ public class TicketController  extends BaseController{
     @Resource
     TicketService ticketServiceImpl;
     @Resource
-    DoSnatchTicketService palaceMuseumTicketServiceImpl;
+    TaskDetailDao taskDetailDao;
     @Resource
     SyncDataService syncDataService;
 
@@ -69,8 +70,6 @@ public class TicketController  extends BaseController{
         taskDetailEntity.setYn(yn);
         Boolean res = ticketServiceImpl.updateTaskDetail(taskDetailEntity);
         if(res){
-            syncDataService.syncNormalData();
-            syncDataService.syncTickingDayData();
             return ServiceResponse.createBySuccessMessgge("更新成功");
         }
         return ServiceResponse.createByErrorMessage("更新失败");
@@ -119,6 +118,16 @@ public class TicketController  extends BaseController{
     @PostMapping(value = "/pay")
     public ServiceResponse pay(@RequestBody PlaceOrderInfo placeOrderInfo) {
         return ticketServiceImpl.pay(placeOrderInfo);
+    }
+
+    @GetMapping(value = "/test1")
+    public ServiceResponse test1(){
+        return ServiceResponse.createBySuccess(ticketServiceImpl.getAllTaskForRun());
+    }
+
+    @GetMapping(value = "/test2")
+    public ServiceResponse test2(){
+        return ServiceResponse.createBySuccess(ticketServiceImpl.getAllTaskForRun1());
     }
 
     @GetMapping(value = "/sync")

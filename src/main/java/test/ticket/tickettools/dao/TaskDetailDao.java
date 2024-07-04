@@ -23,4 +23,5 @@ public interface TaskDetailDao {
     Integer updateByTaskId(Long id);
     Integer updateEntityByTaskId(TaskDetailEntity taskDetailEntity);
     Integer deleteByTaskIdAndCardId(TaskDetailEntity taskDetailEntity);
+    TaskDetailEntity selectByTaskDetailId(Long taskDetailId);
 }

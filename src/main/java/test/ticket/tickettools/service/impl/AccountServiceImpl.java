@@ -11,9 +11,11 @@ import org.springframework.web.client.RestTemplate;
 import test.ticket.tickettools.dao.AccountInfoDao;
 import test.ticket.tickettools.domain.bo.*;
 import test.ticket.tickettools.domain.constant.ChannelEnum;
+import test.ticket.tickettools.domain.constant.RedisKeyEnum;
 import test.ticket.tickettools.domain.entity.AccountInfoEntity;
 import test.ticket.tickettools.domain.entity.UserEntity;
 import test.ticket.tickettools.service.AccountService;
+import test.ticket.tickettools.service.RedisService;
 import test.ticket.tickettools.service.UserService;
 import test.ticket.tickettools.utils.TemplateUtil;
 
@@ -31,6 +33,8 @@ public class AccountServiceImpl implements AccountService {
 
     @Resource
     UserService userServiceImpl;
+    @Resource
+    RedisService redisService;
 
     @Resource
     AccountInfoDao accountInfoDao;
@@ -69,6 +73,8 @@ public class AccountServiceImpl implements AccountService {
         if (insert == null) {
             return ServiceResponse.createByErrorMessage("插入数据失败");
         }
+        AccountInfoEntity accountInfoEntity = accountInfoDao.selectById(userInfo.getId());
+        redisService.setData(RedisKeyEnum.ACCOUNT.getCode()+userInfo.getId(),JSON.toJSONString(accountInfoEntity) );
         return ServiceResponse.createBySuccess();
     }
 
@@ -155,6 +161,7 @@ public class AccountServiceImpl implements AccountService {
         if (del == null) {
             return ServiceResponse.createByErrorMessage("删除数据失败");
         }
+        redisService.deleteKey(RedisKeyEnum.ACCOUNT.getCode()+id);
         return ServiceResponse.createBySuccess();
     }
 
@@ -172,6 +179,8 @@ public class AccountServiceImpl implements AccountService {
         if (integer == null) {
             return ServiceResponse.createByErrorMessage("更新数据失败");
         }
+        AccountInfoEntity update = accountInfoDao.selectById(accountInfoEntity.getId());
+        redisService.setData(RedisKeyEnum.ACCOUNT.getCode()+update.getId(),JSON.toJSONString(update) );
         return ServiceResponse.createBySuccess();
     }
 

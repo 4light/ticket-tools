@@ -35,7 +35,7 @@
                 #{channelUserId,jdbcType=VARCHAR}, #{account,jdbcType=VARCHAR}, #{createDate,jdbcType=TIMESTAMP},
                 #{updateDate,jdbcType=TIMESTAMP},#{status,jdbcType=BIT},#{creator,jdbcType=VARCHAR},#{belongUser,jdbcType=BIGINT})
     </insert>
-    <insert id="insertOrUpdate" parameterType="test.ticket.tickettools.domain.entity.AccountInfoEntity">
+    <insert id="insertOrUpdate" useGeneratedKeys="true" keyProperty="id" parameterType="test.ticket.tickettools.domain.entity.AccountInfoEntity">
         insert into account_info (id, user_name, phone_num, channel,
                                channel_user_id, account, pwd, create_date,
                                update_date, status,headers,ext,creator,operator,belong_user)
@@ -115,4 +115,15 @@
         </set>
         where channel = #{channel} and account = #{account} and yn=0
     </update>
+    <select id="selectByEntity" parameterType="test.ticket.tickettools.domain.entity.AccountInfoEntity" resultMap="BaseResultMap">
+        select * from account_info
+        <where>
+            <if test="channel!=null">
+                and channel = #{channel}
+            </if>
+            <if test="account!=null and account!=''">
+                and account = #{account}
+            </if>
+        </where>
+    </select>
 </mapper>

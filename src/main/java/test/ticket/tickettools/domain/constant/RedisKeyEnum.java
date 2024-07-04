@@ -6,7 +6,9 @@ import java.util.Map;
 public enum RedisKeyEnum {
     TICKETINGDAY("TICKETINGDAY","放票日数据"),
     NORMAL("NORMAL","日常任务数据"),
+    ACCOUNT("ACCOUNT","购票账号"),
     TASK("TASK","任务"),
+    RELATION("RELATION","关系数据"),
     USEDATE("USEDATE","余票日期"),
     TASKDETAIL("TASKDETAIL","任务详情");
 

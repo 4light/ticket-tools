@@ -110,7 +110,7 @@ public class DoSnatchingSchedule {
     /**
      * 去除放票当天的任务需要单个执行的任务
      */
-    @Scheduled(cron = "0/1 0-10 18 * * ?")
+    @Scheduled(cron = "0/1 0-5 18 * * ?")
     public void doSnatchingExcludeTarget() {
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
         LocalDate localDate = LocalDate.now().plusDays(7L);
@@ -151,9 +151,13 @@ public class DoSnatchingSchedule {
         }*/
     }
 
-    @Scheduled(cron = "0/2 11-59 18 * * ?")
+    @Scheduled(cron = "0/2 8-59 18 * * ?")
     public void doSingleSnatch() {
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
+        for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
+            CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo), taskExecutorConfig.getAsyncExecutor());
+        }
+        /*List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
         Map<Date, List<DoSnatchInfo>> mapByUseDate = allTaskForRun.stream()
                 .collect(Collectors.groupingBy(DoSnatchInfo::getUseDate));
         // 对每个useDate异步检查并处理
@@ -174,7 +178,7 @@ public class DoSnatchingSchedule {
                             allOf.thenRun(() -> log.info("日期{}下批次任务执行完成: " , useDate));
                         }
                     });
-        });
+        });*/
         /*for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
             CompletableFuture.runAsync(() -> {
                 Date useDate = doSnatchInfo.getUseDate();
@@ -191,7 +195,9 @@ public class DoSnatchingSchedule {
 
     @Scheduled(cron = "0/1 * 7-17 * * ?")
     public void doSingleSnatchOtherTime() {
+        LocalDate specifiedDate = LocalDate.of(2024, 7, 4); // 指定年、月、日
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
+        allTaskForRun=allTaskForRun.stream().filter(o->ObjectUtil.equals(o.getUseDate(),DateUtils.localDateToDate(specifiedDate))).collect(Collectors.toList());
         for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
             CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo), taskExecutorConfig.getAsyncExecutor());
         }
@@ -231,12 +237,22 @@ public class DoSnatchingSchedule {
         }*/
     }
 
-    @Scheduled(cron = "0/1 * 0-6,19-23 * * ?")
+    //@Scheduled(cron = "0/1 * 0-6,19-23 * * ?")
     public void doSingleSnatchOtherTime2() {
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
-        for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
+        /*for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
             CompletableFuture.runAsync(() -> ticketServiceImpl.snatchingTicket(doSnatchInfo), taskExecutorConfig.getAsyncExecutor());
-        }
+        }*/
+        List<CompletableFuture<Void>> futures = allTaskForRun.stream()
+                .map(doSnatchInfo -> CompletableFuture.runAsync(
+                        () -> ticketServiceImpl.snatchingTicket(doSnatchInfo),
+                        taskExecutorConfig.getAsyncExecutor()
+                ))
+                .collect(Collectors.toList());
+
+        // 使用CompletableFuture.allOf等待所有抓票操作完成
+        CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+        allOf.thenRun(() -> log.info("本次任务执行完成"  ));
         // 将List按useDate字段分组
         /*Map<Date, List<DoSnatchInfo>> mapByUseDate = allTaskForRun.stream()
                 .collect(Collectors.groupingBy(DoSnatchInfo::getUseDate));

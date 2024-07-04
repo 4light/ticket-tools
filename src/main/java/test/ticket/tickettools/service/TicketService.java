@@ -34,8 +34,10 @@ public interface TicketService {
     ServiceResponse getPhoneMsg(String phoneNum);
     //获取发售当天需要执行的任务
     List<DoSnatchInfo> getTaskForRun();
+    List<DoSnatchInfo> getTaskForRun1();
     //获取所有需要单个执行的任务
     List<DoSnatchInfo> getAllTaskForRun();
+    List<DoSnatchInfo> getAllTaskForRun1();
     //获取所有未执行完的任务
     List<TaskEntity> getAllUnDoneTask();
     //执行抢票任务

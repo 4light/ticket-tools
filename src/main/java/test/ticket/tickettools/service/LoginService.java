@@ -12,6 +12,7 @@ import test.ticket.tickettools.dao.AccountInfoDao;
 import test.ticket.tickettools.domain.bo.LogInCSTMParam;
 import test.ticket.tickettools.domain.bo.ServiceResponse;
 import test.ticket.tickettools.domain.constant.ChannelEnum;
+import test.ticket.tickettools.domain.constant.RedisKeyEnum;
 import test.ticket.tickettools.domain.entity.AccountInfoEntity;
 import test.ticket.tickettools.utils.DateUtils;
 import test.ticket.tickettools.utils.TemplateUtil;
@@ -41,6 +42,8 @@ public class LoginService {
     AccountInfoDao accountInfoDao;
     @Resource
     SyncDataService syncDataService;
+    @Resource
+    RedisService redisService;
 
     public String longinCSTM(String loginPhone) {
         RestTemplate restTemplate = new RestTemplate();
@@ -207,8 +210,11 @@ public class LoginService {
             accountInfoEntity.setHeaders(auth);
             Integer integer = accountInfoDao.updateByChannelAccount(accountInfoEntity);
             if(integer>0){
-                syncDataService.syncNormalData();
-                syncDataService.syncTickingDayData();
+                AccountInfoEntity query=new AccountInfoEntity();
+                query.setAccount(logInCSTMParam.getPhone());
+                query.setChannel(ChannelEnum.CSTM.getCode());
+                List<AccountInfoEntity> queryRes = accountInfoDao.selectByEntity(query);
+                redisService.setData(RedisKeyEnum.ACCOUNT.getCode()+queryRes.get(0).getId(),JSON.toJSONString(queryRes.get(0)) );
                 return ServiceResponse.createBySuccessMessgge("登录态更新成功");
             }
             return ServiceResponse.createByErrorMessage("登录态保存失败");

@@ -13,4 +13,5 @@ public interface AccountInfoDao {
     AccountInfoEntity selectById(Long id);
     Integer del(Long id);
     Integer updateByChannelAccount(AccountInfoEntity accountInfoEntity);
+    List<AccountInfoEntity> selectByEntity(AccountInfoEntity accountInfoEntity);
 }
