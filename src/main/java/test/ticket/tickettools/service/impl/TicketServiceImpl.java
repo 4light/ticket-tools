@@ -5,7 +5,9 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
+import org.apache.http.HttpException;
 import org.bytedeco.opencv.global.opencv_core;
 import org.bytedeco.opencv.global.opencv_imgcodecs;
 import org.bytedeco.opencv.global.opencv_imgproc;
@@ -715,19 +717,7 @@ public class TicketServiceImpl implements TicketService {
                     return;
                 }
             }
-            JSONObject getCheckImageJson = null;
-            HttpResponse execute = HttpUtil.createGet(getCheckImagUrl)
-                    .header(getHeader(doSnatchInfo.getAuthorization()))
-                    .timeout(60000)
-                    .execute();
-            if(!ObjectUtils.isEmpty(execute)){
-                String body = execute.body();
-                if(ObjectUtils.isEmpty(body)||!CharUtil.equals(body.charAt(body.length()-1),'}',true)){
-                    runTaskCache.put(taskId, true);
-                    return;
-                }
-                getCheckImageJson=JSON.parseObject(body);
-            }
+            JSONObject getCheckImageJson = getCheckImag(doSnatchInfo.getAuthorization());
             if (!ObjectUtils.isEmpty(getCheckImageJson) && getCheckImageJson.getIntValue("code") == 200) {
                 JSONObject data = getCheckImageJson.getJSONObject("data");
                 String jigsawImageBase64 = data == null ? null : data.getString("jigsawImageBase64");
@@ -1174,4 +1164,38 @@ public class TicketServiceImpl implements TicketService {
         return headers;
     }
 
+    private JSONObject getCheckImag(String auth){
+        int retryCount = 0;
+        while (retryCount < 3) {
+            try {
+                HttpResponse execute = HttpUtil.createGet(getCheckImagUrl)
+                        .header(getHeader(auth))
+                        .timeout(60000)
+                        .execute();
+
+                if (isResponseValid(execute)) {
+                    return JSON.parseObject(execute.body());
+                } else {
+                    log.info("获取响应无效，重试次数: {}" , (retryCount + 1));
+                }
+            } catch (Exception e) {
+                log.info("获取图片验证码请求异常，重试次数: {}" ,(retryCount + 1));
+            }
+            retryCount++;
+        }
+        return null;
+    }
+    private  boolean isResponseValid(HttpResponse response) {
+        if (response == null || response.body() == null) {
+            return false;
+        }
+        try {
+            String body = response.body();
+            ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.readTree(body); // 尝试解析为JSON对象
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }
