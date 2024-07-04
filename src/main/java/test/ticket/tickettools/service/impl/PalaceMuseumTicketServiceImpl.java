@@ -54,7 +54,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
     private static final String delUserUrl = "https://lotswap.dpm.org.cn/lotsapi/up/api/user/contacts/";
 
     private static Map<Long, Object> runTaskCache = new ConcurrentHashMap<>();
-    private static Map<Long,Object> initTaskCache=new ConcurrentHashMap<>();
+    private static Map<Long, Object> initTaskCache = new ConcurrentHashMap<>();
 
     @Resource
     TaskDao taskDao;
@@ -67,10 +67,10 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
     @Override
     public void initData(TaskEntity unDoneTask) {
         Long taskId = unDoneTask.getId();
-        if(initTaskCache.containsKey(taskId)){
+        if (initTaskCache.containsKey(taskId)) {
             return;
-        }else{
-            initTaskCache.put(taskId,true);
+        } else {
+            initTaskCache.put(taskId, true);
         }
         try {
             HttpHeaders headers = new HttpHeaders();
@@ -78,7 +78,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
                 initTaskCache.remove(taskId);
                 return;
             }
-            ProxyInfo proxy = ProxyUtil.getProxy(1).get(0);
+            ProxyInfo proxy = ProxyUtil.getProxyList(1).get(0);
             unDoneTask.setIp(proxy.getIp());
             unDoneTask.setPort(proxy.getPort());
             taskDao.updateTask(unDoneTask);
@@ -93,7 +93,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
             headers.setContentType(MediaType.APPLICATION_JSON);
             Integer integer = taskDao.updateTask(unDoneTask);
             if (integer > 0) {
-                RestTemplate restTemplate = TemplateUtil.initSSLTemplateWithProxy(proxy.getIp(), proxy.getPort());
+                RestTemplate restTemplate = TemplateUtil.initSSLTemplateWithProxyAuth(proxy.getIp(), proxy.getPort());
                 HttpEntity getUsersEntity = new HttpEntity<>(headers);
                 JSONObject getUsersRes = TemplateUtil.getResponse(restTemplate, getUsersUrl, HttpMethod.GET, getUsersEntity);
                 if (ObjectUtils.isEmpty(getUsersRes) && StrUtil.equals("success", getUsersRes.getString("message"))) {
@@ -202,9 +202,11 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
         String getTicketGridUrl = "https://lotswap.dpm.org.cn/lotsapi/merchant/api/merchantParkTicketGridNew?date=%s&merchantParkInfoId=11324&currPage=1&pageSize=200&merchantInfoId=2655&playDate=%s&businessType=park";
         //提交订单
         String createUrl = "https://lotswap.dpm.org.cn/dubboApi/trade-core/tradeCreateService/create?sign=%s&timestamp=%s";
+        String getPayTypeUrl = "https://lotswap.dpm.org.cn/lotsapi/merchant/api/merchantPayType/getMerchantPayType?payOrderNo=%s&businessType=WXXCX&merchantId=2655&merchantInfoId=2655";
+        String toPayUrl = "https://lotswap.dpm.org.cn/lotsapi/order/orderPay/toPay?payOrderNo=%s&paySum=%s&openId=%s&channelProductCode=%s&payType=%s&extendParamJson=%s&accountId=2655&userType=C";
         try {
             JSONObject currentParkFsyyDetail = new JSONObject();
-            RestTemplate restTemplate = ObjectUtils.isEmpty(doSnatchInfo.getIp()) ? TemplateUtil.initSSLTemplate() : TemplateUtil.initSSLTemplateWithProxy(doSnatchInfo.getIp(), doSnatchInfo.getPort());
+            RestTemplate restTemplate = ObjectUtils.isEmpty(doSnatchInfo.getIp()) ? TemplateUtil.initSSLTemplate() : TemplateUtil.initSSLTemplateWithProxyAuth(doSnatchInfo.getIp(), doSnatchInfo.getPort());
             //RestTemplate restTemplate=TemplateUtil.initSSLTemplate();
             HttpHeaders headers = new HttpHeaders();
             String headerStr = doSnatchInfo.getHeaders();
@@ -262,14 +264,14 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
                                         currentParkFsyyDetail = parkFsyyDetailJson;
                                         break outLoop;
                                     } else {
-                                        if(session.split(",").length>1){
+                                        if (session.split(",").length > 1) {
                                             haveTicket = true;
                                             currentParkFsyyDetail = parkFsyyDetailJson;
                                             break outLoop;
                                         }
                                         if (doSnatchInfo.getSession().contains(parkFsyyDetailJson.getString("fsTimeName"))) {
-                                                haveTicket = true;
-                                                currentParkFsyyDetail = parkFsyyDetailJson;
+                                            haveTicket = true;
+                                            currentParkFsyyDetail = parkFsyyDetailJson;
                                         }
                                     }
                                 }
@@ -366,14 +368,14 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
             log.info("身份验证信息:{}", checkUserData);
             if (!ObjectUtils.isEmpty(checkUserData.getJSONArray("rejectCertAuthList"))) {
                 log.info("身份验证失败:{}", checkUserBodyJson);
-                JSONArray rejectCertAuthList=checkUserData.getJSONArray("rejectCertAuthList");
+                JSONArray rejectCertAuthList = checkUserData.getJSONArray("rejectCertAuthList");
                 for (int j = 0; j < rejectCertAuthList.size(); j++) {
                     JSONObject item = rejectCertAuthList.getJSONObject(j);
                     String certNo = item.getString("certNo");
-                    TaskDetailEntity taskDetailEntity=new TaskDetailEntity();
+                    TaskDetailEntity taskDetailEntity = new TaskDetailEntity();
                     taskDetailEntity.setTaskId(doSnatchInfo.getTaskId());
                     taskDetailEntity.setIDCard(certNo);
-                    log.info("删除{}任务下的IDCard为{}的订单", doSnatchInfo.getTaskId(),certNo);
+                    log.info("删除{}任务下的IDCard为{}的订单", doSnatchInfo.getTaskId(), certNo);
                     taskDetailDao.deleteByTaskIdAndCardId(taskDetailEntity);
                 }
                 runTaskCache.remove(taskId);
@@ -389,19 +391,38 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
             String sign = DigestUtils.md5Hex(signStr);
             JSONObject jsonObject = buildCreateParam(mpOpenId, checkUserBody, doSnatchInfo, modelCodeTicketInfoMap);
             headers.setContentLength(Integer.valueOf(JSON.toJSONString(jsonObject).getBytes(StandardCharsets.UTF_8).length));
-            headerJson.remove("Cookie");
-            headerJson.remove("Authorization");
-            headerJson.remove("Host-Ip");
-            headerJson.remove("If-Modified-Since");
-            headerJson.remove("Postman-Token");
             HttpEntity addTicketQueryEntity = new HttpEntity<>(jsonObject, headers);
             String formatCreateUrl = String.format(createUrl, sign, timestamp);
-            log.info("header:{}",headers);
+            log.info("header:{}", headers);
             Thread.sleep(RandomUtil.randomInt(3000, 5000));
             log.info("提交订单入参：{}", JSON.toJSONString(jsonObject));
             JSONObject createRes = TemplateUtil.getResponse(restTemplate, formatCreateUrl, HttpMethod.POST, addTicketQueryEntity);
             log.info("请求结果{}", createRes);
             if (createRes.getIntValue("code") == 200) {
+                String orderCode = createRes.getJSONObject("data").getString("orderCode");
+                Integer paySum = createRes.getJSONObject("data").getDouble("paySum").intValue();
+                headers.remove("Content-Length");
+                headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
+                String formatUrl = String.format(getPayTypeUrl, orderCode);
+                HttpEntity payTypeEntity = new HttpEntity(headerJson);
+                JSONObject response = TemplateUtil.getResponse(restTemplate, formatUrl, HttpMethod.GET, payTypeEntity);
+                log.info("获取支付方式返回结果:{}",response);
+                if (!ObjectUtils.isEmpty(response) || response.getIntValue("status") == 200) {
+                    String message = response.getString("message");
+                    JSONArray messageJsonArr = JSON.parseArray(message);
+                    JSONObject firstPayType = messageJsonArr.getJSONObject(0);
+                    String channelProductCode = firstPayType.getString("channelProductCode");
+                    String payType = firstPayType.getString("payType");
+                    JSONObject extendParamJson = new JSONObject();
+                    extendParamJson.put("openId", headerJson.getString("mpOpenId"));
+                    extendParamJson.put("channelProductCode", channelProductCode);
+                    String encode = URLEncoder.encode(JSON.toJSONString(extendParamJson), "utf-8");
+                    String toPayUrlFormat = String.format(toPayUrl, orderCode, paySum, headerJson.getString("mpOpenId"), channelProductCode, payType, encode);
+                    headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
+                    HttpEntity toPayEntity = new HttpEntity(headerJson);
+                    JSONObject toPayRes = TemplateUtil.getResponse(restTemplate, toPayUrlFormat, HttpMethod.GET, toPayEntity);
+                    log.info("去支付返回结果:{}",toPayUrl);
+                }
                 TaskEntity taskEntity = new TaskEntity();
                 taskEntity.setId(doSnatchInfo.getTaskId());
                 taskEntity.setDone(true);
@@ -603,11 +624,17 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
         }
         return sb.toString();
     }
+
     private String socketMsg(String title, String msg, Integer time) {
         JSONObject res = new JSONObject();
         res.put("title", title);
         res.put("msg", msg);
         res.put("time", time);
         return JSON.toJSONString(res);
+    }
+
+    public static void main(String[] args) throws UnsupportedEncodingException {
+        String encode = URLEncoder.encode("{\"openId\":\"oOya25B0rHfUD_jeSkHR5xfZJTEg\",\"channelProductCode\":\"10809\"}", "utf-8");
+        System.out.println(encode);
     }
 }

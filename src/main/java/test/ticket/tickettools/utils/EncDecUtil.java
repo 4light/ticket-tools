@@ -107,8 +107,4 @@ public class EncDecUtil {
         return new String(decoded.toString().getBytes(), StandardCharsets.UTF_8);
     }
 
-    public static void main(String[] args) {
-        String ayrKJRXPO3nR5Abc = doAES("9793430:1719155503000:2024/06/30:1:3:2", "AyrKJRXPO3nR5Abc");
-        System.out.println(ayrKJRXPO3nR5Abc);
-    }
 }

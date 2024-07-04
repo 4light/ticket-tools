@@ -1,7 +1,14 @@
 package test.ticket.tickettools.schedule;
 
+import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -10,14 +17,17 @@ import test.ticket.tickettools.domain.bo.DoSnatchInfo;
 import test.ticket.tickettools.domain.bo.ProxyInfo;
 import test.ticket.tickettools.domain.entity.TaskEntity;
 import test.ticket.tickettools.service.DoSnatchTicketService;
+import test.ticket.tickettools.utils.DateUtils;
+import test.ticket.tickettools.utils.EncDecUtil;
 import test.ticket.tickettools.utils.ProxyUtil;
+import test.ticket.tickettools.utils.TemplateUtil;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Configuration
@@ -47,7 +57,7 @@ public class DoPalaceMuseumSnatchingSchedule {
     }
 
 
-    @Scheduled(cron = "0/1 01-10 21 * * ?")
+    @Scheduled(cron = "0/1 01-06 20 * * ?")
     public void doPalaceMuseumTicketSnatch() {
         List<DoSnatchInfo> doSnatchInfos = palaceMuseumTicketServiceImpl.getDoSnatchInfos();
         if (ObjectUtils.isEmpty(doSnatchInfos)) {

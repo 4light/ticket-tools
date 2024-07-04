@@ -85,6 +85,12 @@
         <if test="belongUser != null and belongUser != ''">
             OR (yn = 0 AND belong_user = #{belongUser})
         </if>
+        <if test="channel!=null">
+            and channel=#{channel}
+        </if>
+        <if test="account!=null and account!=''">
+            and account=#{account}
+        </if>
     </select>
     <select id="selectById" parameterType="java.lang.Long" resultMap="BaseResultMap">
         select *
