@@ -1166,7 +1166,7 @@ public class TicketServiceImpl implements TicketService {
 
     private JSONObject getCheckImag(String auth){
         int retryCount = 0;
-        while (retryCount < 3) {
+        while (retryCount < 5) {
             try {
                 HttpResponse execute = HttpUtil.createGet(getCheckImagUrl)
                         .header(getHeader(auth))
