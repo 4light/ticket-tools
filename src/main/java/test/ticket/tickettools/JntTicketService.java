@@ -157,7 +157,7 @@ public class JntTicketService {
 
     private static Map<String, JSONObject> sessionMap = new HashMap();
 
-    @Scheduled(cron = "0/1 * * * * ?")
+    //@Scheduled(cron = "0/1 * * * * ?")
     //@Scheduled(cron = "30 29 12 * * ?")
     public void initLogin() {
         List<Map<String, String>> idNameMapList = new ArrayList();

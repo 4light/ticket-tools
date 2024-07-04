@@ -55,17 +55,22 @@ public class TicketSnatchingSchedule {
     //提交订单
     private static String shoppingCartUrl = "https://pcticket.cstm.org.cn/prod-api/config/orderRule/shoppingCart";
     private static String getCurrentUserUrl="https://pcticket.cstm.org.cn/prod-api/getUserInfoToIndividual";
-    private static String useDate = "2023-08-03 00:00:00";
-    private String authorization = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJsb2dpbl91c2VyX2tleSI6IjE4Y2JhZDZkLTk1YWEtNGQ4Zi1hMzgxLWQ3YWExM2VkNzBhNSJ9.8gDO15EhJHJ0-tpODHdcc-nzkDZq0ajbmO8zvvt9W9D59Nr3iY2yB8y_YCzKtyeO5jjU2TlvVJ96TXcpyhGGXQ";
+    private static String useDate = "2024-07-07 00:00:00";
+    private String authorization = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJsb2dpbl91c2VyX2tleSI6Ijc3MjQ1NzYwLTgzNjMtNDU4Ni04MTZiLTk0NDllZDY1ZTc1MSJ9.oPYarofA4EuyOhpAjZh3aY5TQKNM9v0DWqUo5Z_hdTAyuOupWE0_iOdmCYj0vayOLk7RmyNOrFZOtstH3Gccbw";
 
 
     @Resource
     private TaskExecutorConfig taskExecutorConfig;
 
     private static Map<String, String> nameIDMap = new HashMap() {{
-        //put("赵庆山", "320925200911043915");
-        //put("王一鸣", "371312200812066930");
-        //put("李思彤", "231024200710084722");
+        put("罗密欧","410526201406060141");
+        put("李芸鹏","410526201111280315");
+        put("刘晨阳","410526201404040518");
+        put("魏凡淳","410526201110090026");
+        put("向伟香","430424198808301447");
+        put("罗逸梵","430482201308110028");
+        put("罗绍谨","430482201804170150");
+        put("刘玉莲","430424196204070327");
         //put("李珩源", "371302200912154011");
         //put("李国政", "371302201307154077");
     }};
@@ -80,7 +85,7 @@ public class TicketSnatchingSchedule {
         getPriceByScheduleIdUrl=String.format(getPriceByScheduleIdUrl,DateUtil.format(DateUtil.parse(useDate),"yyyy/MM/dd"));
     }
 
-    //@Scheduled(cron = "0/1 * * * * ?")
+    @Scheduled(cron = "0/1 * * * * ?")
     public void run() {
         for (Map.Entry<String, String> entry : nameIDMap.entrySet()) {
             Map<String,String> newMap=new HashMap(){{
@@ -116,16 +121,16 @@ public class TicketSnatchingSchedule {
                 log.info("获取用户信息失败：{}", userInfoJson);
             }*/
             //long userId = userInfo.getLongValue("userId");
-            long userId = 2077998;
+            long userId = 2498718;
             //String phone = userInfo.getString("phoneNumber");
-            String phone = "18310327323";
+            String phone = "17610773273";
             ResponseEntity response = restTemplate.exchange(getScheduleUrl, HttpMethod.GET, entity, String.class);
             Object body = response.getBody();
             //log.info("获取到的场次信息为:{}",body);
             JSONObject responseJson = JSON.parseObject(body.toString());
             Integer hallScheduleId = responseJson == null ? null : responseJson.getJSONArray("data").isEmpty() ? null : responseJson.getJSONArray("data").getJSONObject(0).getInteger("hallScheduleId");
             if (ObjectUtils.isEmpty(hallScheduleId)) {
-                log.info("获取到的场次失败");
+                //log.info("获取到的场次失败");
                 return;
             }
             //获取场次下余票
