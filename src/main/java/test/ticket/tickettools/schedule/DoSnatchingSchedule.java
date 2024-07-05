@@ -76,9 +76,12 @@ public class DoSnatchingSchedule {
         }
         Map<Date, List<DoSnatchInfo>> mapByUseDate = taskForRun.stream()
                 .collect(Collectors.groupingBy(DoSnatchInfo::getUseDate));
+        Map<Date, String> dateToAuthMap = taskForRun.stream()
+                .collect(Collectors.toMap(DoSnatchInfo::getUseDate, DoSnatchInfo::getAuthorization,(existing, replacement) -> replacement));
+
         // 对每个useDate异步检查并处理
         mapByUseDate.forEach((useDate, doSnatchInfos) -> {
-            CompletableFuture.supplyAsync(() -> haveTicket(useDate), taskExecutorConfig.getAsyncExecutor())
+            CompletableFuture.supplyAsync(() -> haveTicket(dateToAuthMap.get(useDate),useDate), taskExecutorConfig.getAsyncExecutor())
                     .thenAccept(hasTicket -> {
                         if (hasTicket) {
                             // 异步执行抓票操作，并收集所有CompletableFuture
@@ -90,8 +93,8 @@ public class DoSnatchingSchedule {
                                     .collect(Collectors.toList());
 
                             // 使用CompletableFuture.allOf等待所有抓票操作完成
-                            CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
-                            allOf.thenRun(() -> log.info("日期{}下批次任务执行完成: ", useDate));
+                            //CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+                            //allOf.thenRun(() -> log.info("日期{}下批次任务执行完成: ", useDate));
                         }
                     });
         });
@@ -112,8 +115,10 @@ public class DoSnatchingSchedule {
         Map<Date, List<DoSnatchInfo>> mapByUseDate = allTaskForRun.stream()
                 .collect(Collectors.groupingBy(DoSnatchInfo::getUseDate));
         // 对每个useDate异步检查并处理
+        Map<Date, String> dateToAuthMap = allTaskForRun.stream()
+                .collect(Collectors.toMap(DoSnatchInfo::getUseDate, DoSnatchInfo::getAuthorization,(existing, replacement) -> replacement));
         mapByUseDate.forEach((useDate, doSnatchInfos) -> {
-            CompletableFuture.supplyAsync(() -> haveTicket(useDate), taskExecutorConfig.getAsyncExecutor())
+            CompletableFuture.supplyAsync(() -> haveTicket(dateToAuthMap.get(useDate),useDate), taskExecutorConfig.getAsyncExecutor())
                     .thenAccept(hasTicket -> {
                         if (hasTicket) {
                             // 异步执行抓票操作，并收集所有CompletableFuture
@@ -125,8 +130,8 @@ public class DoSnatchingSchedule {
                                     .collect(Collectors.toList());
 
                             // 使用CompletableFuture.allOf等待所有抓票操作完成
-                            CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
-                            allOf.thenRun(() -> log.info("日期{}下批次任务执行完成: ", useDate));
+                            //CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+                            //allOf.thenRun(() -> log.info("日期{}下批次任务执行完成: ", useDate));
                         }
                     });
         });
@@ -155,9 +160,11 @@ public class DoSnatchingSchedule {
         }*/
         Map<Date, List<DoSnatchInfo>> mapByUseDate = allTaskForRun.stream()
                 .collect(Collectors.groupingBy(DoSnatchInfo::getUseDate));
+        Map<Date, String> dateToAuthMap = allTaskForRun.stream()
+                .collect(Collectors.toMap(DoSnatchInfo::getUseDate, DoSnatchInfo::getAuthorization,(existing, replacement) -> replacement));
         // 对每个useDate异步检查并处理
         mapByUseDate.forEach((useDate, doSnatchInfos) -> {
-            CompletableFuture.supplyAsync(() -> haveTicket(useDate), taskExecutorConfig.getAsyncExecutor())
+            CompletableFuture.supplyAsync(() -> haveTicket(dateToAuthMap.get(useDate),useDate), taskExecutorConfig.getAsyncExecutor())
                     .thenAccept(hasTicket -> {
                         if (hasTicket) {
                             // 异步执行抓票操作，并收集所有CompletableFuture
@@ -169,8 +176,8 @@ public class DoSnatchingSchedule {
                                     .collect(Collectors.toList());
 
                             // 使用CompletableFuture.allOf等待所有抓票操作完成
-                            CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
-                            allOf.thenRun(() -> log.info("日期{}下批次任务执行完成: ", useDate));
+                            //CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+                            //allOf.thenRun(() -> log.info("日期{}下批次任务执行完成: ", useDate));
                         }
                     });
         });
@@ -184,9 +191,11 @@ public class DoSnatchingSchedule {
         }
         Map<Date, List<DoSnatchInfo>> mapByUseDate = allTaskForRun.stream()
                 .collect(Collectors.groupingBy(DoSnatchInfo::getUseDate));
+        Map<Date, String> dateToAuthMap = allTaskForRun.stream()
+                .collect(Collectors.toMap(DoSnatchInfo::getUseDate, DoSnatchInfo::getAuthorization,(existing, replacement) -> replacement));
         // 对每个useDate异步检查并处理
         mapByUseDate.forEach((useDate, doSnatchInfos) -> {
-            CompletableFuture.supplyAsync(() -> haveTicket(useDate), taskExecutorConfig.getAsyncExecutor())
+            CompletableFuture.supplyAsync(() -> haveTicket(dateToAuthMap.get(useDate),useDate), taskExecutorConfig.getAsyncExecutor())
                     .thenAccept(hasTicket -> {
                         if (hasTicket) {
                             // 异步执行抓票操作，并收集所有CompletableFuture
@@ -198,8 +207,8 @@ public class DoSnatchingSchedule {
                                     .collect(Collectors.toList());
 
                             // 使用CompletableFuture.allOf等待所有抓票操作完成
-                            CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
-                            allOf.thenRun(() -> log.info("日期{}下批次任务执行完成: ", useDate));
+                            //CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+                            //allOf.thenRun(() -> log.info("日期{}下批次任务执行完成: ", useDate));
                         }
                     });
         });
@@ -213,9 +222,11 @@ public class DoSnatchingSchedule {
         }
         Map<Date, List<DoSnatchInfo>> mapByUseDate = allTaskForRun.stream()
                 .collect(Collectors.groupingBy(DoSnatchInfo::getUseDate));
+        Map<Date, String> dateToAuthMap = allTaskForRun.stream()
+                .collect(Collectors.toMap(DoSnatchInfo::getUseDate, DoSnatchInfo::getAuthorization,(existing, replacement) -> replacement));
         // 对每个useDate异步检查并处理
         mapByUseDate.forEach((useDate, doSnatchInfos) -> {
-            CompletableFuture.supplyAsync(() -> haveTicket(useDate), taskExecutorConfig.getAsyncExecutor())
+            CompletableFuture.supplyAsync(() -> haveTicket(dateToAuthMap.get(useDate),useDate), taskExecutorConfig.getAsyncExecutor())
                     .thenAccept(hasTicket -> {
                         if (hasTicket) {
                             // 异步执行抓票操作，并收集所有CompletableFuture
@@ -227,8 +238,8 @@ public class DoSnatchingSchedule {
                                     .collect(Collectors.toList());
 
                             // 使用CompletableFuture.allOf等待所有抓票操作完成
-                            CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
-                            allOf.thenRun(() -> log.info("日期{}下批次任务执行完成: ", useDate));
+                           // CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+                            //allOf.thenRun(() -> log.info("日期{}下批次任务执行完成: ", useDate));
                         }
                     });
         });
@@ -342,11 +353,18 @@ public class DoSnatchingSchedule {
         headers.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
         return headers;
     }
-    private Boolean haveTicket(Date date) {
+    private Boolean haveTicket(String auth,Date date) {
         try {
             String url = "https://pcticket.cstm.org.cn/prod-api/pool/getScheduleByHallId?hallId=1&openPerson=1&queryDate=%s&saleMode=1&single=true";
-            String.format(url, DateUtils.dateToStr(date, "yyyy/MM/dd"));
-            HttpResponse response = HttpUtil.createGet("https://pcticket.cstm.org.cn/prod-api/pool/ingore/getCalendar?saleMode=1&openPerson=1").timeout(2000).execute();
+            String format = String.format(url, DateUtils.dateToStr(date, "yyyy/MM/dd"));
+            HttpResponse response = HttpUtil.createGet(format)
+                    .header("Authorization",auth)
+                    .header("Connection","keep-alive")
+                    .header("Referer","https://pcticket.cstm.org.cn/")
+                    .header("Accept","application/json")
+                    .header("User-Agent","Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36/")
+                    .timeout(2000)
+                    .execute();
             String body = response.body();
             if (ObjectUtils.isEmpty(body)) {
                 return false;
