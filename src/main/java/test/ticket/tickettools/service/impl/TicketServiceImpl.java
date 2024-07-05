@@ -705,7 +705,7 @@ public class TicketServiceImpl implements TicketService {
                     for (Long taskDetailId : taskDetailIds) {
                         TaskDetailEntity taskDetailEntity = new TaskDetailEntity();
                         taskDetailEntity.setId(taskDetailId);
-                        taskDetailEntity.setExt(response.getString("msg"));
+                        taskDetailEntity.setExt(ObjectUtils.isEmpty(response)?"添加用户异常":response.getString("msg"));
                         taskDetailDao.updateTaskDetail(taskDetailEntity);
                     }
                     if (!msgCache.containsKey(doSnatchInfo.getTaskId())) {
