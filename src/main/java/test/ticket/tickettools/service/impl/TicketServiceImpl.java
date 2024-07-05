@@ -927,6 +927,9 @@ public class TicketServiceImpl implements TicketService {
             log.info("提交订单结果:{}", exchange.getBody());
             placeOrderRes = exchange.getBody();
             if (!ObjectUtils.isEmpty(placeOrderRes)) {
+                if(placeOrderRes.getIntValue("needChargeCode")==0){
+                    return ServiceResponse.createBySuccess("免费票无需支付");
+                }
                 if (placeOrderRes.getIntValue("code") != 200) {
                     return ServiceResponse.createByErrorMessage(placeOrderRes.getString("msg"));
                 }
