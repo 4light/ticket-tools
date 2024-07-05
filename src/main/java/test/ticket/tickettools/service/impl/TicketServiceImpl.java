@@ -701,16 +701,16 @@ public class TicketServiceImpl implements TicketService {
                 //restTemplate.exchange(addUrl, HttpMethod.POST, addEntity, String.class);
                 JSONObject response = TemplateUtil.getResponse(restTemplate, addUrl, HttpMethod.POST, addEntity);
                 if (ObjectUtils.isEmpty(response) || response.getIntValue("code") != 200) {
+                    List<Long> taskDetailIds = doSnatchInfo.getTaskDetailIds();
+                    for (Long taskDetailId : taskDetailIds) {
+                        TaskDetailEntity taskDetailEntity = new TaskDetailEntity();
+                        taskDetailEntity.setId(taskDetailId);
+                        taskDetailEntity.setExt(response.getString("msg"));
+                        taskDetailDao.updateTaskDetail(taskDetailEntity);
+                    }
                     if (!msgCache.containsKey(doSnatchInfo.getTaskId())) {
                         WebSocketServer.sendInfo(socketMsg("抢票异常", "账号:" + doSnatchInfo.getAccount() + response.getString("msg"), 0), doSnatchInfo.getCreator());
                         SendMessageUtil.send(ChannelEnum.CSTM.getDesc(), DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"), "账号：", doSnatchInfo.getAccount(), response.getString("msg"));
-                        List<Long> taskDetailIds = doSnatchInfo.getTaskDetailIds();
-                        for (Long taskDetailId : taskDetailIds) {
-                            TaskDetailEntity taskDetailEntity = new TaskDetailEntity();
-                            taskDetailEntity.setId(taskDetailId);
-                            taskDetailEntity.setExt(response.getString("msg"));
-                            taskDetailDao.updateTaskDetail(taskDetailEntity);
-                        }
                     }
                     msgCache.put(doSnatchInfo.getTaskId(), true);
                     runTaskCache.remove(taskId);
@@ -739,7 +739,7 @@ public class TicketServiceImpl implements TicketService {
                 HttpEntity shoppingCartUrlEntity = new HttpEntity<>(buildParam(token, childrenTicketNum == null ? 0 : childrenTicketNum, point, doSnatchInfo.getSession(), doSnatchInfo.getUseDate(), priceId, childrenPriceId, discountPriceId, olderPriceId, phone, nameIDMap), headers);
                 JSONObject bodyJson = TemplateUtil.getResponse(restTemplate, shoppingCartUrl, HttpMethod.POST, shoppingCartUrlEntity);
                 if (!ObjectUtils.isEmpty(bodyJson) && (bodyJson.getIntValue("code") == 550 || bodyJson.getIntValue("code") == 503)) {
-                    log.info("账号：{}下游客：{},提交订单结果：{}", doSnatchInfo.getAccount(),doSnatchInfo.getIdNameMap().values(),bodyJson);
+                    //log.info("账号：{}下游客：{},提交订单结果：{}", doSnatchInfo.getAccount(),doSnatchInfo.getIdNameMap().values(),bodyJson);
                     if (!msgCache.containsKey(doSnatchInfo.getTaskId())) {
                         //WebSocketServer.sendInfo(socketMsg("抢票异常", "账号:"+doSnatchInfo.getAccount()+","+bodyJson.getString("msg"), 0), doSnatchInfo.getCreator());
                         List<Long> taskDetailIds = doSnatchInfo.getTaskDetailIds();
@@ -854,6 +854,14 @@ public class TicketServiceImpl implements TicketService {
                     taskDetailDao.updateTaskDetailBath(taskDetailEntities);
                     SendMessageUtil.send(ChannelEnum.CSTM.getDesc(), DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"), "主场馆", doSnatchInfo.getAccount(), String.join(",", doSnatchInfo.getIdNameMap().values()));
                     WebSocketServer.sendInfo(socketMsg("抢票成功", String.valueOf(nameIDMap.values()), 5000), doSnatchInfo.getCreator());
+                }else{
+                    List<Long> taskDetailIds = doSnatchInfo.getTaskDetailIds();
+                    for (Long taskDetailId : taskDetailIds) {
+                        TaskDetailEntity taskDetailEntity = new TaskDetailEntity();
+                        taskDetailEntity.setId(taskDetailId);
+                        taskDetailEntity.setExt(JSON.toJSONString(bodyJson));
+                        taskDetailDao.updateTaskDetail(taskDetailEntity);
+                    }
                 }
                     /*if (!ObjectUtils.isEmpty(bodyJson) && bodyJson.getIntValue("code") == 550) {
                         if(bodyJson.getString("msg").contains("已有订单")){
