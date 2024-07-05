@@ -641,10 +641,10 @@ public class TicketServiceImpl implements TicketService {
     @Override
     public void snatchingTicket(DoSnatchInfo doSnatchInfo) {
         Long taskId = doSnatchInfo.getTaskId();
-        if (runTaskCache.containsKey(taskId)) {
+        /*if (runTaskCache.containsKey(taskId)) {
             return;
         }
-        runTaskCache.put(taskId, true);
+        runTaskCache.put(taskId, true);*/
         String getHallUrl = "https://pcticket.cstm.org.cn/prod-api/pool/ingore/getHall?saleMode=1&openPerson=1&queryDate=%s";
         Map<String, String> nameIDMap = doSnatchInfo.getIdNameMap();
         String formatGetHallUrl = String.format(getHallUrl, DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"));
@@ -1176,10 +1176,10 @@ public class TicketServiceImpl implements TicketService {
                 if (isResponseValid(execute)) {
                     return JSON.parseObject(execute.body());
                 } else {
-                    log.info("获取响应无效，重试次数: {}" , (retryCount + 1));
+                    //log.info("获取响应无效，重试次数: {}" , (retryCount + 1));
                 }
             } catch (Exception e) {
-                log.info("获取图片验证码请求异常，重试次数: {}" ,(retryCount + 1));
+                //log.info("获取图片验证码请求异常，重试次数: {}" ,(retryCount + 1));
             }
             retryCount++;
         }
