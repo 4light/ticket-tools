@@ -40,7 +40,7 @@ public interface TicketService {
     List<DoSnatchInfo> getAllTaskForRun1();
     //获取所有未执行完的任务
     List<TaskEntity> getAllUnDoneTask();
-    //执行抢票任务
+    //执行放票当天的抢票任务
     void snatchingTicket(DoSnatchInfo doSnatchInfo);
     //支付
     ServiceResponse<String> pay(PlaceOrderInfo placeOrderInfo);

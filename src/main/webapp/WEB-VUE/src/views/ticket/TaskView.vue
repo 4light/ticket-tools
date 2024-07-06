@@ -79,6 +79,7 @@
         :span-method="objectSpanMethod"
         @selection-change="handleSelectionChange"
         class="currentTable"
+        v-loading="loading"
       >
 <!--              :row-class-name="tableCellStyle"
   -->
@@ -109,7 +110,7 @@
               <el-link type="success" @click="ticketInspectionCode(row.orderNumber,row.userName)"
                        v-if="row.childrenTicket&&row.channel==0&&row.orderNumber!=null">二维码
               </el-link>
-              <span v-if="row.ext!=null">
+              <span v-if="row.ext!=null&&row.ext!='null'">
                 <el-tooltip class="item" effect="dark" :content="row.ext" placement="top-start">
                   <el-icon class="el-icon-warning-outline"></el-icon>
                 </el-tooltip>
@@ -268,6 +269,7 @@ export default {
   },
   data () {
     return {
+      loading:false,
       ynList: [
         {
           id: 0,

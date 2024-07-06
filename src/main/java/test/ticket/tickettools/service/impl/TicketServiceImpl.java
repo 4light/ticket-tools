@@ -640,14 +640,7 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     public void snatchingTicket(DoSnatchInfo doSnatchInfo) {
-        Long taskId = doSnatchInfo.getTaskId();
-        /*if (runTaskCache.containsKey(taskId)) {
-            return;
-        }
-        runTaskCache.put(taskId, true);*/
-        String getHallUrl = "https://pcticket.cstm.org.cn/prod-api/pool/ingore/getHall?saleMode=1&openPerson=1&queryDate=%s";
         Map<String, String> nameIDMap = doSnatchInfo.getIdNameMap();
-        String formatGetHallUrl = String.format(getHallUrl, DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"));
         RestTemplate restTemplate = TemplateUtil.initSSLTemplate();
         try {
             HttpHeaders headers = getHeader(doSnatchInfo.getAuthorization());
@@ -705,6 +698,7 @@ public class TicketServiceImpl implements TicketService {
                     for (Long taskDetailId : taskDetailIds) {
                         TaskDetailEntity taskDetailEntity = new TaskDetailEntity();
                         taskDetailEntity.setId(taskDetailId);
+                        taskDetailEntity.setUpdateDate(new Date());
                         taskDetailEntity.setExt(ObjectUtils.isEmpty(response)?"添加用户异常":response.getString("msg"));
                         taskDetailDao.updateTaskDetail(taskDetailEntity);
                     }
@@ -713,7 +707,6 @@ public class TicketServiceImpl implements TicketService {
                         SendMessageUtil.send(ChannelEnum.CSTM.getDesc(), DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"), "账号：", doSnatchInfo.getAccount(), response.getString("msg"));
                     }
                     msgCache.put(doSnatchInfo.getTaskId(), true);
-                    runTaskCache.remove(taskId);
                     return;
                 }
             }
@@ -746,12 +739,12 @@ public class TicketServiceImpl implements TicketService {
                         for (Long taskDetailId : taskDetailIds) {
                             TaskDetailEntity taskDetailEntity = new TaskDetailEntity();
                             taskDetailEntity.setId(taskDetailId);
+                            taskDetailEntity.setUpdateDate(new Date());
                             taskDetailEntity.setExt("购票账号：" + doSnatchInfo.getAccount() + "。" + bodyJson.getString("msg"));
                             taskDetailDao.updateTaskDetail(taskDetailEntity);
                         }
                     }
                     msgCache.put(doSnatchInfo.getTaskId(), true);
-                    runTaskCache.remove(taskId);
                     try {
                         Files.delete(Paths.get(sliderImageName));
                         Files.delete(Paths.get(backImageName));
@@ -771,47 +764,6 @@ public class TicketServiceImpl implements TicketService {
                     }
                     msgCache.remove(doSnatchInfo.getTaskId());
                     log.info("账号：{}下游客：{},提交订单结果：{}", doSnatchInfo.getAccount(),doSnatchInfo.getIdNameMap().values(),bodyJson);
-                        /*//doneList.addAll(nameIDMap.values());
-                        HttpEntity placeOrderEntity = new HttpEntity<>(buildPlaceOrderParam(priceNameCountMap.get("childrenTicket"), useDate, phone, bodyJson.getJSONArray("data").toJavaList(Long.class)), headers);
-                        ResponseEntity<String> placeOrderRes = restTemplate.exchange(placeOrderUrl, HttpMethod.POST, placeOrderEntity, String.class);
-                        String placeOrderBody = placeOrderRes.getBody();
-                        log.info("下单结果：{}",placeOrderBody);
-                        JSONObject placeOrderJson = JSON.parseObject(placeOrderBody);
-                        if(placeOrderJson==null||placeOrderJson.getIntValue("code")!=200){
-                            try {
-                                Files.delete(Paths.get(sliderImageName));
-                                Files.delete(Paths.get(backImageName));
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                            return;
-                        }
-                    //放票日
-                    if (StrUtil.equals(doSnatchInfo.getType(), RedisKeyEnum.TICKETINGDAY.getCode())) {
-                        String key = RedisKeyEnum.TASK.getCode() + ":" + doSnatchInfo.getTaskId();
-                        List<String> list = redisService.getList(key);
-                        if (ObjectUtils.isEmpty(list)) {
-                            redisService.removeFromList(RedisKeyEnum.TICKETINGDAY.getCode(), String.valueOf(doSnatchInfo.getTaskId()));
-                        }
-                        for (String s : list) {
-                            JSONObject item = JSON.parseObject(s);
-                            List<Long> taskDetailIds = item.getJSONArray("taskDetailIds").toJavaList(Long.class);
-                            if (taskDetailIds.stream().anyMatch(doSnatchInfo.getTaskDetailIds()::contains)) {
-                                redisService.removeFromList(key, s);
-                                for (Long taskDetailId : taskDetailIds) {
-                                    String normalKey = doSnatchInfo.getTaskId() + ":" + taskDetailId;
-                                    redisService.removeFromList(RedisKeyEnum.NORMAL.getCode(), normalKey);
-                                    redisService.deleteKey(normalKey);
-                                }
-                            }
-                        }
-                    }
-                    //普通
-                    if (StrUtil.equals(doSnatchInfo.getType(), RedisKeyEnum.NORMAL.getCode())) {
-                        String key = doSnatchInfo.getTaskId() + ":" + doSnatchInfo.getTaskDetailIds().get(0);
-                        redisService.removeFromList(RedisKeyEnum.NORMAL.getCode(), key);
-                        redisService.deleteKey(key);
-                    }*/
                     //查询个人订单
                     headers.set("Referer", "https://pcticket.cstm.org.cn/personal/car");
                     HttpEntity searchEntity = new HttpEntity(headers);
@@ -820,7 +772,6 @@ public class TicketServiceImpl implements TicketService {
                     JSONObject searchBodyJson = JSON.parseObject(searchResBody);
                     if (searchBodyJson == null || searchBodyJson.getIntValue("code") != 200) {
                         log.info("查询个人订单失败：{}", searchBodyJson);
-                        runTaskCache.remove(taskId);
                         try {
                             Files.delete(Paths.get(sliderImageName));
                             Files.delete(Paths.get(backImageName));
@@ -859,20 +810,11 @@ public class TicketServiceImpl implements TicketService {
                     for (Long taskDetailId : taskDetailIds) {
                         TaskDetailEntity taskDetailEntity = new TaskDetailEntity();
                         taskDetailEntity.setId(taskDetailId);
+                        taskDetailEntity.setUpdateDate(new Date());
                         taskDetailEntity.setExt(JSON.toJSONString(bodyJson));
                         taskDetailDao.updateTaskDetail(taskDetailEntity);
                     }
                 }
-                    /*if (!ObjectUtils.isEmpty(bodyJson) && bodyJson.getIntValue("code") == 550) {
-                        if(bodyJson.getString("msg").contains("已有订单")){
-                            doneList.forEach(idCard->{
-                                if(!bodyJson.getString("msg").contains(idCard)){
-                                    WebSocketServer.sendInfo(socketMsg("抢票失败", bodyJson.getString("msg"), 0), null);
-                                }
-                            });
-                        }
-                    }*/
-                runTaskCache.remove(taskId);
                 try {
                     Files.delete(Paths.get(sliderImageName));
                     Files.delete(Paths.get(backImageName));
@@ -886,12 +828,9 @@ public class TicketServiceImpl implements TicketService {
                 msgCache.put(doSnatchInfo.getTaskId(), true);
             }
         } catch (Exception e) {
-            runTaskCache.remove(taskId);
             log.info("科技馆抢票异常:{}", e);
         }
-        runTaskCache.remove(taskId);
     }
-
 
     @Override
     public ServiceResponse<String> pay(PlaceOrderInfo placeOrderInfo) {
@@ -909,46 +848,58 @@ public class TicketServiceImpl implements TicketService {
         headers.set("authorization", placeOrderInfo.getAuthorization());
         headers.set("cookie", "SL_G_WPT_TO=zh; SL_GWPT_Show_Hide_tmp=1; SL_wptGlobTipTmp=1");
         headers.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
-        if (ObjectUtils.isEmpty(placeOrderInfo.getOrderId())) {
-            JSONObject placeOrderRes = new JSONObject();
-            JSONObject param = new JSONObject();
-            param.put("childTicketNum", placeOrderInfo.getChildTicketNum());
-            param.put("date", DateUtil.format(placeOrderInfo.getDate(), "yyyy-MM-dd"));
-            param.put("phone", placeOrderInfo.getLoginPhone());
-            param.put("platform", 1);
-            param.put("poolFlag", 1);
-            param.put("realNameFlag", 1);
-            param.put("saleMode", 1);
-            param.put("ticketInfoList", placeOrderInfo.getTicketInfoList());
-            param.put("ticketNum", placeOrderInfo.getTicketInfoList().size());
-            param.put("useTicketType", 1);
-            HttpEntity entity = new HttpEntity<>(param, headers);
-            ResponseEntity<JSONObject> exchange = restTemplate.exchange(placeOrderUrl, HttpMethod.POST, entity, JSONObject.class);
-            log.info("提交订单结果:{}", exchange.getBody());
-            placeOrderRes = exchange.getBody();
-            if (!ObjectUtils.isEmpty(placeOrderRes)) {
-                if (placeOrderRes.getIntValue("code") != 200) {
-                    return ServiceResponse.createByErrorMessage(placeOrderRes.getString("msg"));
+        try {
+            if (ObjectUtils.isEmpty(placeOrderInfo.getOrderId())) {
+                JSONObject placeOrderRes = new JSONObject();
+                JSONObject param = new JSONObject();
+                param.put("childTicketNum", placeOrderInfo.getChildTicketNum());
+                param.put("date", DateUtil.format(placeOrderInfo.getDate(), "yyyy-MM-dd"));
+                param.put("phone", placeOrderInfo.getLoginPhone());
+                param.put("platform", 1);
+                param.put("poolFlag", 1);
+                param.put("realNameFlag", 1);
+                param.put("saleMode", 1);
+                param.put("ticketInfoList", placeOrderInfo.getTicketInfoList());
+                param.put("ticketNum", placeOrderInfo.getTicketInfoList().size());
+                param.put("useTicketType", 1);
+                HttpEntity entity = new HttpEntity<>(param, headers);
+                ResponseEntity<JSONObject> exchange = restTemplate.exchange(placeOrderUrl, HttpMethod.POST, entity, JSONObject.class);
+                log.info("提交订单结果:{}", exchange.getBody());
+                placeOrderRes = exchange.getBody();
+                if (!ObjectUtils.isEmpty(placeOrderRes)) {
+                    if (placeOrderRes.getIntValue("code") != 200) {
+                        return ServiceResponse.createByErrorMessage(placeOrderRes.getString("msg"));
+                    }
+                    JSONObject orderData = placeOrderRes.getJSONObject("data");
+                    long orderId = orderData.getLongValue("orderId");
+                    Integer needChargeCode = orderData.getInteger("needChargeCode");
+                    List<TaskDetailEntity> updates = new ArrayList<>();
+                    placeOrderInfo.getTaskDetailIds().forEach(o -> {
+                        TaskDetailEntity taskDetailEntity = new TaskDetailEntity();
+                        taskDetailEntity.setId(o);
+                        taskDetailEntity.setUpdateDate(new Date());
+                        taskDetailEntity.setOrderId(orderId);
+                        taskDetailEntity.setPayment(needChargeCode != 1);
+                        updates.add(taskDetailEntity);
+                    });
+                    taskDetailDao.updateTaskDetailBath(updates);
+                    if (needChargeCode != 1) {
+                        return null;
+                    }
+                    JSONObject payParam = new JSONObject();
+                    payParam.put("id", orderId);
+                    payParam.put("payType", 0);
+                    HttpEntity payEntity = new HttpEntity<>(payParam, headers);
+                    ResponseEntity<JSONObject> payResEntity = restTemplate.exchange(wxPayForPcUrl, HttpMethod.POST, payEntity, JSONObject.class);
+                    JSONObject payRes = payResEntity.getBody();
+                    log.info("获取支付url结果:{}", payRes);
+                    if (!ObjectUtils.isEmpty(payRes) && payRes.getIntValue("code") == 200) {
+                        return ServiceResponse.createBySuccess(payRes.getString("data"));
+                    }
                 }
-                JSONObject orderData = placeOrderRes.getJSONObject("data");
-                long orderId = orderData.getLongValue("orderId");
-                String orderNumber = orderData.getString("orderNumber");
-                Integer needChargeCode = orderData.getInteger("needChargeCode");
-                List<TaskDetailEntity> updates = new ArrayList<>();
-                placeOrderInfo.getTaskDetailIds().forEach(o -> {
-                    TaskDetailEntity taskDetailEntity = new TaskDetailEntity();
-                    taskDetailEntity.setId(o);
-                    taskDetailEntity.setUpdateDate(new Date());
-                    taskDetailEntity.setOrderId(orderId);
-                    taskDetailEntity.setPayment(needChargeCode != 1);
-                    updates.add(taskDetailEntity);
-                });
-                taskDetailDao.updateTaskDetailBath(updates);
-                if (needChargeCode != 1) {
-                    return null;
-                }
+            } else {
                 JSONObject payParam = new JSONObject();
-                payParam.put("id", orderId);
+                payParam.put("id", placeOrderInfo.getOrderId());
                 payParam.put("payType", 0);
                 HttpEntity payEntity = new HttpEntity<>(payParam, headers);
                 ResponseEntity<JSONObject> payResEntity = restTemplate.exchange(wxPayForPcUrl, HttpMethod.POST, payEntity, JSONObject.class);
@@ -956,21 +907,13 @@ public class TicketServiceImpl implements TicketService {
                 log.info("获取支付url结果:{}", payRes);
                 if (!ObjectUtils.isEmpty(payRes) && payRes.getIntValue("code") == 200) {
                     return ServiceResponse.createBySuccess(payRes.getString("data"));
+                } else {
+                    return ServiceResponse.createByErrorMessage(payRes.getString("msg"));
                 }
             }
-        } else {
-            JSONObject payParam = new JSONObject();
-            payParam.put("id", placeOrderInfo.getOrderId());
-            payParam.put("payType", 0);
-            HttpEntity payEntity = new HttpEntity<>(payParam, headers);
-            ResponseEntity<JSONObject> payResEntity = restTemplate.exchange(wxPayForPcUrl, HttpMethod.POST, payEntity, JSONObject.class);
-            JSONObject payRes = payResEntity.getBody();
-            log.info("获取支付url结果:{}", payRes);
-            if (!ObjectUtils.isEmpty(payRes) && payRes.getIntValue("code") == 200) {
-                return ServiceResponse.createBySuccess(payRes.getString("data"));
-            } else {
-                return ServiceResponse.createByErrorMessage(payRes.getString("msg"));
-            }
+        }catch (Exception e){
+            e.printStackTrace();
+            return ServiceResponse.createByErrorMessage("获取二维码异常");
         }
         return null;
     }
