@@ -689,7 +689,7 @@ public class TicketServiceImpl implements TicketService {
                     }
                 }
             }
-            for (Map.Entry<String, String> entry : nameIDMap.entrySet()) {
+            /*for (Map.Entry<String, String> entry : nameIDMap.entrySet()) {
                 HttpEntity addEntity = new HttpEntity<>(buildAddParam(entry.getKey(), entry.getValue(), userId), headers);
                 //restTemplate.exchange(addUrl, HttpMethod.POST, addEntity, String.class);
                 JSONObject response = TemplateUtil.getResponse(restTemplate, addUrl, HttpMethod.POST, addEntity);
@@ -709,7 +709,7 @@ public class TicketServiceImpl implements TicketService {
                     msgCache.put(doSnatchInfo.getTaskId(), true);
                     return;
                 }
-            }
+            }*/
             JSONObject getCheckImageJson = getCheckImag(doSnatchInfo.getAuthorization());
             if (!ObjectUtils.isEmpty(getCheckImageJson) && getCheckImageJson.getIntValue("code") == 200) {
                 JSONObject data = getCheckImageJson.getJSONObject("data");
@@ -732,19 +732,7 @@ public class TicketServiceImpl implements TicketService {
                 HttpEntity shoppingCartUrlEntity = new HttpEntity<>(buildParam(token, childrenTicketNum == null ? 0 : childrenTicketNum, point, doSnatchInfo.getSession(), doSnatchInfo.getUseDate(), priceId, childrenPriceId, discountPriceId, olderPriceId, phone, nameIDMap), headers);
                 JSONObject bodyJson = TemplateUtil.getResponse(restTemplate, shoppingCartUrl, HttpMethod.POST, shoppingCartUrlEntity);
                 if (!ObjectUtils.isEmpty(bodyJson) && (bodyJson.getIntValue("code") == 550 || bodyJson.getIntValue("code") == 503)) {
-                    //log.info("账号：{}下游客：{},提交订单结果：{}", doSnatchInfo.getAccount(),doSnatchInfo.getIdNameMap().values(),bodyJson);
-                    if (!msgCache.containsKey(doSnatchInfo.getTaskId())) {
-                        //WebSocketServer.sendInfo(socketMsg("抢票异常", "账号:"+doSnatchInfo.getAccount()+","+bodyJson.getString("msg"), 0), doSnatchInfo.getCreator());
-                        List<Long> taskDetailIds = doSnatchInfo.getTaskDetailIds();
-                        for (Long taskDetailId : taskDetailIds) {
-                            TaskDetailEntity taskDetailEntity = new TaskDetailEntity();
-                            taskDetailEntity.setId(taskDetailId);
-                            taskDetailEntity.setUpdateDate(new Date());
-                            taskDetailEntity.setExt("购票账号：" + doSnatchInfo.getAccount() + "。" + bodyJson.getString("msg"));
-                            taskDetailDao.updateTaskDetail(taskDetailEntity);
-                        }
-                    }
-                    msgCache.put(doSnatchInfo.getTaskId(), true);
+                    log.info("提交订单异常！账号：{}下游客：{},提交订单结果：{}", doSnatchInfo.getAccount(),doSnatchInfo.getIdNameMap().values(),bodyJson);
                     try {
                         Files.delete(Paths.get(sliderImageName));
                         Files.delete(Paths.get(backImageName));
@@ -767,9 +755,7 @@ public class TicketServiceImpl implements TicketService {
                     //查询个人订单
                     headers.set("Referer", "https://pcticket.cstm.org.cn/personal/car");
                     HttpEntity searchEntity = new HttpEntity(headers);
-                    ResponseEntity<String> searchResEntity = restTemplate.exchange(getShoppingCart, HttpMethod.GET, searchEntity, String.class);
-                    String searchResBody = searchResEntity.getBody();
-                    JSONObject searchBodyJson = JSON.parseObject(searchResBody);
+                    JSONObject searchBodyJson = getOrderDetail(searchEntity);
                     if (searchBodyJson == null || searchBodyJson.getIntValue("code") != 200) {
                         log.info("查询个人订单失败：{}", searchBodyJson);
                         try {
@@ -805,15 +791,6 @@ public class TicketServiceImpl implements TicketService {
                     taskDetailDao.updateTaskDetailBath(taskDetailEntities);
                     SendMessageUtil.send(ChannelEnum.CSTM.getDesc(), DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"), "主场馆", doSnatchInfo.getAccount(), String.join(",", doSnatchInfo.getIdNameMap().values()));
                     WebSocketServer.sendInfo(socketMsg("抢票成功", String.valueOf(nameIDMap.values()), 5000), doSnatchInfo.getCreator());
-                }else{
-                    List<Long> taskDetailIds = doSnatchInfo.getTaskDetailIds();
-                    for (Long taskDetailId : taskDetailIds) {
-                        TaskDetailEntity taskDetailEntity = new TaskDetailEntity();
-                        taskDetailEntity.setId(taskDetailId);
-                        taskDetailEntity.setUpdateDate(new Date());
-                        taskDetailEntity.setExt(JSON.toJSONString(bodyJson));
-                        taskDetailDao.updateTaskDetail(taskDetailEntity);
-                    }
                 }
                 try {
                     Files.delete(Paths.get(sliderImageName));
@@ -864,7 +841,7 @@ public class TicketServiceImpl implements TicketService {
                 param.put("useTicketType", 1);
                 HttpEntity entity = new HttpEntity<>(param, headers);
                 ResponseEntity<JSONObject> exchange = restTemplate.exchange(placeOrderUrl, HttpMethod.POST, entity, JSONObject.class);
-                log.info("提交订单结果:{}", exchange.getBody());
+                log.info("购物车提交结果:{}", exchange.getBody());
                 placeOrderRes = exchange.getBody();
                 if (!ObjectUtils.isEmpty(placeOrderRes)) {
                     if (placeOrderRes.getIntValue("code") != 200) {
@@ -913,7 +890,7 @@ public class TicketServiceImpl implements TicketService {
             }
         }catch (Exception e){
             e.printStackTrace();
-            return ServiceResponse.createByErrorMessage("获取二维码异常");
+            return ServiceResponse.createByErrorMessage("获取二维码异常，请重新支付");
         }
         return null;
     }
@@ -1131,6 +1108,20 @@ public class TicketServiceImpl implements TicketService {
                 }
             } catch (Exception e) {
                 //log.info("获取图片验证码请求异常，重试次数: {}" ,(retryCount + 1));
+            }
+            retryCount++;
+        }
+        return null;
+    }
+    private JSONObject getOrderDetail(HttpEntity searchEntity){
+        int retryCount = 0;
+        while (retryCount < 5) {
+            try {
+                ResponseEntity<String> searchResEntity = restTemplate.exchange(getShoppingCart, HttpMethod.GET, searchEntity, String.class);
+                JSONObject searchBodyJson = JSON.parseObject(searchResEntity.getBody());
+                return searchBodyJson;
+            } catch (Exception e) {
+                log.info("获取购物车数据异常，重试次数: {}" ,(retryCount + 1));
             }
             retryCount++;
         }

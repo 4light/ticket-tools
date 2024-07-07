@@ -323,6 +323,7 @@ public class JntTicketServiceImpl implements DoSnatchTicketService {
             TaskDetailEntity taskDetailEntity = new TaskDetailEntity();
             taskDetailEntity.setTaskId(unDoneTask.getId());
             taskDetailEntity.setDone(false);
+            taskDetailEntity.setYn(false);
             List<TaskDetailEntity> taskDetailEntities = taskDetailDao.selectByEntity(taskDetailEntity);
             List<Long> taskDetailIds = new ArrayList<>();
             Map<String, String> idNameMap = new HashMap<>();

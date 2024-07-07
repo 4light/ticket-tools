@@ -91,8 +91,8 @@ public class DoSnatchingSchedule {
                                     .collect(Collectors.toList());
 
                             // 使用CompletableFuture.allOf等待所有抓票操作完成
-                            //CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
-                            //allOf.thenRun(() -> log.info("日期{}下批次任务执行完成: ", useDate));
+                            CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+                            allOf.thenRun(() -> log.info("日期{}下批次任务执行完成: ", useDate));
                         }
                     });
         });
@@ -269,17 +269,12 @@ public class DoSnatchingSchedule {
             CompletableFuture.supplyAsync(() -> haveTicket(doSnatchInfos.get(0).getAuthorization(),useDate), taskExecutorConfig.getAsyncExecutor())
                     .thenAccept(hasTicket -> {
                         if (hasTicket) {
-                            // 异步执行抓票操作，并收集所有CompletableFuture
-                            List<CompletableFuture<Void>> futures = doSnatchInfos.stream()
+                            doSnatchInfos.stream()
                                     .map(doSnatchInfo -> CompletableFuture.runAsync(
                                             () -> ticketServiceImpl.snatchingTicket(doSnatchInfo),
                                             taskExecutorConfig.getAsyncExecutor()
                                     ))
                                     .collect(Collectors.toList());
-
-                            // 使用CompletableFuture.allOf等待所有抓票操作完成
-                            //CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
-                            //allOf.thenRun(() -> log.info("日期{}下批次任务执行完成: ", useDate));
                         }
                     });
         });

@@ -105,6 +105,7 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
             TaskDetailEntity taskDetailEntity = new TaskDetailEntity();
             taskDetailEntity.setTaskId(unDoneTask.getId());
             taskDetailEntity.setDone(false);
+            taskDetailEntity.setYn(false);
             List<TaskDetailEntity> taskDetailEntities = taskDetailDao.selectByEntity(taskDetailEntity);
             if (ObjectUtils.isEmpty(taskDetailEntities)) {
                 unDoneTask.setDone(true);

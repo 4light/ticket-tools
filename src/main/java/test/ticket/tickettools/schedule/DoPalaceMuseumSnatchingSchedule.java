@@ -13,6 +13,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.ObjectUtils;
+import test.ticket.tickettools.dao.TaskDao;
 import test.ticket.tickettools.domain.bo.DoSnatchInfo;
 import test.ticket.tickettools.domain.bo.ProxyInfo;
 import test.ticket.tickettools.domain.entity.TaskEntity;
@@ -24,6 +25,7 @@ import test.ticket.tickettools.utils.TemplateUtil;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -35,8 +37,10 @@ import java.util.stream.Collectors;
 public class DoPalaceMuseumSnatchingSchedule {
     @Resource
     DoSnatchTicketService palaceMuseumTicketServiceImpl;
+    @Resource
+    TaskDao taskDao;
 
-    @Scheduled(cron = "0/1 59 19 * * ?")
+    @Scheduled(cron = "0/1 58 19 * * ?")
     public void initData() {
         List<TaskEntity> allUndoneTask = palaceMuseumTicketServiceImpl.getAllUndoneTask();
         if (ObjectUtils.isEmpty(allUndoneTask)) {
@@ -52,12 +56,11 @@ public class DoPalaceMuseumSnatchingSchedule {
         pool.initialize();
         for (TaskEntity taskEntity : allUndoneTask) {
             CompletableFuture.runAsync(() ->palaceMuseumTicketServiceImpl.initData(taskEntity), pool);
-
         }
     }
 
 
-    @Scheduled(cron = "0/1 01-06 20 * * ?")
+    @Scheduled(cron = "0/1 01-29 20 * * ?")
     public void doPalaceMuseumTicketSnatch() {
         List<DoSnatchInfo> doSnatchInfos = palaceMuseumTicketServiceImpl.getDoSnatchInfos();
         if (ObjectUtils.isEmpty(doSnatchInfos)) {
@@ -73,6 +76,24 @@ public class DoPalaceMuseumSnatchingSchedule {
         pool.initialize();
         for (DoSnatchInfo doSnatchInfo : doSnatchInfos) {
             CompletableFuture.runAsync(() -> palaceMuseumTicketServiceImpl.doSnatchingTicket(doSnatchInfo), pool);
+        }
+    }
+    @Scheduled(cron = "0 0/5 20-21 * * ?")
+    public void updateTaskProxy() {
+        List<TaskEntity> allUndoneTask = palaceMuseumTicketServiceImpl.getAllUndoneTask();
+        LocalTime now = LocalTime.now();
+        LocalTime start = LocalTime.of(20, 5);
+        LocalTime end = LocalTime.of(20, 30);
+        if (now.isAfter(start) && now.isBefore(end)) {
+            // 在20:05到20:30之间执行任务
+            List<ProxyInfo> proxyList = ProxyUtil.getProxyList(allUndoneTask.size());
+            for (int i = 0; i < allUndoneTask.size(); i++) {
+                TaskEntity currentEntity = allUndoneTask.get(i);
+                ProxyInfo proxyInfo = proxyList.get(i);
+                currentEntity.setIp(proxyInfo.getIp());
+                currentEntity.setPort(proxyInfo.getPort());
+                taskDao.updateTask(currentEntity);
+            }
         }
     }
 }

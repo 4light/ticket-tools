@@ -80,7 +80,7 @@
         <where>
             done =0
             <if test='useDate!=null'>
-                AND use_date > #{useDate}
+                AND use_date >= #{useDate}
             </if>
             <if test='channel!=null'>
                 AND channel = #{channel}

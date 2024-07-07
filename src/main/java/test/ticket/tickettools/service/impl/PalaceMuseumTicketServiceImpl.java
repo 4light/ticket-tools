@@ -157,6 +157,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
             TaskDetailEntity taskDetailEntity = new TaskDetailEntity();
             taskDetailEntity.setTaskId(unDoneTask.getId());
             taskDetailEntity.setDone(false);
+            taskDetailEntity.setYn(false);
             List<TaskDetailEntity> taskDetailEntities = taskDetailDao.selectByEntity(taskDetailEntity);
             if (ObjectUtils.isEmpty(taskDetailEntities)) {
                 unDoneTask.setDone(true);
@@ -204,6 +205,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
         String createUrl = "https://lotswap.dpm.org.cn/dubboApi/trade-core/tradeCreateService/create?sign=%s&timestamp=%s";
         String getPayTypeUrl = "https://lotswap.dpm.org.cn/lotsapi/merchant/api/merchantPayType/getMerchantPayType?payOrderNo=%s&businessType=WXXCX&merchantId=2655&merchantInfoId=2655";
         String toPayUrl = "https://lotswap.dpm.org.cn/lotsapi/order/orderPay/toPay?payOrderNo=%s&paySum=%s&openId=%s&channelProductCode=%s&payType=%s&extendParamJson=%s&accountId=2655&userType=C";
+        String getLeagueInfoUrl="https://lotswap.dpm.org.cn/lotsapi/leaguer/api/userLeaguer/manage/leaguerInfo?id=%s&cipherText=0&merchantId=2655&merchantInfoId=2655";
         try {
             JSONObject currentParkFsyyDetail = new JSONObject();
             RestTemplate restTemplate = ObjectUtils.isEmpty(doSnatchInfo.getIp()) ? TemplateUtil.initSSLTemplate() : TemplateUtil.initSSLTemplateWithProxyAuth(doSnatchInfo.getIp(), doSnatchInfo.getPort());
@@ -381,6 +383,19 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
                 runTaskCache.remove(taskId);
                 return;
             }
+            //获取当前用户信息
+            String getLeagueInfoUrlFormat = String.format(getLeagueInfoUrl, doSnatchInfo.getChannelUserId());
+            headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
+            HttpEntity getLeagueInfoEntity = new HttpEntity<>(headers);
+            JSONObject getLeagueInfoJson = TemplateUtil.getResponse(restTemplate, getLeagueInfoUrlFormat, HttpMethod.POST, getLeagueInfoEntity);
+            if(ObjectUtils.isEmpty(getLeagueInfoJson)||getLeagueInfoJson.getIntValue("status")!=200){
+                log.info("获取LeagueInfo数据失败", getLeagueInfoJson);
+                runTaskCache.remove(taskId);
+                return;
+            }
+            JSONObject leagueInfo = getLeagueInfoJson.getJSONObject("data");
+            String idCard=leagueInfo.getString("idcard");
+            String linkmanName=leagueInfo.getString("linkmanName");
             String accessToken = headerJson.getString("access-token");
             headers.set("Accept-Encoding", "gzip,compress,deflate");
             modelCodeTicketInfoMap.put("parkFsyyDetailDTO", currentParkFsyyDetail);
@@ -389,7 +404,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
             headers.set("ts", String.valueOf(timestamp / 1000));
             String signStr = "VDsdxfwljhy#@!94857access-token=" + accessToken + ts + "AAXY";
             String sign = DigestUtils.md5Hex(signStr);
-            JSONObject jsonObject = buildCreateParam(mpOpenId, checkUserBody, doSnatchInfo, modelCodeTicketInfoMap);
+            JSONObject jsonObject = buildCreateParam(mpOpenId, checkUserBody, doSnatchInfo, modelCodeTicketInfoMap,idCard,linkmanName);
             headers.setContentLength(Integer.valueOf(JSON.toJSONString(jsonObject).getBytes(StandardCharsets.UTF_8).length));
             HttpEntity addTicketQueryEntity = new HttpEntity<>(jsonObject, headers);
             String formatCreateUrl = String.format(createUrl, sign, timestamp);
@@ -516,16 +531,17 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
         return item;
     }
 
-    private JSONObject buildCreateParam(String openId, JSONObject checkParam, DoSnatchInfo doSnatchInfo, Map<String, JSONObject> modelCodeTicketInfoMap) {
+    private JSONObject buildCreateParam(String openId, JSONObject checkParam, DoSnatchInfo doSnatchInfo,
+                                        Map<String, JSONObject> modelCodeTicketInfoMap,String idCard,String linkmanName) {
         JSONObject param = new JSONObject();
         Map<String, String> buyerMap = getBuyerMap(doSnatchInfo.getIdNameMap());
         param.put("buyer", new HashMap<String, Object>() {{
             put("id", doSnatchInfo.getChannelUserId());
             put("openId", openId);
             put("mobile", doSnatchInfo.getAccount());
-            put("credentialNo", buyerMap.get("idCard"));
+            put("credentialNo", ObjectUtils.isEmpty(idCard)?buyerMap.get("idCard"):idCard);
             put("credentialType", "0");
-            put("nickName", buyerMap.get("name"));
+            put("nickName", ObjectUtils.isEmpty(linkmanName)?buyerMap.get("name"):linkmanName);
         }});
         String dateStr = DateUtils.dateToStr(doSnatchInfo.getUseDate(), "yyyy-MM-dd");
         param.put("couponCode", "");

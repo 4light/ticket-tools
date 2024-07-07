@@ -651,6 +651,7 @@ export default {
       }, 1500)
     },
     pay () {
+      this.loading=true
       this.showPayPic = false
       this.payUrl = ''
       let payParam = {}
@@ -684,8 +685,9 @@ export default {
             message: res.msg,
             duration: 2000
           })
+          this.onSubmit()
         } else {
-          if (res.data && res.data != '') {
+          if (res.data!=null && res.data != '') {
             this.showPayDialog = true
             this.payUrl = res.data
             this.showPayDialog = true
@@ -699,9 +701,11 @@ export default {
             })
           }
         }
+        this.loading=false
       })
     },
     init () {
+      this.loading=true
       if (this.selectTicket.length <= 0) {
         this.$alert('需勾选要重置的订单')
         return
@@ -733,6 +737,7 @@ export default {
           })
           this.onSubmit()
         }
+        this.loading=false
       })
     },
     addDate (row) {
