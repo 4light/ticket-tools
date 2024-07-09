@@ -7,6 +7,7 @@ import test.ticket.tickettools.domain.bo.*;
 import test.ticket.tickettools.domain.entity.AccountInfoEntity;
 import test.ticket.tickettools.domain.entity.TaskDetailEntity;
 import test.ticket.tickettools.service.*;
+import test.ticket.tickettools.utils.ProxyUtil;
 import test.ticket.tickettools.utils.ScreenshotUtil;
 
 import javax.annotation.Resource;
@@ -123,7 +124,7 @@ public class TicketController  extends BaseController{
 
     @GetMapping(value = "/test1")
     public ServiceResponse test1(){
-        return ServiceResponse.createBySuccess(ticketServiceImpl.getAllTaskForRun());
+        return ServiceResponse.createBySuccess(ProxyUtil.getXieQuProxy(1));
     }
 
     @GetMapping(value = "/test2")
