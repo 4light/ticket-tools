@@ -1,6 +1,8 @@
 package test.ticket.tickettools.utils;
 
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpResponse;
+import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -108,5 +110,35 @@ public class ProxyUtil {
             }
         }
         return list;
+    }
+
+    public static List<ProxyInfo> getXieQuProxy(Integer num){
+        List<ProxyInfo> result = new ArrayList<>();
+        try {
+            String url = "http://api.xiequ.cn/VAD/GetIp.aspx?act=getturn62&uid=143581&vkey=B908DFF5AC305756ABAD190D6E71C087&num=%s&time=6&plat=0&re=0&type=7&so=1&group=51&ow=1&spl=1&addr=&db=1";
+            String format = String.format(url, num);
+            HttpResponse response = HttpUtil.createGet(format)
+                    .timeout(2000)
+                    .execute();
+            String body = response.body();
+            if (!ObjectUtils.isEmpty(body)) {
+                JSONObject bodyJson = JSON.parseObject(body);
+                if (bodyJson.getIntValue("code") == 0&&StrUtil.equals("true",bodyJson.getString("success"))) {
+                    JSONArray data = bodyJson.getJSONArray("data");
+                    for (int i = 0; i < data.size(); i++) {
+                        JSONObject item = data.getJSONObject(i);
+                        result.add(new ProxyInfo(item.getString("IP"), item.getInteger("Port")));
+                    }
+                    return result;
+                }
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(JSON.toJSONString(getXieQuProxy(3)));
     }
 }

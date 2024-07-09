@@ -2,9 +2,6 @@ package test.ticket.tickettools.service.impl;
 
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.http.HttpResponse;
-import cn.hutool.http.HttpUtil;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import org.bytedeco.opencv.global.opencv_core;
 import org.bytedeco.opencv.global.opencv_imgcodecs;
@@ -21,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.bytedeco.javacpp.DoublePointer;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
@@ -469,7 +465,10 @@ public class TicketServiceImpl implements TicketService {
         if (ObjectUtils.isEmpty(taskEntities)) {
             return result;
         }
-        for (TaskEntity entity : taskEntities) {
+        List<ProxyInfo> xieQuProxy = ProxyUtil.getXieQuProxy(taskEntities.size());
+        for (int i = 0; i < taskEntities.size(); i++) {
+            TaskEntity entity=taskEntities.get(i);
+            ProxyInfo proxyInfo = ObjectUtils.isEmpty(xieQuProxy)?null:xieQuProxy.get(i);
             Long id = entity.getId();
             Long userInfoId = entity.getUserInfoId();
             AccountInfoEntity accountInfoEntity = accountInfoDao.selectById(userInfoId);
@@ -492,6 +491,8 @@ public class TicketServiceImpl implements TicketService {
                 Map<String, String> idNameMap = taskDetailEntityList.stream()
                         .collect(Collectors.toMap(TaskDetailEntity::getIDCard, TaskDetailEntity::getUserName));
                 doSnatchInfo.setTaskId(id);
+                doSnatchInfo.setIp(ObjectUtils.isEmpty(proxyInfo)?null:proxyInfo.getIp());
+                doSnatchInfo.setPort(ObjectUtils.isEmpty(proxyInfo)?null:proxyInfo.getPort());
                 doSnatchInfo.setCreator(entity.getCreator());
                 doSnatchInfo.setUserId(Long.valueOf(accountInfoEntity.getChannelUserId()));
                 doSnatchInfo.setAccount(entity.getAccount());
@@ -1107,9 +1108,8 @@ public class TicketServiceImpl implements TicketService {
         int retryCount = 0;
         while (retryCount < 20) {
             try {
-                ProxyInfo proxyInfo = ProxyUtil.getProxy(1).get(0);
                 HttpEntity entity=new HttpEntity(getHeader(doSnatchInfo.getAuthorization()));
-                JSONObject response = TemplateUtil.getResponse(ObjectUtils.isEmpty(proxyInfo)?TemplateUtil.initSSLTemplate():TemplateUtil.initSSLTemplateWithProxy(proxyInfo.getIp(), proxyInfo.getPort()), getCheckImagUrl, HttpMethod.GET,entity);
+                JSONObject response = TemplateUtil.getResponse(ObjectUtils.isEmpty(doSnatchInfo.getIp())?TemplateUtil.initSSLTemplate():TemplateUtil.xieQuTemp(doSnatchInfo.getIp(), doSnatchInfo.getPort()), getCheckImagUrl, HttpMethod.GET,entity);
                 log.info("账号:{}获取验证码结果：{}",doSnatchInfo.getAccount(),response);
                 if (!ObjectUtils.isEmpty(response)) {
                     return response;

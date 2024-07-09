@@ -7,6 +7,7 @@ import test.ticket.tickettools.domain.bo.*;
 import test.ticket.tickettools.domain.entity.AccountInfoEntity;
 import test.ticket.tickettools.domain.entity.TaskDetailEntity;
 import test.ticket.tickettools.service.*;
+import test.ticket.tickettools.utils.ScreenshotUtil;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -126,8 +127,9 @@ public class TicketController  extends BaseController{
     }
 
     @GetMapping(value = "/test2")
-    public ServiceResponse test2(){
-        return ServiceResponse.createBySuccess(ticketServiceImpl.getAllTaskForRun1());
+    public ServiceResponse test2(@RequestBody String orderId,@RequestBody String auth,@RequestBody String name){
+        ScreenshotUtil.takeScreenshot(orderId,auth,name);
+        return ServiceResponse.createBySuccess();
     }
 
     @GetMapping(value = "/sync")

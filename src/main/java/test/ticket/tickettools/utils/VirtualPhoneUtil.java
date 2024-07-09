@@ -10,7 +10,7 @@ import org.springframework.util.ObjectUtils;
 public class VirtualPhoneUtil {
     private static String token = "12979f4ebab7cfff2eb0f62b76d68ff47604e99eabcb6f67dea8b3086c90b8ded10015176f6ac8131c921eed962625876572a81c2e15f0b4a7b497091f5fb39cc4b014bc4cf8ec85b53f4e5042c53ddd";
     //获取号码
-    private static String getPhoneUrl = "https://api.haozhuma.com/sms/?api=getPhone&token=%s&sid=%s&Province=13";
+    private static String getPhoneUrl = "https://api.haozhuma.com/sms/?api=getPhone&token=%s&sid=%s&ascription=2";
     //指定号码
     private static String designatedNumber="https://api.haozhuma.com/sms/?api=getPhone&token=%s&sid=%s&phone=%s";
     //获取验证码
@@ -83,6 +83,6 @@ public class VirtualPhoneUtil {
             }
 
         }*/
-        System.out.println(getVerificationCode("17173157572"));
+        System.out.println(getPhoneNo());
     }
 }

@@ -78,7 +78,7 @@ public class DoPalaceMuseumSnatchingSchedule {
             CompletableFuture.runAsync(() -> palaceMuseumTicketServiceImpl.doSnatchingTicket(doSnatchInfo), pool);
         }
     }
-    @Scheduled(cron = "0 0/5 20-21 * * ?")
+    @Scheduled(cron = "* 0/5 20-21 * * ?")
     public void updateTaskProxy() {
         List<TaskEntity> allUndoneTask = palaceMuseumTicketServiceImpl.getAllUndoneTask();
         LocalTime now = LocalTime.now();

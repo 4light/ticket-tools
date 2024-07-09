@@ -35,6 +35,7 @@ import test.ticket.tickettools.service.RedisService;
 import test.ticket.tickettools.service.TicketService;
 import test.ticket.tickettools.utils.DateUtils;
 import test.ticket.tickettools.utils.ProxyUtil;
+import test.ticket.tickettools.utils.ScreenshotUtil;
 import test.ticket.tickettools.utils.TemplateUtil;
 
 import javax.annotation.Resource;
@@ -72,7 +73,7 @@ public class DoSnatchingSchedule {
     /**
      * 执行放票当天的任务
      */
-    @Scheduled(cron = "0/1 0-5 18 * * ?")
+    @Scheduled(cron = "0/10 0-10 18 * * ?")
     public void doSnatching() {
         List<DoSnatchInfo> taskForRun = ticketServiceImpl.getTaskForRun();
         if (ObjectUtils.isEmpty(taskForRun)) {
@@ -124,7 +125,7 @@ public class DoSnatchingSchedule {
     /**
      * 去除放票当天的任务需要单个执行的任务
      */
-    @Scheduled(cron = "0/1 0-5 18 * * ?")
+    //@Scheduled(cron = "0/1 0-10 18 * * ?")
     public void doSnatchingExcludeTarget() {
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
         if (ObjectUtils.isEmpty(allTaskForRun)) {
@@ -174,22 +175,22 @@ public class DoSnatchingSchedule {
         });*/
     }
 
-    @Scheduled(cron = "0/1 06-59 18 * * ?")
+    //@Scheduled(cron = "0/1 06-59 18 * * ?")
     public void doSingleSnatch() {
         runNormalTask();
     }
 
-    @Scheduled(cron = "0/3 * 7-17 * * ?")
+    //@Scheduled(cron = "0/3 * 7-17 * * ?")
     public void doSingleSnatchOtherTime() {
         runNormalTask();
     }
 
-    @Scheduled(cron = "0/1 * 0-6,19-23 * * ?")
+    //@Scheduled(cron = "0/1 * 0-6,19-23 * * ?")
     public void doSingleSnatchOtherTime2() {
         runNormalTask();
     }
 
-    @Scheduled(cron = "0/30 * * * * ?")
+    @Scheduled(cron = "0/20 * * * * ?")
     public void updateOrderPayStatus() {
         try {
             RestTemplate restTemplate = TemplateUtil.initSSLTemplate();
@@ -200,11 +201,18 @@ public class DoSnatchingSchedule {
                 Long taskId = entry.getKey();
                 List<TaskDetailEntity> taskDetailEntityList = entry.getValue();
                 TaskEntity task = taskDao.selectByPrimaryKey(taskId);
+                if(task.getChannel()!=ChannelEnum.CSTM.getCode()){
+                    continue;
+                }
                 AccountInfoEntity accountInfoEntity = accountInfoDao.selectById(task.getUserInfoId());
                 Map<Long, List<TaskDetailEntity>> orderIdTaskDetailMap = taskDetailEntityList.stream()
                         .collect(Collectors.groupingBy(TaskDetailEntity::getOrderId));
                 for (Map.Entry<Long, List<TaskDetailEntity>> taskDetailEntry : orderIdTaskDetailMap.entrySet()) {
                     Long orderId = taskDetailEntry.getKey();
+                    CompletableFuture.runAsync(()->{
+                        String headers = accountInfoEntity.getHeaders();
+                        ScreenshotUtil.takeScreenshot(String.valueOf(orderId),headers.split(" ")[1],"task"+taskId+"-"+UUID.randomUUID());
+                    });
                     List<TaskDetailEntity> value = taskDetailEntry.getValue();
                     HttpEntity entity = new HttpEntity<>(getHeader(accountInfoEntity.getHeaders(), orderId));
                     JSONObject response = TemplateUtil.getResponse(restTemplate, searchPersonOrderUrl + orderId, HttpMethod.GET, entity);
@@ -390,4 +398,5 @@ public class DoSnatchingSchedule {
         }
         return false;
     }
+
 }

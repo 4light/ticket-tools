@@ -11,9 +11,7 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.*;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.ssl.SSLContexts;
 import org.springframework.http.HttpEntity;
@@ -118,6 +116,24 @@ public class TemplateUtil {
             //e.printStackTrace();
         }
         return new RestTemplate();
+    }
+
+    public static RestTemplate xieQuTemp(String proxyHost, Integer proxyPort){
+        CredentialsProvider credsProvider = new BasicCredentialsProvider();
+        HttpHost proxy = new HttpHost(proxyHost, proxyPort);
+        HttpClientBuilder clientBuilder = HttpClientBuilder.create();
+        clientBuilder.useSystemProperties();
+        clientBuilder.setProxy(proxy);
+        clientBuilder.setDefaultCredentialsProvider(credsProvider);
+        clientBuilder.setProxyAuthenticationStrategy(new ProxyAuthenticationStrategy());
+
+        CloseableHttpClient client = clientBuilder.build();
+        HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
+        factory.setHttpClient(client);
+
+        RestTemplate restTemplate = new RestTemplate();
+        restTemplate.setRequestFactory(factory);
+        return restTemplate;
     }
 
     public static JSONObject getResponse(RestTemplate restTemplate, String url, HttpMethod httpMethod, HttpEntity httpEntity) {
