@@ -127,7 +127,7 @@ public class TicketController  extends BaseController{
     }
 
     @GetMapping(value = "/test2")
-    public ServiceResponse test2(@RequestBody String orderId,@RequestBody String auth,@RequestBody String name){
+    public ServiceResponse test2(@RequestParam String orderId,@RequestParam String auth,@RequestParam String name){
         ScreenshotUtil.takeScreenshot(orderId,auth,name);
         return ServiceResponse.createBySuccess();
     }
