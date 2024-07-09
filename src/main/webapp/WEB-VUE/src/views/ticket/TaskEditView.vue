@@ -42,7 +42,7 @@
         </el-checkbox-group>
       </el-form-item>
       <el-form-item label="账号">
-        <el-select v-model="currentUserInfoId">
+        <el-select v-model="currentUserInfoId" clearable>
           <el-option
             v-for="item in currentUserIdList"
             :key="item.id"

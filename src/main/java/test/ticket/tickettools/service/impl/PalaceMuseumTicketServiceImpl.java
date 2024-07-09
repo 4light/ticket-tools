@@ -387,7 +387,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
             String getLeagueInfoUrlFormat = String.format(getLeagueInfoUrl, doSnatchInfo.getChannelUserId());
             headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
             HttpEntity getLeagueInfoEntity = new HttpEntity<>(headers);
-            JSONObject getLeagueInfoJson = TemplateUtil.getResponse(restTemplate, getLeagueInfoUrlFormat, HttpMethod.POST, getLeagueInfoEntity);
+            JSONObject getLeagueInfoJson = TemplateUtil.getResponse(restTemplate, getLeagueInfoUrlFormat, HttpMethod.GET, getLeagueInfoEntity);
             if(ObjectUtils.isEmpty(getLeagueInfoJson)||getLeagueInfoJson.getIntValue("status")!=200){
                 log.info("获取LeagueInfo数据失败", getLeagueInfoJson);
                 runTaskCache.remove(taskId);

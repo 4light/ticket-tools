@@ -167,7 +167,7 @@ public class JntTicketServiceImpl implements DoSnatchTicketService {
                 String reqParam = "str=" + name;
                 headers.set("Content-Length", String.valueOf(customURLEncode(reqParam, "utf-8").getBytes(StandardCharsets.UTF_8).length));
                 HttpEntity checkNameEntity = new HttpEntity<>(reqParam, headers);
-                JSONObject response = TemplateUtil.getResponse(restTemplate, checkNameUrl, HttpMethod.POST, checkNameEntity);
+                JSONObject response = checkUser(restTemplate,checkNameEntity);
                 String code = response.getString("code");
                 if (!StrUtil.equals("A00006", code) && !StrUtil.equals("A00004", code)) {
                     log.info("姓名-{}校验不通过:{}", name, response);
@@ -562,4 +562,17 @@ public class JntTicketServiceImpl implements DoSnatchTicketService {
         return headers;
     }
 
+    private JSONObject checkUser(RestTemplate restTemplate,HttpEntity checkNameEntity){
+        for (int i = 0; i < 5; i++) {
+            try {
+                JSONObject response = TemplateUtil.getResponse(restTemplate, checkNameUrl, HttpMethod.POST, checkNameEntity);
+                if (!ObjectUtils.isEmpty(response) &&StrUtil.equals(response.getString("code"),"A00006")){
+                    return response;
+                }
+            }catch (Exception e){
+                log.info("校验游客姓名出错");
+            }
+        }
+        return null;
+    }
 }

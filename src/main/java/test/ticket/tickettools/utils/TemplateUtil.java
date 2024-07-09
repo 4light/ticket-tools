@@ -29,7 +29,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 
 public class TemplateUtil {
-    public static RestTemplate initSSLTemplate(){
+    public static RestTemplate initSSLTemplate() {
         SSLContext sslContext = null;
         try {
             sslContext = SSLContexts.custom()
@@ -51,7 +51,8 @@ public class TemplateUtil {
         ((HttpComponentsClientHttpRequestFactory) requestFactory).setReadTimeout(20000);
         return new RestTemplate(requestFactory);
     }
-    public static RestTemplate initSSLTemplateWithProxy(String proxyHost,Integer proxyPort){
+
+    public static RestTemplate initSSLTemplateWithProxy(String proxyHost, Integer proxyPort) {
         SSLContext sslContext = null;
         try {
             sslContext = SSLContexts.custom()
@@ -82,17 +83,16 @@ public class TemplateUtil {
         ((HttpComponentsClientHttpRequestFactory) requestFactory).setReadTimeout(20000);
         return new RestTemplate(requestFactory);
     }
-    public static RestTemplate initSSLTemplateWithProxyAuth(String proxyHost,Integer proxyPort){
+
+    public static RestTemplate initSSLTemplateWithProxyAuth(String proxyHost, Integer proxyPort) {
         // 配置代理服务器地址和端口
         HttpHost proxy = new HttpHost(proxyHost, proxyPort);
-
-        // 如果代理需要身份验证
-        CredentialsProvider credsProvider = new BasicCredentialsProvider();
-        credsProvider.setCredentials(
-                new AuthScope(proxyHost, proxyPort),
-                new UsernamePasswordCredentials("VGZDIJ1W", "84395E70A086"));
-
         try {
+            // 如果代理需要身份验证
+            CredentialsProvider credsProvider = new BasicCredentialsProvider();
+            credsProvider.setCredentials(
+                    new AuthScope(proxyHost, proxyPort),
+                    new UsernamePasswordCredentials("VGZDIJ1W", "84395E70A086"));
             // 创建SSLContext，允许所有主机名，以便代理服务器可以解析HTTPS流量
             SSLContext sslContext = SSLContextBuilder.create()
                     .loadTrustMaterial((chain, authType) -> true)
@@ -114,17 +114,18 @@ public class TemplateUtil {
             // 使用工厂创建RestTemplate
             RestTemplate restTemplate = new RestTemplate(factory);
             return restTemplate;
-        }catch (Exception e){
-            e.printStackTrace();
+        } catch (Exception e) {
+            //e.printStackTrace();
         }
         return new RestTemplate();
     }
+
     public static JSONObject getResponse(RestTemplate restTemplate, String url, HttpMethod httpMethod, HttpEntity httpEntity) {
         try {
             ResponseEntity<String> checkUserRes = restTemplate.exchange(url, httpMethod, httpEntity, String.class);
             String checkUserResBody = checkUserRes.getBody();
             if (StrUtil.isEmpty(checkUserResBody)) {
-                System.out.println("获取数据失败:"+checkUserResBody);
+                System.out.println("获取数据失败:" + checkUserResBody);
                 return null;
             }
             return JSON.parseObject(checkUserResBody);

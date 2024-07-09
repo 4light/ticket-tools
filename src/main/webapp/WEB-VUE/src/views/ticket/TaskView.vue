@@ -31,7 +31,7 @@
         </el-date-picker>
       </el-form-item>
       <el-form-item label="游客姓名">
-        <el-input v-model="queryParam.userName"></el-input>
+        <el-input v-model="queryParam.userName" clearable></el-input>
       </el-form-item>
       <el-form-item label="状态">
         <el-select v-model="queryParam.yn" clearable>
