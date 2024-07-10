@@ -386,7 +386,7 @@ export default {
     },
     initWebSocket () {
       let userName = localStorage.getItem('user')
-      let ws = `ws://42.51.40.37/ticket/api/pushMessage/${userName}`
+      let ws = `ws://110.42.64.193:88/ticket/api/pushMessage/${userName}`
       //let ws = `ws://localhost:8082/ticket/api/pushMessage/${userName}`
       this.websock = new WebSocket(ws)
       this.websock.onmessage = this.websocketOnMessage
