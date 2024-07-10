@@ -33,7 +33,7 @@ public class ScreenshotUtil {
             driver.executeScript(format);
             driver.navigate().refresh();
             // 等待页面加载或执行其他操作
-            Thread.sleep(5000); // 可以使用更合适的等待方式，如WebDriverWait
+            Thread.sleep(10000); // 可以使用更合适的等待方式，如WebDriverWait
             // 截图并保存
             File screenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
             String screenshotPath = "/root/screenShort/"+fileName+".png";
