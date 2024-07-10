@@ -808,7 +808,6 @@ public class TicketServiceImpl implements TicketService {
                         }
                         taskDetailDao.updateTaskDetailBath(taskDetailEntities);
                     }
-                    SendMessageUtil.send(ChannelEnum.CSTM.getDesc(), DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"), "主场馆", doSnatchInfo.getAccount(), String.join(",", doSnatchInfo.getIdNameMap().values()));
                     WebSocketServer.sendInfo(socketMsg("抢票成功", String.valueOf(nameIDMap.values()), 5000), doSnatchInfo.getCreator());
                 }
                 try {

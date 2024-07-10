@@ -55,6 +55,35 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
 
     private static Map<Long, Object> runTaskCache = new ConcurrentHashMap<>();
     private static Map<Long, Object> initTaskCache = new ConcurrentHashMap<>();
+    static class AgeComparator implements Comparator<String> {
+        private final Map<String, String> map;
+
+        public AgeComparator(Map<String, String> map) {
+            this.map = map;
+        }
+
+        @Override
+        public int compare(String id1, String id2) {
+            int age1 = GetAgeForIdCardUtil.getAge(id1);
+            int age2 = GetAgeForIdCardUtil.getAge(id2);
+            // 按照指定的规则进行排序
+            if ((age1 >= 18 && age1 < 60) && (age2 >= 18 && age2 < 60)) {
+                return Integer.compare(age1, age2);
+            } else if ((age1 >= 18 && age1 < 60)) {
+                return -1;
+            } else if ((age2 >= 18 && age2 < 60)) {
+                return 1;
+            } else if (age1 >= 60 && age2 >= 60) {
+                return Integer.compare(age1, age2);
+            } else if (age1 >= 60) {
+                return -1;
+            } else if (age2 >= 60) {
+                return 1;
+            } else {
+                return Integer.compare(age1, age2);
+            }
+        }
+    }
 
     @Resource
     TaskDao taskDao;
@@ -357,11 +386,13 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
                 runTaskCache.remove(taskId);
                 return;
             }
+            TreeMap idNameTreeMap=new TreeMap<>(new AgeComparator(doSnatchInfo.getIdNameMap()));
+            idNameTreeMap.putAll(doSnatchInfo.getIdNameMap());
             //校验用户信息
             headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
             headers.setContentType(MediaType.APPLICATION_JSON);
             String formatDate = DateUtils.dateToStr(doSnatchInfo.getUseDate(), "yyyy-MM-dd");
-            JSONObject checkUserBody = buildCheckUserParam(doSnatchInfo.getIdNameMap(), formatDate, typeTicketMap);
+            JSONObject checkUserBody = buildCheckUserParam(idNameTreeMap, formatDate, typeTicketMap);
             log.info("校验身份信息入参：{}", JSON.toJSONString(checkUserBody));
             HttpEntity checkUserEntity = new HttpEntity<>(checkUserBody, headers);
             Thread.sleep(RandomUtil.randomInt(4000, 5000));
@@ -404,7 +435,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
             headers.set("ts", String.valueOf(timestamp / 1000));
             String signStr = "VDsdxfwljhy#@!94857access-token=" + accessToken + ts + "AAXY";
             String sign = DigestUtils.md5Hex(signStr);
-            JSONObject jsonObject = buildCreateParam(mpOpenId, checkUserBody, doSnatchInfo, modelCodeTicketInfoMap,idCard,linkmanName);
+            JSONObject jsonObject = buildCreateParam(mpOpenId, checkUserBody, doSnatchInfo, modelCodeTicketInfoMap,idNameTreeMap);
             headers.setContentLength(Integer.valueOf(JSON.toJSONString(jsonObject).getBytes(StandardCharsets.UTF_8).length));
             HttpEntity addTicketQueryEntity = new HttpEntity<>(jsonObject, headers);
             String formatCreateUrl = String.format(createUrl, sign, timestamp);
@@ -459,7 +490,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
         }
     }
 
-    private JSONObject buildCheckUserParam(Map<String, String> iDNameMap, String useDate, Map<String, JSONObject> typeTicketMap) {
+    private JSONObject buildCheckUserParam(TreeMap<String, String> iDNameMap, String useDate, Map<String, JSONObject> typeTicketMap) {
         JSONObject param = new JSONObject();
         JSONObject normal = new JSONObject();
         JSONObject old = new JSONObject();
@@ -532,16 +563,15 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
     }
 
     private JSONObject buildCreateParam(String openId, JSONObject checkParam, DoSnatchInfo doSnatchInfo,
-                                        Map<String, JSONObject> modelCodeTicketInfoMap,String idCard,String linkmanName) {
+                                        Map<String, JSONObject> modelCodeTicketInfoMap,TreeMap<String,String> idNameTreemap) {
         JSONObject param = new JSONObject();
-        Map<String, String> buyerMap = getBuyerMap(doSnatchInfo.getIdNameMap());
         param.put("buyer", new HashMap<String, Object>() {{
             put("id", doSnatchInfo.getChannelUserId());
             put("openId", openId);
             put("mobile", doSnatchInfo.getAccount());
-            put("credentialNo", ObjectUtils.isEmpty(idCard)?buyerMap.get("idCard"):idCard);
+            put("credentialNo", idNameTreemap.firstEntry().getKey());
             put("credentialType", "0");
-            put("nickName", ObjectUtils.isEmpty(linkmanName)?buyerMap.get("name"):linkmanName);
+            put("nickName", idNameTreemap.firstEntry().getValue());
         }});
         String dateStr = DateUtils.dateToStr(doSnatchInfo.getUseDate(), "yyyy-MM-dd");
         param.put("couponCode", "");
@@ -589,33 +619,6 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
         return param;
     }
 
-    private static Map<String, String> getBuyerMap(Map<String, String> iDNameMap) {
-        Map<String, String> normalMap = new HashMap();
-        Map<String, String> oldMap = new HashMap();
-        for (Map.Entry<String, String> nameIDMapEntry : iDNameMap.entrySet()) {
-            String idCard = nameIDMapEntry.getKey();
-            String name = nameIDMapEntry.getValue();
-            if (idCard.length() < 17) {
-                normalMap.put("name", name);
-                normalMap.put("idCard", idCard);
-                break;
-            }
-            Integer age = GetAgeForIdCardUtil.getAge(idCard);
-            if (!ObjectUtils.isEmpty(age)) {
-                if (age > 18 && age < 60) {
-                    normalMap.put("name", name);
-                    normalMap.put("idCard", idCard);
-                    break;
-                }
-                if (age >= 60) {
-                    oldMap.put("name", name);
-                    oldMap.put("idCard", idCard);
-                }
-            }
-        }
-        return ObjectUtils.isEmpty(normalMap) ? oldMap : normalMap;
-    }
-
 
     private String customURLEncode(String s, String enc) {
         StringBuilder sb = new StringBuilder();
@@ -649,8 +652,15 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
         return JSON.toJSONString(res);
     }
 
-    public static void main(String[] args) throws UnsupportedEncodingException {
-        String encode = URLEncoder.encode("{\"openId\":\"oOya25B0rHfUD_jeSkHR5xfZJTEg\",\"channelProductCode\":\"10809\"}", "utf-8");
-        System.out.println(encode);
+    public static void main(String[] args) {
+        Map<String, String> idNameMap = new HashMap<>();
+        idNameMap.put("11010519491231002X", "Alice");
+        idNameMap.put("110105200306150024", "Bob");
+        idNameMap.put("110105198509100023", "Charlie");
+        idNameMap.put("110105201512310026", "David");
+        TreeMap treemap=new TreeMap(new AgeComparator(idNameMap));
+        treemap.putAll(idNameMap);
+        treemap.forEach((id, name) -> System.out.println(id + ": " + name));
+
     }
 }
