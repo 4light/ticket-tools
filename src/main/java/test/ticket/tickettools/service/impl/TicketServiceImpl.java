@@ -872,6 +872,10 @@ public class TicketServiceImpl implements TicketService {
                         updates.add(taskDetailEntity);
                     });
                     taskDetailDao.updateTaskDetailBath(updates);
+                    CompletableFuture.runAsync(()->{
+                        String auth = placeOrderInfo.getAuthorization();
+                        ScreenshotUtil.takeScreenshot(String.valueOf(orderId),auth,"task"+placeOrderInfo.getTaskId()+"-"+UUID.randomUUID());
+                    });
                     if (needChargeCode != 1) {
                         return null;
                     }

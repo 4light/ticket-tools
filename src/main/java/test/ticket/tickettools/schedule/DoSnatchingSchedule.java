@@ -209,10 +209,6 @@ public class DoSnatchingSchedule {
                         .collect(Collectors.groupingBy(TaskDetailEntity::getOrderId));
                 for (Map.Entry<Long, List<TaskDetailEntity>> taskDetailEntry : orderIdTaskDetailMap.entrySet()) {
                     Long orderId = taskDetailEntry.getKey();
-                    CompletableFuture.runAsync(()->{
-                        String headers = accountInfoEntity.getHeaders();
-                        ScreenshotUtil.takeScreenshot(String.valueOf(orderId),headers.split(" ")[1],"task"+taskId+"-"+UUID.randomUUID());
-                    });
                     List<TaskDetailEntity> value = taskDetailEntry.getValue();
                     HttpEntity entity = new HttpEntity<>(getHeader(accountInfoEntity.getHeaders(), orderId));
                     JSONObject response = TemplateUtil.getResponse(restTemplate, searchPersonOrderUrl + orderId, HttpMethod.GET, entity);
