@@ -598,7 +598,6 @@ public class TicketServiceImpl implements TicketService {
                     put(taskDetailEntity.getIDCard(), taskDetailEntity.getUserName());
                 }});
                 result.add(doSnatchInfo);
-                return result;
             }
         }
         return result;
@@ -1116,12 +1115,12 @@ public class TicketServiceImpl implements TicketService {
             try {
                 HttpEntity entity=new HttpEntity(getHeader(doSnatchInfo.getAuthorization()));
                 JSONObject response = TemplateUtil.getResponse(ObjectUtils.isEmpty(doSnatchInfo.getIp())?TemplateUtil.initSSLTemplate():TemplateUtil.xieQuTemp(doSnatchInfo.getIp(), doSnatchInfo.getPort()), getCheckImagUrl, HttpMethod.GET,entity);
-                log.info("账号:{}获取验证码结果：{}",doSnatchInfo.getAccount(),response);
+                log.info("账号:{}获取到验证码结果：{}",doSnatchInfo.getAccount(),response);
                 if (!ObjectUtils.isEmpty(response)) {
                     return response;
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                //e.printStackTrace();
             }
             retryCount++;
         }

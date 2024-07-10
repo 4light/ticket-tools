@@ -43,6 +43,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -125,7 +126,7 @@ public class DoSnatchingSchedule {
     /**
      * 去除放票当天的任务需要单个执行的任务
      */
-    //@Scheduled(cron = "0/1 0-10 18 * * ?")
+    @Scheduled(cron = "0/10 0-10 18 * * ?")
     public void doSnatchingExcludeTarget() {
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
         if (ObjectUtils.isEmpty(allTaskForRun)) {
@@ -134,25 +135,34 @@ public class DoSnatchingSchedule {
         LocalDate localDate = LocalDate.now().plusDays(7L);
         Date date = DateUtils.localDateToDate(localDate);
         allTaskForRun = allTaskForRun.stream().filter(o -> !ObjectUtils.nullSafeEquals(date, o.getUseDate())).collect(Collectors.toList());
+        Map<Date, List<DoSnatchInfo>> mapByUseDate = allTaskForRun.stream()
+                .collect(Collectors.groupingBy(DoSnatchInfo::getUseDate));
         ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
         pool.setThreadNamePrefix("CSTMNormalDataProcessor-");
         pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());//拒绝策略
-        int size = allTaskForRun.size();
+        int size = mapByUseDate.size();
         pool.setMaxPoolSize(size);
         pool.setCorePoolSize(size);
         pool.setQueueCapacity(size);
         pool.initialize();
-        List<CompletableFuture<Void>> futures = allTaskForRun.stream()
-                .map(doSnatchInfo -> CompletableFuture.runAsync(
-                        () -> {
-                            if(haveTicket(doSnatchInfo.getAuthorization(),doSnatchInfo.getUseDate())) {
-                                ticketServiceImpl.snatchingTicket(doSnatchInfo);
-                            }
-                        },
-                        pool
-                ))
-                .collect(Collectors.toList());
-        CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+        AtomicBoolean isTicketSnatched = new AtomicBoolean(false);
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+        // 对每个 useDate 异步检查并处理
+        mapByUseDate.forEach((useDate, doSnatchInfos) -> {
+            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                if (haveTicket(doSnatchInfos.get(0).getAuthorization(), useDate)) {
+                    if (isTicketSnatched.compareAndSet(false, true)) {
+                        ticketServiceImpl.snatchingTicket(doSnatchInfos.get(0));
+                    }
+                }
+            }, pool);
+            futures.add(future);
+        });
+        // 等待所有任务完成
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
+        // 关闭线程池
+        pool.shutdown();
         /*Map<Date, List<DoSnatchInfo>> mapByUseDate = allTaskForRun.stream()
                 .collect(Collectors.groupingBy(DoSnatchInfo::getUseDate));
         mapByUseDate.forEach((useDate, doSnatchInfos) -> {
@@ -175,17 +185,17 @@ public class DoSnatchingSchedule {
         });*/
     }
 
-    //@Scheduled(cron = "0/1 06-59 18 * * ?")
+    @Scheduled(cron = "0/1 11-59 18 * * ?")
     public void doSingleSnatch() {
         runNormalTask();
     }
 
-    //@Scheduled(cron = "0/10 * 7-17 * * ?")
+    @Scheduled(cron = "0/5 * 7-17 * * ?")
     public void doSingleSnatchOtherTime() {
         runNormalTask();
     }
 
-    //@Scheduled(cron = "0/1 * 0-6,19-23 * * ?")
+    @Scheduled(cron = "0/1 * 0-6,19-23 * * ?")
     public void doSingleSnatchOtherTime2() {
         runNormalTask();
     }
@@ -201,7 +211,7 @@ public class DoSnatchingSchedule {
                 Long taskId = entry.getKey();
                 List<TaskDetailEntity> taskDetailEntityList = entry.getValue();
                 TaskEntity task = taskDao.selectByPrimaryKey(taskId);
-                if(task.getChannel()!=ChannelEnum.CSTM.getCode()){
+                if (task.getChannel() != ChannelEnum.CSTM.getCode()) {
                     continue;
                 }
                 AccountInfoEntity accountInfoEntity = accountInfoDao.selectById(task.getUserInfoId());
@@ -221,9 +231,9 @@ public class DoSnatchingSchedule {
                             map.put(item.getString("certificateInfo"), item);
                         }
                         if (data.getIntValue("status") == 2) {
-                            CompletableFuture.runAsync(()->{
+                            CompletableFuture.runAsync(() -> {
                                 String auth = accountInfoEntity.getHeaders();
-                                ScreenshotUtil.takeScreenshot(String.valueOf(orderId),auth,"task"+task.getId()+"-"+UUID.randomUUID());
+                                ScreenshotUtil.takeScreenshot(String.valueOf(orderId), auth, "task" + task.getId() + "-" + UUID.randomUUID());
                             });
                             value.forEach(o -> {
                                 o.setPayment(true);
@@ -241,7 +251,7 @@ public class DoSnatchingSchedule {
         }
     }
 
-   //@Scheduled(cron = "* 0/6 * * * ?")
+    //@Scheduled(cron = "* 0/6 * * * ?")
     public void updateTaskProxy() {
         TaskEntity taskEntity = new TaskEntity();
         taskEntity.setUseDate(DateUtils.localDateToDate(LocalDate.now()));
@@ -328,11 +338,11 @@ public class DoSnatchingSchedule {
         if (ObjectUtils.isEmpty(allTaskForRun)) {
             return;
         }
-        for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
+        /*for (DoSnatchInfo doSnatchInfo : allTaskForRun) {
             if(haveTicket(doSnatchInfo.getAuthorization(),doSnatchInfo.getUseDate())) {
                 ticketServiceImpl.snatchingTicket(doSnatchInfo);
             }
-        }
+        }*/
         /*ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
         pool.setThreadNamePrefix("CSTMNormalDataProcessor-");
         pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());//拒绝策略
@@ -352,34 +362,55 @@ public class DoSnatchingSchedule {
                 ))
                 .collect(Collectors.toList());
         CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));*/
-        /*Map<Date, List<DoSnatchInfo>> mapByUseDate = allTaskForRun.stream()
+        Map<Date, List<DoSnatchInfo>> mapByUseDate = allTaskForRun.stream()
                 .collect(Collectors.groupingBy(DoSnatchInfo::getUseDate));
-        // 对每个useDate异步检查并处理
+        ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
+        pool.setThreadNamePrefix("CSTMNormalDataProcessor-");
+        pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());//拒绝策略
+        int size = mapByUseDate.size();
+        pool.setMaxPoolSize(size);
+        pool.setCorePoolSize(size);
+        pool.setQueueCapacity(size);
+        pool.initialize();
+        AtomicBoolean isTicketSnatched = new AtomicBoolean(false);
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+        // 对每个 useDate 异步检查并处理
         mapByUseDate.forEach((useDate, doSnatchInfos) -> {
-            CompletableFuture.supplyAsync(() -> haveTicket(doSnatchInfos.get(0).getAuthorization(),useDate), taskExecutorConfig.getAsyncExecutor())
+            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                if (haveTicket(doSnatchInfos.get(0).getAuthorization(), useDate)) {
+                    if (isTicketSnatched.compareAndSet(false, true)) {
+                        ticketServiceImpl.snatchingTicket(doSnatchInfos.get(0));
+                    }
+                }
+            }, pool);
+            futures.add(future);
+        });
+        // 等待所有任务完成
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
+        // 关闭线程池
+        pool.shutdown();
+        /*mapByUseDate.forEach((useDate, doSnatchInfos) -> {
+            CompletableFuture.supplyAsync(() -> haveTicket(doSnatchInfos.get(0).getAuthorization(), useDate), pool)
                     .thenAccept(hasTicket -> {
                         if (hasTicket) {
-                            doSnatchInfos.stream()
-                                    .map(doSnatchInfo -> CompletableFuture.runAsync(
-                                            () -> ticketServiceImpl.snatchingTicket(doSnatchInfo),
-                                            taskExecutorConfig.getAsyncExecutor()
-                                    ))
-                                    .collect(Collectors.toList());
+                            ticketServiceImpl.snatchingTicket(doSnatchInfos.get(0));
+                            return;
                         }
                     });
         });*/
     }
 
-    private Boolean haveTicket(String auth,Date date) {
+    private Boolean haveTicket(String auth, Date date) {
         try {
             String url = "https://pcticket.cstm.org.cn/prod-api/pool/getScheduleByHallId?hallId=1&openPerson=1&queryDate=%s&saleMode=1&single=true";
             String format = String.format(url, DateUtils.dateToStr(date, "yyyy/MM/dd"));
             HttpResponse response = HttpUtil.createGet(format)
-                    .header("Authorization",auth)
-                    .header("Connection","keep-alive")
-                    .header("Referer","https://pcticket.cstm.org.cn/")
-                    .header("Accept","application/json")
-                    .header("User-Agent","Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36/")
+                    .header("Authorization", auth)
+                    .header("Connection", "keep-alive")
+                    .header("Referer", "https://pcticket.cstm.org.cn/")
+                    .header("Accept", "application/json")
+                    .header("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36/")
                     .timeout(2000)
                     .execute();
             String body = response.body();
@@ -391,8 +422,8 @@ public class DoSnatchingSchedule {
             if (ObjectUtils.isEmpty(data)) {
                 return false;
             }
-            log.info("{}日期下余票{}",date,data.getJSONObject(0).getIntValue("ticketPool"));
-            return data.getJSONObject(0).getIntValue("ticketPool")>0;
+            log.info("{}日期下余票{}", date, data.getJSONObject(0).getIntValue("ticketPool"));
+            return data.getJSONObject(0).getIntValue("ticketPool") > 0;
         } catch (Exception e) {
 
         }

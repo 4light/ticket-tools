@@ -36,7 +36,7 @@ public class ScreenshotUtil {
             Thread.sleep(5000); // 可以使用更合适的等待方式，如WebDriverWait
             // 截图并保存
             File screenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
-            String screenshotPath = "/root/screenShort"+fileName+".png";
+            String screenshotPath = "/root/screenShort/"+fileName+".png";
             File destination = new File(screenshotPath);
             FileUtil.copyFile(screenshot, destination);
             //String screenshotBase64 = ((TakesScreenshot) driver).getScreenshotAs(OutputType.BASE64);
