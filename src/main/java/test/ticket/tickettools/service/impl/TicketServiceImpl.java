@@ -761,12 +761,12 @@ public class TicketServiceImpl implements TicketService {
                 //WebSocketServer.sendInfo("余票不足","web");
                 if (!ObjectUtils.isEmpty(bodyJson) && bodyJson.getIntValue("code") == 200) {
                     List<Long> taskDetailIds = doSnatchInfo.getTaskDetailIds();
-                    for (Long taskDetailId : taskDetailIds) {
+                    /*for (Long taskDetailId : taskDetailIds) {
                         String taskDetailStr = redisService.getData(RedisKeyEnum.TASKDETAIL.getCode() + taskDetailId);
                         TaskDetailEntity taskDetailEntity = JSON.parseObject(taskDetailStr, TaskDetailEntity.class);
                         taskDetailEntity.setDone(true);
                         redisService.setData(RedisKeyEnum.TASKDETAIL.getCode() + taskDetailId,JSON.toJSONString(taskDetailEntity));
-                    }
+                    }*/
                     msgCache.remove(doSnatchInfo.getTaskId());
                     log.info("账号：{}下游客：{},提交订单结果：{}", doSnatchInfo.getAccount(),doSnatchInfo.getIdNameMap().values(),bodyJson);
                     //查询个人订单
@@ -1115,8 +1115,8 @@ public class TicketServiceImpl implements TicketService {
             try {
                 HttpEntity entity=new HttpEntity(getHeader(doSnatchInfo.getAuthorization()));
                 JSONObject response = TemplateUtil.getResponse(ObjectUtils.isEmpty(doSnatchInfo.getIp())?TemplateUtil.initSSLTemplate():TemplateUtil.xieQuTemp(doSnatchInfo.getIp(), doSnatchInfo.getPort()), getCheckImagUrl, HttpMethod.GET,entity);
-                log.info("账号:{}获取到验证码结果：{}",doSnatchInfo.getAccount(),response);
-                if (!ObjectUtils.isEmpty(response)) {
+                if (!ObjectUtils.isEmpty(response)&&response.getIntValue("code")==200) {
+                    log.info("账号:{}获取到验证码成功",doSnatchInfo.getAccount());
                     return response;
                 }
             } catch (Exception e) {
