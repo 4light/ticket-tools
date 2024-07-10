@@ -692,6 +692,7 @@ export default {
             this.payUrl = res.data
             this.showPayDialog = true
             this.showPayPic = true
+            this.loading=false
             this.qrcode(this.payUrl)
           } else {
             this.$notify.success({
@@ -699,6 +700,7 @@ export default {
               message: '免费票无需支付',
               duration: 2000
             })
+            this.loading=false
           }
         }
         this.loading=false

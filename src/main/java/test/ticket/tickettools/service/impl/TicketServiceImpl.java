@@ -567,7 +567,10 @@ public class TicketServiceImpl implements TicketService {
         if (ObjectUtils.isEmpty(allUnDoneTasks)) {
             return result;
         }
-        for (TaskEntity entity : allUnDoneTasks) {
+        List<ProxyInfo> xieQuProxy = ProxyUtil.getXieQuProxy(allUnDoneTasks.size());
+        for (int i = 0; i < allUnDoneTasks.size(); i++) {
+            TaskEntity entity=allUnDoneTasks.get(i);
+            ProxyInfo proxyInfo =ObjectUtils.isEmpty(xieQuProxy)?null: xieQuProxy.get(i);
             Long userInfoId = entity.getUserInfoId();
             AccountInfoEntity accountInfoEntity = accountInfoDao.selectById(userInfoId);
             TaskDetailEntity query = new TaskDetailEntity();
@@ -581,6 +584,8 @@ public class TicketServiceImpl implements TicketService {
             }
             for (TaskDetailEntity taskDetailEntity : taskDetailEntities) {
                 DoSnatchInfo doSnatchInfo = new DoSnatchInfo();
+                doSnatchInfo.setIp(ObjectUtils.isEmpty(proxyInfo)?null:proxyInfo.getIp());
+                doSnatchInfo.setPort(ObjectUtils.isEmpty(proxyInfo)?null:proxyInfo.getPort());
                 doSnatchInfo.setCreator(entity.getCreator());
                 doSnatchInfo.setTaskId(entity.getId());
                 doSnatchInfo.setUserId(accountInfoEntity.getChannelUserId() == null ? null : Long.valueOf(accountInfoEntity.getChannelUserId()));
@@ -743,6 +748,7 @@ public class TicketServiceImpl implements TicketService {
                 Integer childrenTicketNum = priceNameCountMap.get("childrenTicket");
                 HttpEntity shoppingCartUrlEntity = new HttpEntity<>(buildParam(token, childrenTicketNum == null ? 0 : childrenTicketNum, point, doSnatchInfo.getSession(), doSnatchInfo.getUseDate(), priceId, childrenPriceId, discountPriceId, olderPriceId, phone, nameIDMap), headers);
                 JSONObject bodyJson = TemplateUtil.getResponse(restTemplate, shoppingCartUrl, HttpMethod.POST, shoppingCartUrlEntity);
+                log.info("提交订单结果：{}", bodyJson);
                 if (!ObjectUtils.isEmpty(bodyJson) && (bodyJson.getIntValue("code") == 550 || bodyJson.getIntValue("code") == 503)) {
                     log.info("提交订单异常！账号：{}下游客：{},提交订单结果：{}", doSnatchInfo.getAccount(),doSnatchInfo.getIdNameMap().values(),bodyJson);
                     try {
@@ -872,10 +878,6 @@ public class TicketServiceImpl implements TicketService {
                         updates.add(taskDetailEntity);
                     });
                     taskDetailDao.updateTaskDetailBath(updates);
-                    CompletableFuture.runAsync(()->{
-                        String auth = placeOrderInfo.getAuthorization();
-                        ScreenshotUtil.takeScreenshot(String.valueOf(orderId),auth,"task"+placeOrderInfo.getTaskId()+"-"+UUID.randomUUID());
-                    });
                     if (needChargeCode != 1) {
                         return null;
                     }

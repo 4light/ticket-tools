@@ -180,7 +180,7 @@ public class DoSnatchingSchedule {
         runNormalTask();
     }
 
-    //@Scheduled(cron = "0/3 * 7-17 * * ?")
+    //@Scheduled(cron = "0/10 * 7-17 * * ?")
     public void doSingleSnatchOtherTime() {
         runNormalTask();
     }
@@ -221,6 +221,10 @@ public class DoSnatchingSchedule {
                             map.put(item.getString("certificateInfo"), item);
                         }
                         if (data.getIntValue("status") == 2) {
+                            CompletableFuture.runAsync(()->{
+                                String auth = accountInfoEntity.getHeaders();
+                                ScreenshotUtil.takeScreenshot(String.valueOf(orderId),auth,"task"+task.getId()+"-"+UUID.randomUUID());
+                            });
                             value.forEach(o -> {
                                 o.setPayment(true);
                                 o.setOrderNumber(map.get(o.getIDCard()).getString("ticketNumber"));
