@@ -170,6 +170,11 @@
             <artifactId>selenium-devtools</artifactId>
             <version>4.0.0-rc-1</version>
         </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.15.1</version>
+        </dependency>
 
     </dependencies>
 

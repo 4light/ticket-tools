@@ -1,7 +1,9 @@
 package test.ticket.tickettools.web.controller;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.json.JSONObject;
 import org.springframework.web.bind.annotation.*;
+import org.apache.commons.io.IOUtils;
 import test.ticket.tickettools.dao.TaskDetailDao;
 import test.ticket.tickettools.domain.bo.*;
 import test.ticket.tickettools.domain.entity.AccountInfoEntity;
@@ -12,8 +14,12 @@ import test.ticket.tickettools.utils.ScreenshotUtil;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.Date;
-import java.util.Map;
+import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.*;
 
 @RestController
 @RequestMapping("/ticket")
@@ -122,6 +128,44 @@ public class TicketController  extends BaseController{
         return ticketServiceImpl.pay(placeOrderInfo);
     }
 
+    @GetMapping(value = "/get/path")
+    public ServiceResponse getScreenShortPath(@RequestParam Long taskId){
+        File folder=new File("./");
+        File[] files = folder.listFiles();
+        List<JSONObject> path=new ArrayList<>();
+        for (File file : files) {
+            JSONObject item=new JSONObject();
+            if(file.getName().startsWith("task")){
+                item.set("name",file.getName());
+                path.add(item);
+            }
+        }
+        if(!ObjectUtil.isEmpty(path)){
+            return ServiceResponse.createBySuccess(path);
+        }
+        return ServiceResponse.createByErrorMessage("当前任务还没有订单截图");
+    }
+    @GetMapping("/scs/download")
+    public void download(HttpServletResponse response, @RequestParam String name){
+        response.setContentType("application/octet-stream");
+        response.setHeader("Content-Disposition", "attachment; filename=license.lic");
+        ///文件路径
+        String licenseFilePath = "./"+name;
+
+        try {
+            FileInputStream is = new FileInputStream(licenseFilePath);
+            byte[] temp = new byte[is.available()];
+            is.read(temp);
+            response.getOutputStream().write(temp);
+            is.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
     @GetMapping(value = "/test1")
     public ServiceResponse test1(){
         return ServiceResponse.createBySuccess(ProxyUtil.getXieQuProxy(1));
@@ -141,5 +185,24 @@ public class TicketController  extends BaseController{
         if(ObjectUtil.equals(tag,"normal")){
             syncDataService.syncNormalData();
         }
+    }
+
+    public static void main(String[] args) {
+        File folder=new File("./");
+        File[] files = folder.listFiles();
+        for (File file : files) {
+            if(file.getName().startsWith("task")){
+
+                System.out.println(file.getName());
+            }
+        }
+    }
+
+    public static String imageToBase64(String imagePath) throws IOException {
+        File imageFile = new File(imagePath);
+        FileInputStream inputStream = new FileInputStream(imageFile);
+        byte[] imageData = IOUtils.toByteArray(inputStream);
+        inputStream.close();
+        return Base64.getEncoder().encodeToString(imageData);
     }
 }

@@ -202,6 +202,9 @@
             <el-link
               type="danger" @click="init">重置
             </el-link>
+<!--            <el-link
+              type="primary" @click="getPath(scope.row.taskId)">获取截图
+            </el-link>-->
           </template>
         </el-table-column>
       </el-table>
@@ -241,6 +244,32 @@
         <p style="font-size: medium; font-weight: bolder;margin-bottom: 5px">{{ this.currentUserName }}</p>
       </div>
     </el-dialog>
+<!--    <el-dialog
+      :visible.sync="showDownloadDialog"
+      style="height: 50em;overflow: unset"
+      width="40%"
+      :before-close="closeDownloadDialog"
+    >
+      <el-table
+        :data="downloadList"
+      >
+        <el-table-column
+          type="index"
+          width="50">
+        </el-table-column>
+        <el-table-column
+          prop="name"
+        >
+        </el-table-column>
+        <el-table-column prop="option">
+          <template slot-scope="scope">
+            <el-link
+              type="primary" @click="downFile(scope.row.name)">下载
+            </el-link>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-dialog>-->
     <audio
       ref="audio"
     >
@@ -253,6 +282,7 @@
 import taskEditView from './TaskEditView'
 import QRCode from 'qrcodejs2'
 import {get, post} from '../../request'
+import axios from 'axios'
 
 export default {
   name: 'TaskView',
@@ -269,6 +299,8 @@ export default {
   },
   data () {
     return {
+      downloadList:[],
+      showDownloadDialog:false,
       loading:false,
       ynList: [
         {
@@ -608,6 +640,9 @@ export default {
       this.taskInfo = {'userList': []}
       this.onSubmit()
     },
+    closeDownloadDialog(){
+      this.showDownloadDialog=false
+    },
     handleSelectionChange (val) {
       this.selectTicket = val
       let currentTaskId = 0
@@ -741,6 +776,44 @@ export default {
         }
         this.loading=false
       })
+    },
+    getPath(taskId){
+      get('/ticket/get/path',
+        {
+          taskId: taskId
+        }
+      ).then(res => {
+        if (res.status != 0) {
+          this.$notify.error({
+            title: '失败',
+            message: res.msg,
+            duration: 2000
+          })
+        } else {
+          this.downloadList=res.data
+          this.showDownloadDialog=true
+        }
+      })
+    },
+    downFile(name){
+      axios.get('/ticket/scs/download',{
+        params:{
+          name: name,
+        },
+        headers:{
+          responseType:'arraybuffer',
+          Authorization:localStorage.getItem("authorization")
+        }
+      }).then(res => {
+        let url = window.URL.createObjectURL(new Blob([res.data],{type:'application/png'}));
+        let link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download',name)
+        document.body.append(link)
+        link.click();
+      }).catch((error) => {
+        console.error('下载文件时发生错误:', error);
+      });
     },
     addDate (row) {
       let nowDate = row.updateDate

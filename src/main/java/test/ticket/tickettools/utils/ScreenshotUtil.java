@@ -1,13 +1,19 @@
 package test.ticket.tickettools.utils;
 
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.util.RandomUtil;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 
 import java.io.File;
+import java.util.concurrent.TimeUnit;
 
 public class ScreenshotUtil {
 
@@ -33,7 +39,9 @@ public class ScreenshotUtil {
             driver.executeScript(format);
             driver.navigate().refresh();
             // 等待页面加载或执行其他操作
-            Thread.sleep(10000); // 可以使用更合适的等待方式，如WebDriverWait
+            driver.manage().timeouts().implicitlyWait(20, TimeUnit.SECONDS);
+            driver.findElement(new By.ByClassName("ticket"));
+            Thread.sleep(1000); // 可以使用更合适的等待方式，如WebDriverWait
             // 截图并保存
             File screenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
             String screenshotPath = "/root/screenShort/"+fileName+".png";
@@ -44,7 +52,7 @@ public class ScreenshotUtil {
             e.printStackTrace();
         } finally {
             // 关闭浏览器
-           // driver.quit();
+           driver.quit();
         }
     }
 }

@@ -1,6 +1,6 @@
 <template>
   <div style="height:85vh">
-    <el-form ref="form" :model="form" label-width="80px">
+    <el-form ref="form" :model="form" label-width="80px" v-loading="formLoading">
       <!--      <el-form-item label="手机号">
               <el-input v-model="form.loginPhone" style="width: 30%"></el-input>
             </el-form-item>-->
@@ -144,6 +144,7 @@ export default {
   },
   data () {
     return {
+      formLoading:false,
       form: {
         'taskName': null,
         'userId': null,
@@ -242,6 +243,7 @@ export default {
       this.showUserList = true
     },
     onSubmit () {
+
       this.form.session = '23'
       this.form.venue = 1
       if (this.form.channel == 0 && this.userList.length > 15) {
@@ -253,6 +255,7 @@ export default {
       }
       this.form.userInfoId = this.currentUserInfoId
       this.form.userList = this.userList
+      this.formLoading=true
       post('/ticket/add/taskInfo', this.form).then(res => {
         if (res.status != 0) {
           this.$notify.error({
@@ -260,11 +263,13 @@ export default {
             message: res.msg,
             duration: 2000
           })
+          this.formLoading=false
         } else {
           this.$notify.success({
             title: '保存成功',
             duration: 1000
           })
+          this.formLoading=false
           this.close()
         }
       })

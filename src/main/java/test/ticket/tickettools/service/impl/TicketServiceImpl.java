@@ -150,23 +150,27 @@ public class TicketServiceImpl implements TicketService {
     public ServiceResponse addTaskInfo(TaskInfo taskInfo) {
         TaskEntity taskEntity = JSON.parseObject(JSON.toJSONString(taskInfo), TaskEntity.class);
         Long userInfoId = taskInfo.getUserInfoId();
-        AccountInfoEntity accountInfoEntity=null;
-        if(ObjectUtils.isEmpty(userInfoId)){
+        AccountInfoEntity accountInfoEntity = null;
+        if (ObjectUtils.isEmpty(userInfoId)) {
             String phoneNo = VirtualPhoneUtil.getPhoneNo();
-            AccountInfoEntity account=new AccountInfoEntity();
-            account.setUserName("三方号"+phoneNo);
+            AccountInfoEntity account = new AccountInfoEntity();
+            account.setUserName("三方号" + phoneNo);
             account.setAccount(phoneNo);
             account.setChannel(ChannelEnum.CSTM.getCode());
             account.setCreator(taskInfo.getCreator());
             account.setYn(false);
             account.setStatus(false);
             account.setCreateDate(new Date());
-            accountInfoDao.insertOrUpdate(account);
-            accountInfoEntity=account;
-            taskEntity.setUserInfoId(account.getId());
-            taskEntity.setAccount(phoneNo);
-            CompletableFuture.runAsync(()->updateVerPhoneAuth(phoneNo));
-        }else{
+            Integer integer = accountInfoDao.insertOrUpdate(account);
+            if(integer>0) {
+                accountInfoEntity = account;
+                taskEntity.setUserInfoId(account.getId());
+                taskEntity.setAccount(phoneNo);
+                CompletableFuture.runAsync(() -> updateVerPhoneAuth(phoneNo));
+            }else{
+                return ServiceResponse.createByErrorMessage("保存购票账号异常");
+            }
+        } else {
             accountInfoEntity = accountInfoDao.selectById(userInfoId);
         }
         BeanUtils.copyProperties(taskInfo, taskEntity);
@@ -180,7 +184,7 @@ public class TicketServiceImpl implements TicketService {
         if (ObjectUtils.isEmpty(taskInfo.getId())) {
             taskEntity.setCreateDate(new Date());
             taskEntity.setAuth(taskInfo.getAuth());
-            taskEntity.setUserInfoId(taskInfo.getUserInfoId());
+            taskEntity.setUserInfoId(accountInfoEntity.getId());
             taskEntity.setTaskName(taskInfo.getTaskName());
             Integer insert = taskDao.insert(taskEntity);
             if (insert > 0) {
@@ -188,7 +192,7 @@ public class TicketServiceImpl implements TicketService {
                 if (ObjectUtils.isEmpty(userList)) {
                     return ServiceResponse.createBySuccessMessgge("详情数据为空");
                 }
-                TaskEntity query=new TaskEntity();
+                TaskEntity query = new TaskEntity();
                 query.setId(taskEntity.getId());
                 //redisService.setData(RedisKeyEnum.TASK.getCode()+taskEntity.getId(),JSON.toJSONString(taskDao.queryTask(query)));
                 userList.forEach(o -> {
@@ -217,7 +221,7 @@ public class TicketServiceImpl implements TicketService {
             taskEntity.setPwd(accountInfoEntity.getPwd());
             taskEntity.setUserInfoId(accountInfoEntity.getId());
             Integer insert = taskDao.updateTask(taskEntity);
-            redisService.setData(RedisKeyEnum.TASK.getCode()+taskEntity.getId(),JSON.toJSONString(taskEntity));
+            redisService.setData(RedisKeyEnum.TASK.getCode() + taskEntity.getId(), JSON.toJSONString(taskEntity));
             if (insert > 0) {
                 List<TaskDetailEntity> all = taskDetailDao.selectByTaskId(taskEntity.getId());
                 List<TaskDetailEntity> userList = taskInfo.getUserList();
@@ -226,17 +230,17 @@ public class TicketServiceImpl implements TicketService {
                 List<TaskDetailEntity> deleteList = new ArrayList<>();
                 List<Long> taskDetailIds = updateList.stream().map(TaskDetailEntity::getId).collect(Collectors.toList());
                 if (updateList.size() != all.size()) {
-                    List<String> taskDetailIdList=new ArrayList<>();
+                    List<String> taskDetailIdList = new ArrayList<>();
                     all.forEach(allEntity -> {
-                        redisService.setData(RedisKeyEnum.TASKDETAIL.getCode()+allEntity.getId(),JSON.toJSONString(allEntity));
+                        redisService.setData(RedisKeyEnum.TASKDETAIL.getCode() + allEntity.getId(), JSON.toJSONString(allEntity));
                         taskDetailIdList.add(String.valueOf(allEntity.getId()));
                         if (!taskDetailIds.contains(allEntity.getId())) {
                             deleteList.add(allEntity);
-                            redisService.deleteKey(RedisKeyEnum.TASKDETAIL.getCode()+allEntity.getId());
-                            redisService.setData(RedisKeyEnum.RELATION.getCode()+taskEntity.getId(),String.valueOf(allEntity.getId()));
+                            redisService.deleteKey(RedisKeyEnum.TASKDETAIL.getCode() + allEntity.getId());
+                            redisService.setData(RedisKeyEnum.RELATION.getCode() + taskEntity.getId(), String.valueOf(allEntity.getId()));
                         }
                     });
-                    redisService.saveList(RedisKeyEnum.RELATION.getCode()+taskEntity.getId(), taskDetailIdList);
+                    redisService.saveList(RedisKeyEnum.RELATION.getCode() + taskEntity.getId(), taskDetailIdList);
                     if (deleteList.size() > 0) {
                         taskDetailDao.deleteTaskDetailBath(deleteList);
                     }
@@ -249,16 +253,16 @@ public class TicketServiceImpl implements TicketService {
                     });
                     taskDetailDao.insertBatch(addList);
                     List<String> list = redisService.getList(RedisKeyEnum.RELATION.getCode() + taskEntity.getId());
-                    addList.forEach(o->{
+                    addList.forEach(o -> {
                         list.add(String.valueOf(o.getId()));
-                        redisService.setData(RedisKeyEnum.TASKDETAIL.getCode()+o.getId(),JSON.toJSONString(o));
+                        redisService.setData(RedisKeyEnum.TASKDETAIL.getCode() + o.getId(), JSON.toJSONString(o));
                     });
-                    redisService.saveList(RedisKeyEnum.RELATION.getCode() + taskEntity.getId(),list);
+                    redisService.saveList(RedisKeyEnum.RELATION.getCode() + taskEntity.getId(), list);
                 }
                 if (!ObjectUtils.isEmpty(updateList)) {
                     taskDetailDao.updateTaskDetailBath(updateList);
-                    updateList.forEach(o->{
-                        redisService.setData(RedisKeyEnum.TASKDETAIL.getCode()+o.getId(),JSON.toJSONString(o));
+                    updateList.forEach(o -> {
+                        redisService.setData(RedisKeyEnum.TASKDETAIL.getCode() + o.getId(), JSON.toJSONString(o));
                     });
                 }
                 return ServiceResponse.createBySuccess();
@@ -296,13 +300,13 @@ public class TicketServiceImpl implements TicketService {
                     taskDetailEntity.setDone(false);
                     //successEntities.add(taskDetailEntity);
                     taskDetailDao.updateTaskDetail(taskDetailEntity);
-                    redisService.setData(RedisKeyEnum.TASKDETAIL.getCode()+taskDetailEntity.getId(), JSON.toJSONString(taskDetailEntity));
+                    redisService.setData(RedisKeyEnum.TASKDETAIL.getCode() + taskDetailEntity.getId(), JSON.toJSONString(taskDetailEntity));
                 } else {
                     failTicket.add(taskDetailEntity.getUserName());
                 }
             }
         }
-        redisService.setData(RedisKeyEnum.TASK.getCode()+initTaskParam.getTaskId(), JSON.toJSONString(targetTask));
+        redisService.setData(RedisKeyEnum.TASK.getCode() + initTaskParam.getTaskId(), JSON.toJSONString(targetTask));
         if (ObjectUtils.isEmpty(failTicket)) {
             return ServiceResponse.createBySuccessMessgge("重置成功");
         }
@@ -357,7 +361,7 @@ public class TicketServiceImpl implements TicketService {
                 taskInfoListResponse.setTaskName(taskEntity.getTaskName());
                 taskInfoListResponse.setAccount(ObjectUtils.isEmpty(accountInfoEntity) ? null : accountInfoEntity.getUserName());
                 taskInfoListResponse.setId(taskDetailEntity.getId());
-                taskInfoListResponse.setAuthorization(ObjectUtils.isEmpty(accountInfoEntity) ? null:accountInfoEntity.getHeaders());
+                taskInfoListResponse.setAuthorization(ObjectUtils.isEmpty(accountInfoEntity) ? null : accountInfoEntity.getHeaders());
                 //使用名字好区分
                 taskInfoListResponse.setAccountName(accountInfoEntity == null ? null : accountInfoEntity.getUserName());
                 taskInfoListResponse.setTaskYn(taskEntity.getYn());
@@ -413,17 +417,17 @@ public class TicketServiceImpl implements TicketService {
         taskEntity.setYn(yn);
         Integer integer = taskDao.updateTask(taskEntity);
         if (integer > 0) {
-            TaskDetailEntity taskDetailEntity=new TaskDetailEntity();
+            TaskDetailEntity taskDetailEntity = new TaskDetailEntity();
             taskDetailEntity.setYn(yn);
             taskDetailEntity.setTaskId(taskId);
             Integer res = taskDetailDao.updateEntityByTaskId(taskDetailEntity);
             if (res > 0) {
                 List<TaskDetailEntity> taskDetailEntityList = taskDetailDao.selectByTaskId(taskId);
-                taskDetailEntityList.forEach(o->{
-                    redisService.setData(RedisKeyEnum.TASKDETAIL.getCode()+o.getId(),JSON.toJSONString(o));
+                taskDetailEntityList.forEach(o -> {
+                    redisService.setData(RedisKeyEnum.TASKDETAIL.getCode() + o.getId(), JSON.toJSONString(o));
                 });
                 TaskEntity queryTask = taskDao.queryTask(taskEntity);
-                redisService.setData(RedisKeyEnum.TASK.getCode()+queryTask.getId(),JSON.toJSONString(queryTask));
+                redisService.setData(RedisKeyEnum.TASK.getCode() + queryTask.getId(), JSON.toJSONString(queryTask));
                 return ServiceResponse.createBySuccess();
             }
             return ServiceResponse.createByErrorMessage("删除详情失败");
@@ -467,8 +471,8 @@ public class TicketServiceImpl implements TicketService {
         }
         List<ProxyInfo> xieQuProxy = ProxyUtil.getXieQuProxy(taskEntities.size());
         for (int i = 0; i < taskEntities.size(); i++) {
-            TaskEntity entity=taskEntities.get(i);
-            ProxyInfo proxyInfo = ObjectUtils.isEmpty(xieQuProxy)?null:xieQuProxy.get(i);
+            TaskEntity entity = taskEntities.get(i);
+            ProxyInfo proxyInfo = ObjectUtils.isEmpty(xieQuProxy) ? null : xieQuProxy.get(i);
             Long id = entity.getId();
             Long userInfoId = entity.getUserInfoId();
             AccountInfoEntity accountInfoEntity = accountInfoDao.selectById(userInfoId);
@@ -491,8 +495,8 @@ public class TicketServiceImpl implements TicketService {
                 Map<String, String> idNameMap = taskDetailEntityList.stream()
                         .collect(Collectors.toMap(TaskDetailEntity::getIDCard, TaskDetailEntity::getUserName));
                 doSnatchInfo.setTaskId(id);
-                doSnatchInfo.setIp(ObjectUtils.isEmpty(proxyInfo)?null:proxyInfo.getIp());
-                doSnatchInfo.setPort(ObjectUtils.isEmpty(proxyInfo)?null:proxyInfo.getPort());
+                doSnatchInfo.setIp(ObjectUtils.isEmpty(proxyInfo) ? null : proxyInfo.getIp());
+                doSnatchInfo.setPort(ObjectUtils.isEmpty(proxyInfo) ? null : proxyInfo.getPort());
                 doSnatchInfo.setCreator(entity.getCreator());
                 doSnatchInfo.setUserId(Long.valueOf(accountInfoEntity.getChannelUserId()));
                 doSnatchInfo.setAccount(entity.getAccount());
@@ -518,26 +522,26 @@ public class TicketServiceImpl implements TicketService {
             TaskEntity taskEntity = JSON.parseObject(taskStr, TaskEntity.class);
             String accountStr = redisService.getData(RedisKeyEnum.ACCOUNT.getCode() + taskEntity.getUserInfoId());
             AccountInfoEntity accountInfoEntity = JSON.parseObject(accountStr, AccountInfoEntity.class);
-            if(taskEntity.getChannel()==ChannelEnum.CSTM.getCode()
-                    && ObjectUtil.equals(DateUtils.localDateToDate(snatchDate),taskEntity.getUseDate())
-                    &&!taskEntity.getDone()
-                    &&!taskEntity.getYn()){
+            if (taskEntity.getChannel() == ChannelEnum.CSTM.getCode()
+                    && ObjectUtil.equals(DateUtils.localDateToDate(snatchDate), taskEntity.getUseDate())
+                    && !taskEntity.getDone()
+                    && !taskEntity.getYn()) {
                 List<String> taskDetailIds = redisService.getList(RedisKeyEnum.RELATION.getCode() + taskEntity.getId());
                 List<List<String>> partition = Lists.partition(taskDetailIds, 5);
                 for (List<String> item : partition) {
-                    DoSnatchInfo doSnatchInfo=new DoSnatchInfo();
-                    Map<String, String> idNameMap=new HashMap<>();
-                    List<Long> detailIds=new ArrayList<>();
+                    DoSnatchInfo doSnatchInfo = new DoSnatchInfo();
+                    Map<String, String> idNameMap = new HashMap<>();
+                    List<Long> detailIds = new ArrayList<>();
                     for (String o : item) {
                         String taskDetailStr = redisService.getData(RedisKeyEnum.TASKDETAIL.getCode() + o);
                         TaskDetailEntity taskDetailEntity = JSON.parseObject(taskDetailStr, TaskDetailEntity.class);
-                        if (!taskDetailEntity.getDone()||taskDetailEntity.getYn()){
+                        if (!taskDetailEntity.getDone() || taskDetailEntity.getYn()) {
                             continue;
                         }
                         detailIds.add(Long.valueOf(o));
-                        idNameMap.put(taskDetailEntity.getIDCard(),taskDetailEntity.getUserName());
+                        idNameMap.put(taskDetailEntity.getIDCard(), taskDetailEntity.getUserName());
                     }
-                    if(ObjectUtils.isEmpty(detailIds)){
+                    if (ObjectUtils.isEmpty(detailIds)) {
                         continue;
                     }
                     doSnatchInfo.setTaskId(taskEntity.getId());
@@ -569,8 +573,8 @@ public class TicketServiceImpl implements TicketService {
         }
         List<ProxyInfo> xieQuProxy = ProxyUtil.getXieQuProxy(allUnDoneTasks.size());
         for (int i = 0; i < allUnDoneTasks.size(); i++) {
-            TaskEntity entity=allUnDoneTasks.get(i);
-            ProxyInfo proxyInfo =ObjectUtils.isEmpty(xieQuProxy)?null: xieQuProxy.get(i);
+            TaskEntity entity = allUnDoneTasks.get(i);
+            ProxyInfo proxyInfo = ObjectUtils.isEmpty(xieQuProxy) ? null : xieQuProxy.get(i);
             Long userInfoId = entity.getUserInfoId();
             AccountInfoEntity accountInfoEntity = accountInfoDao.selectById(userInfoId);
             TaskDetailEntity query = new TaskDetailEntity();
@@ -584,13 +588,13 @@ public class TicketServiceImpl implements TicketService {
             }
             for (TaskDetailEntity taskDetailEntity : taskDetailEntities) {
                 DoSnatchInfo doSnatchInfo = new DoSnatchInfo();
-                doSnatchInfo.setIp(ObjectUtils.isEmpty(proxyInfo)?null:proxyInfo.getIp());
-                doSnatchInfo.setPort(ObjectUtils.isEmpty(proxyInfo)?null:proxyInfo.getPort());
+                doSnatchInfo.setIp(ObjectUtils.isEmpty(proxyInfo) ? null : proxyInfo.getIp());
+                doSnatchInfo.setPort(ObjectUtils.isEmpty(proxyInfo) ? null : proxyInfo.getPort());
                 doSnatchInfo.setCreator(entity.getCreator());
                 doSnatchInfo.setTaskId(entity.getId());
-                doSnatchInfo.setUserId(accountInfoEntity.getChannelUserId() == null ? null : Long.valueOf(accountInfoEntity.getChannelUserId()));
+                doSnatchInfo.setUserId(ObjectUtils.isEmpty(accountInfoEntity)? null : accountInfoEntity.getChannelUserId() == null?null:Long.valueOf(accountInfoEntity.getChannelUserId()));
                 doSnatchInfo.setAccount(entity.getAccount());
-                doSnatchInfo.setAuthorization(accountInfoEntity.getHeaders());
+                doSnatchInfo.setAuthorization(ObjectUtils.isEmpty(accountInfoEntity)?null:accountInfoEntity.getHeaders());
                 doSnatchInfo.setUseDate(entity.getUseDate());
                 doSnatchInfo.setSession(entity.getSession());
                 doSnatchInfo.setTaskDetailIds(Arrays.asList(taskDetailEntity.getId()));
@@ -602,6 +606,7 @@ public class TicketServiceImpl implements TicketService {
         }
         return result;
     }
+
     @Override
     public List<DoSnatchInfo> getAllTaskForRun1() {
         List<String> taskKeys = redisService.searchKey(RedisKeyEnum.TASK.getCode() + "[0-9]*");
@@ -647,9 +652,9 @@ public class TicketServiceImpl implements TicketService {
     @Override
     public Boolean updateTaskDetail(TaskDetailEntity taskDetailEntity) {
         Integer integer = taskDetailDao.updateTaskDetail(taskDetailEntity);
-        if(integer>0){
+        if (integer > 0) {
             TaskDetailEntity res = taskDetailDao.selectByTaskDetailId(taskDetailEntity.getId());
-            redisService.setData(RedisKeyEnum.TASKDETAIL.getCode()+res.getId(), JSON.toJSONString(res));
+            redisService.setData(RedisKeyEnum.TASKDETAIL.getCode() + res.getId(), JSON.toJSONString(res));
         }
         return integer > 0;
     }
@@ -747,9 +752,9 @@ public class TicketServiceImpl implements TicketService {
                 Integer childrenTicketNum = priceNameCountMap.get("childrenTicket");
                 HttpEntity shoppingCartUrlEntity = new HttpEntity<>(buildParam(token, childrenTicketNum == null ? 0 : childrenTicketNum, point, doSnatchInfo.getSession(), doSnatchInfo.getUseDate(), priceId, childrenPriceId, discountPriceId, olderPriceId, phone, nameIDMap), headers);
                 JSONObject bodyJson = TemplateUtil.getResponse(restTemplate, shoppingCartUrl, HttpMethod.POST, shoppingCartUrlEntity);
-                log.info("提交订单结果：{}", bodyJson);
+                log.info("账号：{}下游客：{},提交订单结果：{}", doSnatchInfo.getAccount(), doSnatchInfo.getIdNameMap().values(), bodyJson);
                 if (!ObjectUtils.isEmpty(bodyJson) && (bodyJson.getIntValue("code") == 550 || bodyJson.getIntValue("code") == 503)) {
-                    log.info("提交订单异常！账号：{}下游客：{},提交订单结果：{}", doSnatchInfo.getAccount(),doSnatchInfo.getIdNameMap().values(),bodyJson);
+                    log.info("提交订单异常！账号：{}下游客：{},提交订单结果：{}", doSnatchInfo.getAccount(), doSnatchInfo.getIdNameMap().values(), bodyJson);
                     try {
                         Files.delete(Paths.get(sliderImageName));
                         Files.delete(Paths.get(backImageName));
@@ -769,13 +774,12 @@ public class TicketServiceImpl implements TicketService {
                     }*/
                     SendMessageUtil.send(ChannelEnum.CSTM.getDesc(), DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"), "主场馆", doSnatchInfo.getAccount(), String.join(",", doSnatchInfo.getIdNameMap().values()));
                     msgCache.remove(doSnatchInfo.getTaskId());
-                    log.info("账号：{}下游客：{},提交订单结果：{}", doSnatchInfo.getAccount(),doSnatchInfo.getIdNameMap().values(),bodyJson);
                     //查询个人订单
                     headers.set("Referer", "https://pcticket.cstm.org.cn/personal/car");
                     HttpEntity searchEntity = new HttpEntity(headers);
                     JSONObject searchBodyJson = getOrderDetail(searchEntity);
                     if (searchBodyJson == null || searchBodyJson.getIntValue("code") != 200) {
-                        SendMessageUtil.send(ChannelEnum.CSTM.getDesc(), DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"), "主场馆", doSnatchInfo.getAccount(), "任务成功，更新任务数据失败请求检查"+String.join(",", doSnatchInfo.getIdNameMap().values()));
+                        SendMessageUtil.send(ChannelEnum.CSTM.getDesc(), DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"), "主场馆", doSnatchInfo.getAccount(), "任务成功，更新任务数据失败请求检查" + String.join(",", doSnatchInfo.getIdNameMap().values()));
                         log.info("查询个人订单失败：{}", searchBodyJson);
                         try {
                             Files.delete(Paths.get(sliderImageName));
@@ -906,7 +910,7 @@ public class TicketServiceImpl implements TicketService {
                     return ServiceResponse.createByErrorMessage(payRes.getString("msg"));
                 }
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             return ServiceResponse.createByErrorMessage("获取二维码异常，请重新支付");
         }
@@ -1110,25 +1114,27 @@ public class TicketServiceImpl implements TicketService {
         return headers;
     }
 
-    private JSONObject getCheckImag(DoSnatchInfo doSnatchInfo){
+    private JSONObject getCheckImag(DoSnatchInfo doSnatchInfo) {
         int retryCount = 0;
         while (retryCount < 20) {
             try {
-                HttpEntity entity=new HttpEntity(getHeader(doSnatchInfo.getAuthorization()));
-                JSONObject response = TemplateUtil.getResponse(ObjectUtils.isEmpty(doSnatchInfo.getIp())?TemplateUtil.initSSLTemplate():TemplateUtil.xieQuTemp(doSnatchInfo.getIp(), doSnatchInfo.getPort()), getCheckImagUrl, HttpMethod.GET,entity);
-                if (!ObjectUtils.isEmpty(response)&&response.getIntValue("code")==200) {
-                    log.info("账号:{}获取到验证码成功",doSnatchInfo.getAccount());
+                HttpEntity entity = new HttpEntity(getHeader(doSnatchInfo.getAuthorization()));
+                JSONObject response = TemplateUtil.getResponse(ObjectUtils.isEmpty(doSnatchInfo.getIp()) ? TemplateUtil.initSSLTemplate() : TemplateUtil.xieQuTemp(doSnatchInfo.getIp(), doSnatchInfo.getPort()), getCheckImagUrl, HttpMethod.GET, entity);
+                if (!ObjectUtils.isEmpty(response) && response.getIntValue("code") == 200) {
+                    log.info("账号:{}获取到验证码成功", doSnatchInfo.getAccount());
                     return response;
                 }
+                log.info("账号:{}获取到验证码失败，重试中",doSnatchInfo.getAccount());
             } catch (Exception e) {
                 //e.printStackTrace();
+                log.info("账号:{}获取到验证码异常，涉及游客",String.join(",",doSnatchInfo.getIdNameMap().values()));
             }
             retryCount++;
         }
         return null;
     }
 
-    private JSONObject getOrderDetail(HttpEntity searchEntity){
+    private JSONObject getOrderDetail(HttpEntity searchEntity) {
         int retryCount = 0;
         while (retryCount < 10) {
             try {
@@ -1136,79 +1142,85 @@ public class TicketServiceImpl implements TicketService {
                 JSONObject searchBodyJson = JSON.parseObject(searchResEntity.getBody());
                 return searchBodyJson;
             } catch (Exception e) {
-                log.info("获取购物车数据异常，重试次数: {}" ,(retryCount + 1));
+                log.info("获取购物车数据异常，重试次数: {}", (retryCount + 1));
             }
             retryCount++;
         }
         return null;
     }
 
-    private void updateVerPhoneAuth(String phoneNum){
-        try{
-            ServiceResponse<LogInCSTMParam> captchaImage = loginService.getCaptchaImage();
-            if(captchaImage.getStatus()==0){
-                LogInCSTMParam data = captchaImage.getData();
-                data.setPhone(phoneNum);
-                String captchaImageBase64 = data.getCaptchaImageBase64();
-                String code=null;
-                //重试3次
-                for (int i = 0; i < 3; i++) {
-                    String verCode = ImageUtils.getVerCode(captchaImageBase64);
-                    if(!ObjectUtils.isEmpty(verCode)){
-                        code=verCode;
+    private void updateVerPhoneAuth(String phoneNum) {
+        try {
+            LogInCSTMParam sourceParam = new LogInCSTMParam();
+            for (int i = 0; i < 10; i++) {
+                ServiceResponse<LogInCSTMParam> captchaImage = loginService.getCaptchaImage();
+                if (captchaImage.getStatus() == 0) {
+                    log.info("获取渠道图片验证码成功");
+                    LogInCSTMParam data = captchaImage.getData();
+                    data.setPhone(phoneNum);
+                    String captchaImageBase64 = data.getCaptchaImageBase64();
+                    String code = null;
+                    //重试3次
+                    for (int j = 0; j < 3; j++) {
+                        String verCode = ImageUtils.getVerCode(captchaImageBase64);
+                        if (!ObjectUtils.isEmpty(verCode)) {
+                            code = verCode;
+                            break;
+                        }
+                    }
+                    if (ObjectUtils.isEmpty(code)) {
+                        continue;
+                    }
+                    data.setCaptchaImage(code);
+                    ServiceResponse sendMsgCodeRes = loginService.sendMessageCode(data);
+                    if (sendMsgCodeRes.getStatus() == 0) {
+                        log.info("发送渠道短信验证码成功");
+                        sourceParam = data;
                         break;
                     }
                 }
-                if(ObjectUtils.isEmpty(code)){
-                    SendMessageUtil.send(ChannelEnum.CSTM.getDesc(), null, null, phoneNum, "从三方获取图片验证码异常!");
-                    return;
-                }
-                data.setCaptchaImage(code);
-                ServiceResponse sendMsgCodeRes = loginService.sendMessageCode(data);
-                if(sendMsgCodeRes.getStatus()!=0){
-                    SendMessageUtil.send(ChannelEnum.CSTM.getDesc(), null, null, phoneNum, "发送渠道短信验证码异常!");
-                    return;
-                }
-                String msgCode=null;
-                //等待100秒
-                for (int i = 0; i < 10; i++) {
-                    Thread.sleep(10000);
-                    String verificationCode = VirtualPhoneUtil.getVerificationCode(phoneNum);
-                    if(!ObjectUtils.isEmpty(verificationCode)){
-                        msgCode=verificationCode;
-                        break;
-                    }
-                }
-                if(ObjectUtils.isEmpty(msgCode)){
-                    SendMessageUtil.send(ChannelEnum.CSTM.getDesc(), null, null, phoneNum, "获取渠道短信验证码异常!");
-                    return;
-
-                }
-                data.setVerificationCode(msgCode);
-                ServiceResponse login = loginService.login(data);
-                if(login.getStatus()!=0){
-                    SendMessageUtil.send(ChannelEnum.CSTM.getDesc(), null, null, phoneNum, "登录异常");
-                    return;
+                log.info("第{}重试发送短信验证码",i);
+            }
+            String msgCode = null;
+            //等待100秒
+            for (int i = 0; i < 10; i++) {
+                Thread.sleep(10000);
+                String verificationCode = VirtualPhoneUtil.getVerificationCode(phoneNum);
+                if (!ObjectUtils.isEmpty(verificationCode)) {
+                    msgCode = verificationCode;
+                    break;
                 }
             }
-        }catch (Exception e){
-            log.info("获取手机号异常:{}",e);
+            if (ObjectUtils.isEmpty(msgCode)) {
+                SendMessageUtil.send(ChannelEnum.CSTM.getDesc(), null, null, phoneNum, "获取渠道短信验证码异常!");
+                return;
+            }
+            sourceParam.setVerificationCode(msgCode);
+            ServiceResponse login = loginService.login(sourceParam);
+            if (login.getStatus() != 0) {
+                SendMessageUtil.send(ChannelEnum.CSTM.getDesc(), null, null, phoneNum, "登录异常");
+                return;
+            }
+            log.info("账号{}登录成功成功",sourceParam.getPhone());
+        } catch (Exception e) {
+            log.info("获取手机号异常:{}", e);
         }
 
     }
 
+
     public static void main(String[] args) {
-        HttpHeaders headers=new HttpHeaders();
+        HttpHeaders headers = new HttpHeaders();
         headers.set("authority", "pcticket.cstm.org.cn");
         headers.set("accept", "application/json");
         headers.set("Accept-Encoding", "gzip, deflate, br, zstd");
         headers.set("authorization", "Bearer eyJhbGciOiJIUzUxMiJ9.eyJsb2dpbl91c2VyX2tleSI6Ijk3NjY0ZDI4LWQ1OTQtNDRiMi1hZTYzLWU1OWJmMTY2NzMxNCJ9.Eg1P8iCWc5DPvZ3VVPRYF0xRLpfn1I-yUaQFGSyc1ZxPj3FXW3yHkOhv6p4OYolWoZbj720Tbiknktzeso3rsg");
         headers.set("cookie", "SL_G_WPT_TO=zh; SL_GWPT_Show_Hide_tmp=1; SL_wptGlobTipTmp=1");
         headers.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
-       // for (int i = 0; i < 10; i++) {
-            List<ProxyInfo> proxy = ProxyUtil.getProxyList(1);
-            JSONObject response = TemplateUtil.getResponse(TemplateUtil.initSSLTemplateWithProxyAuth(proxy.get(0).getIp(), proxy.get(0).getPort()), getCheckImagUrl, HttpMethod.GET, new HttpEntity(headers));
-            System.out.println(response);
-       // }
+        // for (int i = 0; i < 10; i++) {
+        List<ProxyInfo> proxy = ProxyUtil.getProxyList(1);
+        JSONObject response = TemplateUtil.getResponse(TemplateUtil.initSSLTemplateWithProxyAuth(proxy.get(0).getIp(), proxy.get(0).getPort()), getCheckImagUrl, HttpMethod.GET, new HttpEntity(headers));
+        System.out.println(response);
+        // }
     }
 }
