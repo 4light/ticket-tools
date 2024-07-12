@@ -428,7 +428,7 @@ public class DoSnatchingSchedule {
                 account.setCreateDate(new Date());
                 Integer integer = accountInfoDao.insertOrUpdate(account);
                 if(integer>0) {
-                    CompletableFuture.runAsync(() -> ticketServiceImpl.updateAuth(phoneNo));
+                    ticketServiceImpl.updateAuth(phoneNo);
                     TaskEntity taskEntity=new TaskEntity();
                     taskEntity.setId(taskId);
                     taskEntity.setAccount(phoneNo);
