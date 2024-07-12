@@ -195,7 +195,7 @@ public class DoSnatchingSchedule {
         runNormalTask();
     }
 
-    //@Scheduled(cron = "0/1 * 0-6,19-23 * * ?")
+    @Scheduled(cron = "0/1 * 0-6,19-23 * * ?")
     public void doSingleSnatchOtherTime2() {
         runNormalTask();
     }
