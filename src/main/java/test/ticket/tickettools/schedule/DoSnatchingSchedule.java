@@ -33,10 +33,7 @@ import test.ticket.tickettools.service.AccountService;
 import test.ticket.tickettools.service.LoginService;
 import test.ticket.tickettools.service.RedisService;
 import test.ticket.tickettools.service.TicketService;
-import test.ticket.tickettools.utils.DateUtils;
-import test.ticket.tickettools.utils.ProxyUtil;
-import test.ticket.tickettools.utils.ScreenshotUtil;
-import test.ticket.tickettools.utils.TemplateUtil;
+import test.ticket.tickettools.utils.*;
 
 import javax.annotation.Resource;
 import java.time.LocalDate;
@@ -150,7 +147,7 @@ public class DoSnatchingSchedule {
         // 对每个 useDate 异步检查并处理
         mapByUseDate.forEach((useDate, doSnatchInfos) -> {
             CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-                if (haveTicket(doSnatchInfos.get(0).getAuthorization(), useDate)) {
+                if (haveTicket(doSnatchInfos.get(0).getAuthorization(), useDate,doSnatchInfos.get(0).getCreator(),doSnatchInfos.get(0).getTaskId())) {
                     if (isTicketSnatched.compareAndSet(false, true)) {
                         ticketServiceImpl.snatchingTicket(doSnatchInfos.get(0));
                     }
@@ -185,17 +182,17 @@ public class DoSnatchingSchedule {
         });*/
     }
 
-    @Scheduled(cron = "0/5 11-59 18 * * ?")
+    @Scheduled(cron = "0/1 11-59 18 * * ?")
     public void doSingleSnatch() {
         runNormalTask();
     }
 
-    @Scheduled(cron = "0/5 * 7-17 * * ?")
+    @Scheduled(cron = "0/1 * 7-17 * * ?")
     public void doSingleSnatchOtherTime() {
         runNormalTask();
     }
 
-    @Scheduled(cron = "0/5 * 0-6,19-23 * * ?")
+    @Scheduled(cron = "0/1 * 0-6,19-23 * * ?")
     public void doSingleSnatchOtherTime2() {
         runNormalTask();
     }
@@ -377,7 +374,7 @@ public class DoSnatchingSchedule {
         // 对每个 useDate 异步检查并处理
         mapByUseDate.forEach((useDate, doSnatchInfos) -> {
             CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-                if (haveTicket(doSnatchInfos.get(0).getAuthorization(), useDate)) {
+                if (haveTicket(doSnatchInfos.get(0).getAuthorization(), useDate,doSnatchInfos.get(0).getCreator(),doSnatchInfos.get(0).getTaskId())) {
                     if (isTicketSnatched.compareAndSet(false, true)) {
                         ticketServiceImpl.snatchingTicket(doSnatchInfos.get(0));
                     }
@@ -401,7 +398,7 @@ public class DoSnatchingSchedule {
         });*/
     }
 
-    private Boolean haveTicket(String auth, Date date) {
+    private Boolean haveTicket(String auth, Date date,String creator,Long taskId) {
         try {
             String url = "https://pcticket.cstm.org.cn/prod-api/pool/getScheduleByHallId?hallId=1&openPerson=1&queryDate=%s&saleMode=1&single=true";
             String format = String.format(url, DateUtils.dateToStr(date, "yyyy/MM/dd"));
@@ -418,6 +415,31 @@ public class DoSnatchingSchedule {
                 return false;
             }
             JSONObject responseJson = JSON.parseObject(body);
+            if(!ObjectUtils.isEmpty(responseJson)&&responseJson.getIntValue("code")==401&&responseJson.getString("msg").contains("认证失败")){
+                log.info("任务{}购票账号登录态异常:{}",taskId,responseJson);
+                String phoneNo = VirtualPhoneUtil.getPhoneNo();
+                AccountInfoEntity account = new AccountInfoEntity();
+                account.setUserName("三方号" + phoneNo);
+                account.setAccount(phoneNo);
+                account.setChannel(ChannelEnum.CSTM.getCode());
+                account.setCreator(creator);
+                account.setYn(false);
+                account.setStatus(false);
+                account.setCreateDate(new Date());
+                Integer integer = accountInfoDao.insertOrUpdate(account);
+                if(integer>0) {
+                    CompletableFuture.runAsync(() -> ticketServiceImpl.updateAuth(phoneNo));
+                    TaskEntity taskEntity=new TaskEntity();
+                    taskEntity.setId(taskId);
+                    taskEntity.setAccount(phoneNo);
+                    taskEntity.setUserInfoId(account.getId());
+                    Integer res = taskDao.updateTask(taskEntity);
+                    log.info("更新任务结果：{}",res>0);
+                }else{
+                    log.info("更新任务购票账号异常");
+                }
+                return false;
+            }
             JSONArray data = responseJson.getJSONArray("data");
             if (ObjectUtils.isEmpty(data)) {
                 return false;

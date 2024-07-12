@@ -162,12 +162,12 @@ public class TicketServiceImpl implements TicketService {
             account.setStatus(false);
             account.setCreateDate(new Date());
             Integer integer = accountInfoDao.insertOrUpdate(account);
-            if(integer>0) {
+            if (integer > 0) {
                 accountInfoEntity = account;
                 taskEntity.setUserInfoId(account.getId());
                 taskEntity.setAccount(phoneNo);
                 CompletableFuture.runAsync(() -> updateVerPhoneAuth(phoneNo));
-            }else{
+            } else {
                 return ServiceResponse.createByErrorMessage("保存购票账号异常");
             }
         } else {
@@ -592,9 +592,9 @@ public class TicketServiceImpl implements TicketService {
                 doSnatchInfo.setPort(ObjectUtils.isEmpty(proxyInfo) ? null : proxyInfo.getPort());
                 doSnatchInfo.setCreator(entity.getCreator());
                 doSnatchInfo.setTaskId(entity.getId());
-                doSnatchInfo.setUserId(ObjectUtils.isEmpty(accountInfoEntity)? null : accountInfoEntity.getChannelUserId() == null?null:Long.valueOf(accountInfoEntity.getChannelUserId()));
+                doSnatchInfo.setUserId(ObjectUtils.isEmpty(accountInfoEntity) ? null : accountInfoEntity.getChannelUserId() == null ? null : Long.valueOf(accountInfoEntity.getChannelUserId()));
                 doSnatchInfo.setAccount(entity.getAccount());
-                doSnatchInfo.setAuthorization(ObjectUtils.isEmpty(accountInfoEntity)?null:accountInfoEntity.getHeaders());
+                doSnatchInfo.setAuthorization(ObjectUtils.isEmpty(accountInfoEntity) ? null : accountInfoEntity.getHeaders());
                 doSnatchInfo.setUseDate(entity.getUseDate());
                 doSnatchInfo.setSession(entity.getSession());
                 doSnatchInfo.setTaskDetailIds(Arrays.asList(taskDetailEntity.getId()));
@@ -917,6 +917,11 @@ public class TicketServiceImpl implements TicketService {
         return null;
     }
 
+    @Override
+    public void updateAuth(String phone) {
+        updateVerPhoneAuth(phone);
+    }
+
     private String socketMsg(String title, String msg, Integer time) {
         JSONObject res = new JSONObject();
         res.put("title", title);
@@ -1124,10 +1129,10 @@ public class TicketServiceImpl implements TicketService {
                     log.info("账号:{}获取到验证码成功", doSnatchInfo.getAccount());
                     return response;
                 }
-                log.info("账号:{}获取到验证码失败，重试中",doSnatchInfo.getAccount());
+                log.info("账号:{}获取到验证码失败{}，重试中", doSnatchInfo.getAccount(), response);
             } catch (Exception e) {
                 //e.printStackTrace();
-                log.info("账号:{}获取到验证码异常，涉及游客",String.join(",",doSnatchInfo.getIdNameMap().values()));
+                log.info("账号:{}获取到验证码异常，涉及游客", String.join(",", doSnatchInfo.getIdNameMap().values()));
             }
             retryCount++;
         }
@@ -1179,7 +1184,7 @@ public class TicketServiceImpl implements TicketService {
                         break;
                     }
                 }
-                log.info("第{}重试发送短信验证码",i);
+                log.info("第{}重试发送短信验证码", i);
             }
             String msgCode = null;
             //等待100秒
@@ -1201,7 +1206,7 @@ public class TicketServiceImpl implements TicketService {
                 SendMessageUtil.send(ChannelEnum.CSTM.getDesc(), null, null, phoneNum, "登录异常");
                 return;
             }
-            log.info("账号{}登录成功成功",sourceParam.getPhone());
+            log.info("账号{}登录成功成功", sourceParam.getPhone());
         } catch (Exception e) {
             log.info("获取手机号异常:{}", e);
         }

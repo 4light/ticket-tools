@@ -44,4 +44,5 @@ public interface TicketService {
     void snatchingTicket(DoSnatchInfo doSnatchInfo);
     //支付
     ServiceResponse<String> pay(PlaceOrderInfo placeOrderInfo);
+    void updateAuth(String phone);
 }

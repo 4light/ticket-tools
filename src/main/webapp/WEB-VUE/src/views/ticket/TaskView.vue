@@ -81,8 +81,8 @@
         class="currentTable"
         v-loading="loading"
       >
-<!--              :row-class-name="tableCellStyle"
-  -->
+        <!--              :row-class-name="tableCellStyle"
+          -->
         <el-table-column
           prop="taskId"
           label="任务Id"
@@ -299,9 +299,9 @@ export default {
   },
   data () {
     return {
-      downloadList:[],
-      showDownloadDialog:false,
-      loading:false,
+      downloadList: [],
+      showDownloadDialog: false,
+      loading: false,
       ynList: [
         {
           id: 0,
@@ -640,8 +640,8 @@ export default {
       this.taskInfo = {'userList': []}
       this.onSubmit()
     },
-    closeDownloadDialog(){
-      this.showDownloadDialog=false
+    closeDownloadDialog () {
+      this.showDownloadDialog = false
     },
     handleSelectionChange (val) {
       this.selectTicket = val
@@ -686,7 +686,7 @@ export default {
       }, 1500)
     },
     pay () {
-      this.loading=true
+      this.loading = true
       this.showPayPic = false
       this.payUrl = ''
       let payParam = {}
@@ -722,12 +722,12 @@ export default {
           })
           this.onSubmit()
         } else {
-          if (res.data!=null && res.data != '') {
+          if (res.data != null && res.data != '') {
             this.showPayDialog = true
             this.payUrl = res.data
             this.showPayDialog = true
             this.showPayPic = true
-            this.loading=false
+            this.loading = false
             this.qrcode(this.payUrl)
           } else {
             this.$notify.success({
@@ -735,14 +735,14 @@ export default {
               message: '免费票无需支付',
               duration: 2000
             })
-            this.loading=false
+            this.loading = false
           }
         }
-        this.loading=false
+        this.loading = false
       })
     },
     init () {
-      this.loading=true
+      this.loading = true
       if (this.selectTicket.length <= 0) {
         this.$alert('需勾选要重置的订单')
         return
@@ -774,10 +774,10 @@ export default {
           })
           this.onSubmit()
         }
-        this.loading=false
+        this.loading = false
       })
     },
-    getPath(taskId){
+    getPath (taskId) {
       get('/ticket/get/path',
         {
           taskId: taskId
@@ -790,30 +790,32 @@ export default {
             duration: 2000
           })
         } else {
-          this.downloadList=res.data
-          this.showDownloadDialog=true
+          this.downloadList = res.data
+          this.showDownloadDialog = true
         }
       })
     },
-    downFile(name){
-      axios.get('/ticket/scs/download',{
-        params:{
-          name: name,
-        },
-        headers:{
-          responseType:'arraybuffer',
-          Authorization:localStorage.getItem("authorization")
-        }
-      }).then(res => {
-        let url = window.URL.createObjectURL(new Blob([res.data],{type:'application/png'}));
-        let link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download',name)
-        document.body.append(link)
-        link.click();
-      }).catch((error) => {
-        console.error('下载文件时发生错误:', error);
-      });
+    async downFile (name) {
+      try {
+        let response =await axios({
+          url: `/api/download/${name}`,
+          method: 'GET',
+          headers:{
+            Authorization: localStorage.getItem('authorization'),
+            //responseType: 'blob',
+            Accept:'*/*'
+          }
+        });
+        const blob = new Blob([response.data])
+        const link = document.createElement('a')
+        link.href = window.URL.createObjectURL(blob)
+        link.download = name // Use the filename specified or set it dynamically
+        link.click()
+        window.URL.revokeObjectURL(link.href) // Clean up and remove the object URL
+      } catch (error) {
+        console.error('Error downloading the image:', error)
+      }
+
     },
     addDate (row) {
       let nowDate = row.updateDate
