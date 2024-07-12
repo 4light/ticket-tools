@@ -185,7 +185,7 @@ public class DoSnatchingSchedule {
         });*/
     }
 
-    @Scheduled(cron = "0/1 11-59 18 * * ?")
+    @Scheduled(cron = "0/5 11-59 18 * * ?")
     public void doSingleSnatch() {
         runNormalTask();
     }
@@ -195,7 +195,7 @@ public class DoSnatchingSchedule {
         runNormalTask();
     }
 
-    @Scheduled(cron = "0/1 * 0-6,19-23 * * ?")
+    @Scheduled(cron = "0/5 * 0-6,19-23 * * ?")
     public void doSingleSnatchOtherTime2() {
         runNormalTask();
     }
