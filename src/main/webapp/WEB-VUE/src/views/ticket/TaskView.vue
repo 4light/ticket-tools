@@ -797,7 +797,7 @@ export default {
     },
     async downFile (name) {
         axios({
-          url: `/ticket/scs/download//${name}`,
+          url: `/ticket/scs/download/${name}`,
           method: 'GET',
           responseType: 'blob',
           headers:{
