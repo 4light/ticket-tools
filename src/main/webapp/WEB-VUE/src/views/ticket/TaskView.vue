@@ -202,9 +202,9 @@
             <el-link
               type="danger" @click="init">重置
             </el-link>
-<!--            <el-link
+            <el-link
               type="primary" @click="getPath(scope.row.taskId)">获取截图
-            </el-link>-->
+            </el-link>
           </template>
         </el-table-column>
       </el-table>
@@ -244,7 +244,7 @@
         <p style="font-size: medium; font-weight: bolder;margin-bottom: 5px">{{ this.currentUserName }}</p>
       </div>
     </el-dialog>
-<!--    <el-dialog
+    <el-dialog
       :visible.sync="showDownloadDialog"
       style="height: 50em;overflow: unset"
       width="40%"
@@ -269,7 +269,7 @@
           </template>
         </el-table-column>
       </el-table>
-    </el-dialog>-->
+    </el-dialog>
     <audio
       ref="audio"
     >
@@ -796,26 +796,24 @@ export default {
       })
     },
     async downFile (name) {
-      try {
-        let response =await axios({
-          url: `/api/download/${name}`,
+        axios({
+          url: `/ticket/scs/download//${name}`,
           method: 'GET',
+          responseType: 'blob',
           headers:{
-            Authorization: localStorage.getItem('authorization'),
-            //responseType: 'blob',
-            Accept:'*/*'
+            Authorization: localStorage.getItem('authorization')
           }
+        }).then((response) => {
+          const url = window.URL.createObjectURL(new Blob([response.data]));
+          const link = document.createElement('a');
+          link.href = url;
+          link.setAttribute('download', name);
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }).catch((error) => {
+          console.error("There was an error downloading the image!", error);
         });
-        const blob = new Blob([response.data])
-        const link = document.createElement('a')
-        link.href = window.URL.createObjectURL(blob)
-        link.download = name // Use the filename specified or set it dynamically
-        link.click()
-        window.URL.revokeObjectURL(link.href) // Clean up and remove the object URL
-      } catch (error) {
-        console.error('Error downloading the image:', error)
-      }
-
     },
     addDate (row) {
       let nowDate = row.updateDate

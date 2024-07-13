@@ -71,7 +71,7 @@ public class DoSnatchingSchedule {
     /**
      * 执行放票当天的任务
      */
-    @Scheduled(cron = "0/10 0-10 18 * * ?")
+    @Scheduled(cron = "0/10 0-5 18 * * ?")
     public void doSnatching() {
         List<DoSnatchInfo> taskForRun = ticketServiceImpl.getTaskForRun();
         if (ObjectUtils.isEmpty(taskForRun)) {
@@ -92,6 +92,7 @@ public class DoSnatchingSchedule {
                 ))
                 .collect(Collectors.toList());
         CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+        allOf.thenRun(() -> log.info("放票日批次任务执行完成"));
         // 使用CompletableFuture.allOf等待所有抓票操作完成
         /*CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
         allOf.thenRun(() -> log.info("日期{}下批次任务执行完成: ", useDate));
@@ -123,7 +124,7 @@ public class DoSnatchingSchedule {
     /**
      * 去除放票当天的任务需要单个执行的任务
      */
-    @Scheduled(cron = "0/10 0-10 18 * * ?")
+    @Scheduled(cron = "0/5 0-10 18 * * ?")
     public void doSnatchingExcludeTarget() {
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
         if (ObjectUtils.isEmpty(allTaskForRun)) {
@@ -132,8 +133,8 @@ public class DoSnatchingSchedule {
         LocalDate localDate = LocalDate.now().plusDays(7L);
         Date date = DateUtils.localDateToDate(localDate);
         allTaskForRun = allTaskForRun.stream().filter(o -> !ObjectUtils.nullSafeEquals(date, o.getUseDate())).collect(Collectors.toList());
-        Map<Date, List<DoSnatchInfo>> mapByUseDate = allTaskForRun.stream()
-                .collect(Collectors.groupingBy(DoSnatchInfo::getUseDate));
+        Map<Long, List<DoSnatchInfo>> mapByUseDate = allTaskForRun.stream()
+                .collect(Collectors.groupingBy(DoSnatchInfo::getTaskId));
         ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
         pool.setThreadNamePrefix("CSTMNormalDataProcessor-");
         pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());//拒绝策略
@@ -147,7 +148,7 @@ public class DoSnatchingSchedule {
         // 对每个 useDate 异步检查并处理
         mapByUseDate.forEach((useDate, doSnatchInfos) -> {
             CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-                if (haveTicket(doSnatchInfos.get(0).getAuthorization(), useDate,doSnatchInfos.get(0).getCreator(),doSnatchInfos.get(0).getTaskId())) {
+                if (haveTicket(doSnatchInfos.get(0).getAuthorization(), doSnatchInfos.get(0).getUseDate(),doSnatchInfos.get(0).getCreator(),doSnatchInfos.get(0).getTaskId())) {
                     if (isTicketSnatched.compareAndSet(false, true)) {
                         ticketServiceImpl.snatchingTicket(doSnatchInfos.get(0));
                     }
@@ -182,7 +183,7 @@ public class DoSnatchingSchedule {
         });*/
     }
 
-    @Scheduled(cron = "0/3 11-59 18 * * ?")
+    @Scheduled(cron = "0/3 6-59 18 * * ?")
     public void doSingleSnatch() {
         runNormalTask();
     }
@@ -359,8 +360,8 @@ public class DoSnatchingSchedule {
                 ))
                 .collect(Collectors.toList());
         CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));*/
-        Map<Date, List<DoSnatchInfo>> mapByUseDate = allTaskForRun.stream()
-                .collect(Collectors.groupingBy(DoSnatchInfo::getUseDate));
+        Map<Long, List<DoSnatchInfo>> mapByUseDate = allTaskForRun.stream()
+                .collect(Collectors.groupingBy(DoSnatchInfo::getTaskId));
         ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
         pool.setThreadNamePrefix("CSTMNormalDataProcessor-");
         pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());//拒绝策略
@@ -374,7 +375,7 @@ public class DoSnatchingSchedule {
         // 对每个 useDate 异步检查并处理
         mapByUseDate.forEach((useDate, doSnatchInfos) -> {
             CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-                if (haveTicket(doSnatchInfos.get(0).getAuthorization(), useDate,doSnatchInfos.get(0).getCreator(),doSnatchInfos.get(0).getTaskId())) {
+                if (haveTicket(doSnatchInfos.get(0).getAuthorization(), doSnatchInfos.get(0).getUseDate(),doSnatchInfos.get(0).getCreator(),doSnatchInfos.get(0).getTaskId())) {
                     if (isTicketSnatched.compareAndSet(false, true)) {
                         ticketServiceImpl.snatchingTicket(doSnatchInfos.get(0));
                     }

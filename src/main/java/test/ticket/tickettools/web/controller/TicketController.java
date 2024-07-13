@@ -141,7 +141,7 @@ public class TicketController  extends BaseController{
 
     @GetMapping(value = "/get/path")
     public ServiceResponse getScreenShortPath(@RequestParam Long taskId){
-        File folder=new File("./");
+        File folder=new File("/root/screenShort/");
         File[] files = folder.listFiles();
         List<JSONObject> path=new ArrayList<>();
         for (File file : files) {
@@ -159,8 +159,11 @@ public class TicketController  extends BaseController{
     @GetMapping("/scs/download/{filename:.+}")
     @ResponseBody
     public ResponseEntity<org.springframework.core.io.Resource> download(@PathVariable String filename){
+        if(filename.startsWith(".")){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
         try {
-            Path file = Paths.get("./"+filename);;
+            Path file = Paths.get("/root/screenShort/"+filename);;
             org.springframework.core.io.Resource resource = new UrlResource(file.toUri());
 
             if (resource.exists() && resource.isReadable()) {

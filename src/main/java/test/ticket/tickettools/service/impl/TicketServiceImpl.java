@@ -166,7 +166,7 @@ public class TicketServiceImpl implements TicketService {
                 accountInfoEntity = account;
                 taskEntity.setUserInfoId(account.getId());
                 taskEntity.setAccount(phoneNo);
-                CompletableFuture.runAsync(() -> updateVerPhoneAuth(phoneNo));
+                //CompletableFuture.runAsync(() -> updateVerPhoneAuth(phoneNo));
             } else {
                 return ServiceResponse.createByErrorMessage("保存购票账号异常");
             }
