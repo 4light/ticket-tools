@@ -1121,20 +1121,45 @@ public class TicketServiceImpl implements TicketService {
 
     private JSONObject getCheckImag(DoSnatchInfo doSnatchInfo) {
         int retryCount = 0;
+        JSONObject response=new JSONObject();
         while (retryCount < 5) {
             try {
                 HttpEntity entity = new HttpEntity(getHeader(doSnatchInfo.getAuthorization()));
-                JSONObject response = TemplateUtil.getResponse(ObjectUtils.isEmpty(doSnatchInfo.getIp()) ? TemplateUtil.initSSLTemplate() : TemplateUtil.xieQuTemp(doSnatchInfo.getIp(), doSnatchInfo.getPort()), getCheckImagUrl, HttpMethod.GET, entity);
+                response = TemplateUtil.getResponse(ObjectUtils.isEmpty(doSnatchInfo.getIp()) ? TemplateUtil.initSSLTemplate() : TemplateUtil.xieQuTemp(doSnatchInfo.getIp(), doSnatchInfo.getPort()), getCheckImagUrl, HttpMethod.GET, entity);
                 if (!ObjectUtils.isEmpty(response) && response.getIntValue("code") == 200) {
-                    log.info("账号:{}获取到验证码成功", doSnatchInfo.getAccount());
+                    log.info("账号:{}获取到提单验证码成功", doSnatchInfo.getAccount());
                     return response;
                 }
-                log.info("账号:{}获取到验证码失败{}，重试中", doSnatchInfo.getAccount(), response);
+                log.info("账号:{}获取提单验证码失败{}，重试中", doSnatchInfo.getAccount(), response);
             } catch (Exception e) {
                 //e.printStackTrace();
-                log.info("账号:{}获取到验证码异常，涉及游客", String.join(",", doSnatchInfo.getIdNameMap().values()));
+                log.info("账号:{}获取提单验证码异常，涉及游客", String.join(",", doSnatchInfo.getIdNameMap().values()));
             }
             retryCount++;
+        }
+        if(!ObjectUtils.isEmpty(response)&& response.getIntValue("code") == 500 && response.getString("msg").contains("当前预约人数较多")){
+            log.info("获取提单验证码异常，更新购票账号");
+            String phoneNo = VirtualPhoneUtil.getPhoneNo();
+            AccountInfoEntity account = new AccountInfoEntity();
+            account.setUserName("三方号" + phoneNo);
+            account.setAccount(phoneNo);
+            account.setChannel(ChannelEnum.CSTM.getCode());
+            account.setCreator(doSnatchInfo.getCreator());
+            account.setYn(false);
+            account.setStatus(false);
+            account.setCreateDate(new Date());
+            Integer integer = accountInfoDao.insertOrUpdate(account);
+            if(integer>0) {
+                updateVerPhoneAuth(phoneNo);
+                TaskEntity taskEntity=new TaskEntity();
+                taskEntity.setId(doSnatchInfo.getTaskId());
+                taskEntity.setAccount(phoneNo);
+                taskEntity.setUserInfoId(account.getId());
+                Integer res = taskDao.updateTask(taskEntity);
+                log.info("getCheckImag更新任务结果：{}",res>0);
+            }else{
+                log.info("getCheckImag更新任务购票账号异常");
+            }
         }
         return null;
     }
