@@ -20,12 +20,12 @@ public class ScreenshotUtil {
     public static void takeScreenshot(String orderId,String auth,String fileName) {
         String url="https://pcticket.cstm.org.cn/personal/order_detail?orderId="+orderId;
         // 设置ChromeDriver的路径
-        //System.setProperty("webdriver.chrome.driver", "/Users/devin.zhang/Downloads/chromedriver-mac-x64/chromedriver");
-        System.setProperty("webdriver.chrome.driver", "/usr/local/bin/chromedriver-linux64/chromedriver");
+        System.setProperty("webdriver.chrome.driver", "/Users/devin.zhang/Downloads/chromedriver-mac-x64/chromedriver");
+        //System.setProperty("webdriver.chrome.driver", "/usr/local/bin/chromedriver-linux64/chromedriver");
 
         // 配置ChromeOptions
         ChromeOptions options = new ChromeOptions();
-        options.addArguments("--headless");
+        //options.addArguments("--headless");
         options.addArguments("--disable-gpu");
         options.addArguments("--no-sandbox");
         options.addArguments("--disable-dev-shm-usage");
@@ -52,7 +52,7 @@ public class ScreenshotUtil {
             e.printStackTrace();
         } finally {
             // 关闭浏览器
-           driver.quit();
+           //driver.quit();
         }
     }
 }

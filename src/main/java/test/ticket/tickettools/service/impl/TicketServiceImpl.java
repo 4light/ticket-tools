@@ -1121,7 +1121,7 @@ public class TicketServiceImpl implements TicketService {
 
     private JSONObject getCheckImag(DoSnatchInfo doSnatchInfo) {
         int retryCount = 0;
-        while (retryCount < 20) {
+        while (retryCount < 5) {
             try {
                 HttpEntity entity = new HttpEntity(getHeader(doSnatchInfo.getAuthorization()));
                 JSONObject response = TemplateUtil.getResponse(ObjectUtils.isEmpty(doSnatchInfo.getIp()) ? TemplateUtil.initSSLTemplate() : TemplateUtil.xieQuTemp(doSnatchInfo.getIp(), doSnatchInfo.getPort()), getCheckImagUrl, HttpMethod.GET, entity);

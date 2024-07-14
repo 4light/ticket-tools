@@ -424,9 +424,12 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
                 runTaskCache.remove(taskId);
                 return;
             }
-            JSONObject leagueInfo = getLeagueInfoJson.getJSONObject("data");
-            String idCard=leagueInfo.getString("idcard");
-            String linkmanName=leagueInfo.getString("linkmanName");
+            //调用checkin接口
+            headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
+            headers.remove("Content-Length");
+            HttpEntity checkInEntity = new HttpEntity<>(headers);
+            JSONObject checkInJson = TemplateUtil.getResponse(restTemplate, "https://lotswap.dpm.org.cn/lotsapi/merchant/api/merchantParkInfo/add_ticket/query?modelCodes=MP2022070117025856157%2CMP2022070419504838714%2CMP2022070117104622099%2CMP2022070419411024189&occDate=2024-07-17&merchantId=2655&merchantInfoId=2655", HttpMethod.GET, checkInEntity);
+            log.info("获取checkIn数据:{}", checkInJson);
             String accessToken = headerJson.getString("access-token");
             headers.set("Accept-Encoding", "gzip,compress,deflate");
             modelCodeTicketInfoMap.put("parkFsyyDetailDTO", currentParkFsyyDetail);
