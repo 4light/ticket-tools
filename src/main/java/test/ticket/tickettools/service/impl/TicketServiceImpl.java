@@ -741,8 +741,8 @@ public class TicketServiceImpl implements TicketService {
                 String imageUuid = UUID.randomUUID().toString();
                 String sliderImageName = "." + File.separator + imageUuid + "_" + "slider.png";
                 String backImageName = "." + File.separator + imageUuid + "_" + "back.png";
-                ImageUtils.imagCreate(jigsawImageBase64, sliderImageName, 155, 50);
-                ImageUtils.imagCreate(originalImageBase64, backImageName, 155, 330);
+                ImageUtils.imagCreate(jigsawImageBase64, sliderImageName, 155, 47);
+                ImageUtils.imagCreate(originalImageBase64, backImageName, 155, 310);
                 //图片验证码处理
                 Double x = getPoint(sliderImageName, backImageName, imageUuid);
                 JSONObject param = new JSONObject();
