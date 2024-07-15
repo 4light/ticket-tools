@@ -574,9 +574,6 @@ public class TicketServiceImpl implements TicketService {
         List<ProxyInfo> xieQuProxy = ProxyUtil.getXieQuProxy(allUnDoneTasks.size());
         for (int i = 0; i < allUnDoneTasks.size(); i++) {
             TaskEntity entity = allUnDoneTasks.get(i);
-            if(entity.getId()!=219){
-                continue;
-            }
             ProxyInfo proxyInfo = ObjectUtils.isEmpty(xieQuProxy) ? null : xieQuProxy.get(i);
             Long userInfoId = entity.getUserInfoId();
             AccountInfoEntity accountInfoEntity = accountInfoDao.selectById(userInfoId);
