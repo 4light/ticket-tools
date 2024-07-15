@@ -959,7 +959,6 @@ public class TicketServiceImpl implements TicketService {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println( maxLoc.x());
         int real = maxLoc.x() * 330 / 310;
         //log.info("real:{}", real);
         return real * 310 / 330.0;
