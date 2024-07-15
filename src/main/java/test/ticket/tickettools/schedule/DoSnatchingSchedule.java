@@ -71,7 +71,7 @@ public class DoSnatchingSchedule {
     /**
      * 执行放票当天的任务
      */
-    @Scheduled(cron = "0/10 0-5 18 * * ?")
+    @Scheduled(cron = "0/3 0-5 18 * * ?")
     public void doSnatching() {
         List<DoSnatchInfo> taskForRun = ticketServiceImpl.getTaskForRun();
         if (ObjectUtils.isEmpty(taskForRun)) {
@@ -124,7 +124,7 @@ public class DoSnatchingSchedule {
     /**
      * 去除放票当天的任务需要单个执行的任务
      */
-    @Scheduled(cron = "0/5 0-10 18 * * ?")
+    @Scheduled(cron = "0/3 0-5 18 * * ?")
     public void doSnatchingExcludeTarget() {
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
         if (ObjectUtils.isEmpty(allTaskForRun)) {
@@ -183,17 +183,17 @@ public class DoSnatchingSchedule {
         });*/
     }
 
-    @Scheduled(cron = "0/2 6-59 18 * * ?")
+    @Scheduled(cron = "* 6-59 18 * * ?")
     public void doSingleSnatch() {
         runNormalTask();
     }
 
-    @Scheduled(cron = "0/2 * 7-17 * * ?")
+    @Scheduled(cron = "* * 7-17 * * ?")
     public void doSingleSnatchOtherTime() {
         runNormalTask();
     }
 
-    @Scheduled(cron = "0/2 * 0-6,19-23 * * ?")
+    @Scheduled(cron = "* * 0-6,19-23 * * ?")
     public void doSingleSnatchOtherTime2() {
         runNormalTask();
     }

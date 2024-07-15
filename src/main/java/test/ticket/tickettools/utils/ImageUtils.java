@@ -137,7 +137,7 @@ public class ImageUtils {
         BufferedImage mergedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = mergedImage.createGraphics();
         g2d.drawImage(img1, 0, 0, null);
-        g2d.drawImage(img2, 0, img1.getHeight(), null);
+        g2d.drawImage(img2, img1.getWidth(), img1.getHeight(), null);
         g2d.dispose();
         return mergedImage;
     }
