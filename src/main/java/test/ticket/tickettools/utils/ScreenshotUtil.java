@@ -52,7 +52,7 @@ public class ScreenshotUtil {
             e.printStackTrace();
         } finally {
             // 关闭浏览器
-           //driver.quit();
+           driver.quit();
         }
     }
 }

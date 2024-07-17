@@ -323,7 +323,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
             headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
             HttpEntity getTicketEntity = new HttpEntity<>(headers);
             String formatGetTicketGridUrl = String.format(getTicketGridUrl, formatUseDate, formatUseDate);
-            //Thread.sleep(RandomUtil.randomInt(3000, 3500));
+            Thread.sleep(RandomUtil.randomInt(3000, 3500));
             JSONObject ticketGridJson = TemplateUtil.getResponse(restTemplate, formatGetTicketGridUrl, HttpMethod.GET, getTicketEntity);
             if (ObjectUtils.isEmpty(ticketGridJson)) {
                 runTaskCache.remove(taskId);
@@ -398,7 +398,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
             JSONObject checkUserBody = buildCheckUserParam(idNameTreeMap, formatDate, typeTicketMap);
             log.info("校验身份信息入参：{}", JSON.toJSONString(checkUserBody));
             HttpEntity checkUserEntity = new HttpEntity<>(checkUserBody, headers);
-            //Thread.sleep(RandomUtil.randomInt(4000, 5000));
+            Thread.sleep(RandomUtil.randomInt(4000, 5000));
             JSONObject checkUserBodyJson = TemplateUtil.getResponse(restTemplate, checkUserUrl, HttpMethod.POST, checkUserEntity);
             JSONObject checkUserData = checkUserBodyJson.getJSONObject("data");
             log.info("身份验证信息:{}", checkUserData);
@@ -436,20 +436,27 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
             String accessToken = headerJson.getString("access-token");
             headers.set("Accept-Encoding", "gzip,compress,deflate");
             modelCodeTicketInfoMap.put("parkFsyyDetailDTO", currentParkFsyyDetail);
-            long timestamp = System.currentTimeMillis();
-            String ts = String.valueOf(timestamp).substring(0, 11);
-            headers.set("ts", String.valueOf(timestamp / 1000));
-            String signStr = "VDsdxfwljhy#@!94857access-token=" + accessToken + ts + "AAXY";
-            String sign = DigestUtils.md5Hex(signStr);
+            JSONObject createRes=new JSONObject();
             JSONObject jsonObject = buildCreateParam(mpOpenId, checkUserBody, doSnatchInfo, modelCodeTicketInfoMap,idNameTreeMap);
-            headers.setContentLength(Integer.valueOf(JSON.toJSONString(jsonObject).getBytes(StandardCharsets.UTF_8).length));
-            HttpEntity addTicketQueryEntity = new HttpEntity<>(jsonObject, headers);
-            String formatCreateUrl = String.format(createUrl, sign, timestamp);
-            log.info("header:{}", headers);
-            //Thread.sleep(RandomUtil.randomInt(3000, 5000));
-            log.info("提交订单入参：{}", JSON.toJSONString(jsonObject));
-            JSONObject createRes = TemplateUtil.getResponse(restTemplate, formatCreateUrl, HttpMethod.POST, addTicketQueryEntity);
-            log.info("请求结果{}", createRes);
+            for (int i = 0; i < 5; i++) {
+                Thread.sleep(RandomUtil.randomInt(1000, 3000));
+                long timestamp = System.currentTimeMillis();
+                String ts = String.valueOf(timestamp).substring(0, 11);
+                headers.set("ts", String.valueOf(timestamp / 1000));
+                String signStr = "VDsdxfwljhy#@!94857access-token=" + accessToken + ts + "AAXY";
+                String sign = DigestUtils.md5Hex(signStr);
+                headers.setContentLength(Integer.valueOf(JSON.toJSONString(jsonObject).getBytes(StandardCharsets.UTF_8).length));
+                HttpEntity addTicketQueryEntity = new HttpEntity<>(jsonObject, headers);
+                String formatCreateUrl = String.format(createUrl, sign, timestamp);
+                log.info("header:{}", headers);
+                log.info("提交订单入参：{}", JSON.toJSONString(jsonObject));
+                createRes = TemplateUtil.getResponse(restTemplate, formatCreateUrl, HttpMethod.POST, addTicketQueryEntity);
+                log.info("请求结果{}", createRes);
+            }
+            if(ObjectUtils.isEmpty(createRes)){
+                runTaskCache.remove(taskId);
+                return;
+            }
             if (createRes.getIntValue("code") == 200) {
                 String orderCode = createRes.getJSONObject("data").getString("orderCode");
                 Integer paySum = createRes.getJSONObject("data").getDouble("paySum").intValue();
@@ -473,7 +480,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
                     headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
                     HttpEntity toPayEntity = new HttpEntity(headerJson);
                     JSONObject toPayRes = TemplateUtil.getResponse(restTemplate, toPayUrlFormat, HttpMethod.GET, toPayEntity);
-                    log.info("去支付返回结果:{}",toPayUrl);
+                    log.info("去支付返回结果:{}",toPayRes);
                 }
                 TaskEntity taskEntity = new TaskEntity();
                 taskEntity.setId(doSnatchInfo.getTaskId());

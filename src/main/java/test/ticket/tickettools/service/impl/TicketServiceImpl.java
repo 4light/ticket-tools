@@ -182,6 +182,10 @@ public class TicketServiceImpl implements TicketService {
             taskEntity.setPwd(accountInfoEntity.getPwd());
         }
         if (ObjectUtils.isEmpty(taskInfo.getId())) {
+            List<String> checkRes = checkUserRepeat(taskInfo.getUseDate(), taskInfo.getUserList());
+            if(!ObjectUtils.isEmpty(checkRes)){
+                return ServiceResponse.createByErrorMessage("以下用户已存在抢票任务:"+String.join(",",checkRes));
+            }
             taskEntity.setCreateDate(new Date());
             taskEntity.setAuth(taskInfo.getAuth());
             taskEntity.setUserInfoId(accountInfoEntity.getId());
@@ -190,7 +194,7 @@ public class TicketServiceImpl implements TicketService {
             if (insert > 0) {
                 List<TaskDetailEntity> userList = taskInfo.getUserList();
                 if (ObjectUtils.isEmpty(userList)) {
-                    return ServiceResponse.createBySuccessMessgge("详情数据为空");
+                    return ServiceResponse.createByErrorMessage("详情数据不能为空");
                 }
                 TaskEntity query = new TaskEntity();
                 query.setId(taskEntity.getId());
@@ -221,26 +225,30 @@ public class TicketServiceImpl implements TicketService {
             taskEntity.setPwd(accountInfoEntity.getPwd());
             taskEntity.setUserInfoId(accountInfoEntity.getId());
             Integer insert = taskDao.updateTask(taskEntity);
-            redisService.setData(RedisKeyEnum.TASK.getCode() + taskEntity.getId(), JSON.toJSONString(taskEntity));
+            //redisService.setData(RedisKeyEnum.TASK.getCode() + taskEntity.getId(), JSON.toJSONString(taskEntity));
             if (insert > 0) {
                 List<TaskDetailEntity> all = taskDetailDao.selectByTaskId(taskEntity.getId());
                 List<TaskDetailEntity> userList = taskInfo.getUserList();
                 List<TaskDetailEntity> addList = userList.stream().filter(o -> o.getId() == null).collect(Collectors.toList());
+                List<String> checkRes = checkUserRepeat(taskInfo.getUseDate(),addList);
+                if(!ObjectUtils.isEmpty(checkRes)){
+                    return ServiceResponse.createByErrorMessage("以下用户已存在抢票任务:"+String.join(",",checkRes));
+                }
                 List<TaskDetailEntity> updateList = userList.stream().filter(o -> o.getId() != null).collect(Collectors.toList());
                 List<TaskDetailEntity> deleteList = new ArrayList<>();
                 List<Long> taskDetailIds = updateList.stream().map(TaskDetailEntity::getId).collect(Collectors.toList());
                 if (updateList.size() != all.size()) {
                     List<String> taskDetailIdList = new ArrayList<>();
                     all.forEach(allEntity -> {
-                        redisService.setData(RedisKeyEnum.TASKDETAIL.getCode() + allEntity.getId(), JSON.toJSONString(allEntity));
+                        //redisService.setData(RedisKeyEnum.TASKDETAIL.getCode() + allEntity.getId(), JSON.toJSONString(allEntity));
                         taskDetailIdList.add(String.valueOf(allEntity.getId()));
                         if (!taskDetailIds.contains(allEntity.getId())) {
                             deleteList.add(allEntity);
-                            redisService.deleteKey(RedisKeyEnum.TASKDETAIL.getCode() + allEntity.getId());
-                            redisService.setData(RedisKeyEnum.RELATION.getCode() + taskEntity.getId(), String.valueOf(allEntity.getId()));
+                            //redisService.deleteKey(RedisKeyEnum.TASKDETAIL.getCode() + allEntity.getId());
+                            //redisService.setData(RedisKeyEnum.RELATION.getCode() + taskEntity.getId(), String.valueOf(allEntity.getId()));
                         }
                     });
-                    redisService.saveList(RedisKeyEnum.RELATION.getCode() + taskEntity.getId(), taskDetailIdList);
+                    //redisService.saveList(RedisKeyEnum.RELATION.getCode() + taskEntity.getId(), taskDetailIdList);
                     if (deleteList.size() > 0) {
                         taskDetailDao.deleteTaskDetailBath(deleteList);
                     }
@@ -252,18 +260,19 @@ public class TicketServiceImpl implements TicketService {
                         o.setTaskId(taskEntity.getId());
                     });
                     taskDetailDao.insertBatch(addList);
+
                     List<String> list = redisService.getList(RedisKeyEnum.RELATION.getCode() + taskEntity.getId());
                     addList.forEach(o -> {
                         list.add(String.valueOf(o.getId()));
-                        redisService.setData(RedisKeyEnum.TASKDETAIL.getCode() + o.getId(), JSON.toJSONString(o));
+                        //redisService.setData(RedisKeyEnum.TASKDETAIL.getCode() + o.getId(), JSON.toJSONString(o));
                     });
-                    redisService.saveList(RedisKeyEnum.RELATION.getCode() + taskEntity.getId(), list);
+                    //redisService.saveList(RedisKeyEnum.RELATION.getCode() + taskEntity.getId(), list);
                 }
                 if (!ObjectUtils.isEmpty(updateList)) {
                     taskDetailDao.updateTaskDetailBath(updateList);
-                    updateList.forEach(o -> {
+                    /*updateList.forEach(o -> {
                         redisService.setData(RedisKeyEnum.TASKDETAIL.getCode() + o.getId(), JSON.toJSONString(o));
-                    });
+                    });*/
                 }
                 return ServiceResponse.createBySuccess();
             }
@@ -662,7 +671,7 @@ public class TicketServiceImpl implements TicketService {
     @Override
     public void snatchingTicket(DoSnatchInfo doSnatchInfo) {
         Map<String, String> nameIDMap = doSnatchInfo.getIdNameMap();
-        RestTemplate restTemplate = TemplateUtil.xieQuTemp(doSnatchInfo.getIp(),doSnatchInfo.getPort());
+        RestTemplate restTemplate = TemplateUtil.xieQuTunnelTemp();
         //RestTemplate restTemplate = TemplateUtil.initSSLTemplateWithProxyTunnelAuth();
         try {
             HttpHeaders headers = getHeader(doSnatchInfo.getAuthorization());
@@ -1126,7 +1135,7 @@ public class TicketServiceImpl implements TicketService {
         while (retryCount < 3) {
             try {
                 HttpEntity entity = new HttpEntity(getHeader(doSnatchInfo.getAuthorization()));
-                response = TemplateUtil.getResponse(ObjectUtils.isEmpty(doSnatchInfo.getIp()) ? TemplateUtil.initSSLTemplate() : TemplateUtil.xieQuTemp(doSnatchInfo.getIp(), doSnatchInfo.getPort()), getCheckImagUrl, HttpMethod.GET, entity);
+                response = TemplateUtil.getResponse(TemplateUtil.xieQuTunnelTemp(), getCheckImagUrl, HttpMethod.GET, entity);
                 //response = TemplateUtil.getResponse(TemplateUtil.initSSLTemplateWithProxyTunnelAuth(), getCheckImagUrl, HttpMethod.GET, entity);
                 if (!ObjectUtils.isEmpty(response) && response.getIntValue("code") == 200) {
                     log.info("账号:{}获取到提单验证码成功", doSnatchInfo.getAccount());
@@ -1155,6 +1164,33 @@ public class TicketServiceImpl implements TicketService {
             retryCount++;
         }
         return null;
+    }
+
+    /**
+     * 检查同一天内用户是否重复
+     * @param date
+     * @param taskDetailEntities
+     * @return
+     */
+    private List<String> checkUserRepeat(Date date,List<TaskDetailEntity> taskDetailEntities){
+        TaskEntity taskEntity=new TaskEntity();
+        taskEntity.setYn(false);
+        taskEntity.setUseDate(date);
+        taskEntity.setChannel(ChannelEnum.CSTM.getCode());
+        List<TaskEntity> taskEntityList = taskDao.fuzzyQuery(taskEntity);
+        List<String> ids=new ArrayList<>();
+        taskEntityList.forEach(entity->{
+            List<TaskDetailEntity> taskDetailEntityList = taskDetailDao.selectByTaskId(entity.getId());
+            List<String> collect = taskDetailEntityList.stream().map(TaskDetailEntity::getIDCard).collect(Collectors.toList());
+            ids.addAll(collect);
+        });
+        List<String> res=new ArrayList<>();
+        for (TaskDetailEntity taskDetailEntity : taskDetailEntities) {
+            if(ids.contains(taskDetailEntity.getIDCard())){
+                res.add(taskDetailEntity.getUserName());
+            }
+        }
+        return res;
     }
 
     private void updateVerPhoneAuth(String phoneNum) {

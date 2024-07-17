@@ -136,6 +136,24 @@ public class TemplateUtil {
         return restTemplate;
     }
 
+    public static RestTemplate xieQuTunnelTemp(){
+        CredentialsProvider credsProvider = new BasicCredentialsProvider();
+        HttpHost proxy = new HttpHost("1435815039.sd.proxy.xiequ.cn", 3828);
+        HttpClientBuilder clientBuilder = HttpClientBuilder.create();
+        clientBuilder.useSystemProperties();
+        clientBuilder.setProxy(proxy);
+        clientBuilder.setDefaultCredentialsProvider(credsProvider);
+        clientBuilder.setProxyAuthenticationStrategy(new ProxyAuthenticationStrategy());
+
+        CloseableHttpClient client = clientBuilder.build();
+        HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
+        factory.setHttpClient(client);
+
+        RestTemplate restTemplate = new RestTemplate();
+        restTemplate.setRequestFactory(factory);
+        return restTemplate;
+    }
+
     public static RestTemplate initSSLTemplateWithProxyTunnelAuth() {
         // 配置代理服务器地址和端口
         HttpHost proxy = new HttpHost("overseas.tunnel.qg.net", 16150);

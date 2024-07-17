@@ -95,7 +95,7 @@
         </el-table-column>
         <el-table-column
           prop="channel"
-          label="渠道"
+          label="平台"
           :width="80"
         >
           <template slot-scope="{ row }">
@@ -124,7 +124,7 @@
         </el-table-column>
         <el-table-column
           :width="50"
-          label="状态">
+          label="任务状态">
           <template slot-scope="scope">
             <div>
               <span v-if="scope.row.taskDetailYn==false" style="color: #7bc749">正常</span>
