@@ -101,7 +101,10 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
         taskEntity.setChannel(ChannelEnum.CHNMU.getCode());
         List<TaskEntity> unDoneTasks = taskDao.getUnDoneTasks(taskEntity);
         List<DoSnatchInfo> doSnatchInfoList = new ArrayList<>();
-        for (TaskEntity unDoneTask : unDoneTasks) {
+        List<ProxyInfo> xieQuProxy = ProxyUtil.getXieQuProxy(unDoneTasks.size());
+        for (int i = 0; i < unDoneTasks.size(); i++) {
+            TaskEntity unDoneTask=unDoneTasks.get(i);
+            ProxyInfo proxyInfo = xieQuProxy.get(i);
             TaskDetailEntity taskDetailEntity = new TaskDetailEntity();
             taskDetailEntity.setTaskId(unDoneTask.getId());
             taskDetailEntity.setDone(false);
@@ -122,8 +125,8 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
             doSnatchInfo.setChannelUserId(accountInfoEntity.getChannelUserId());
             doSnatchInfo.setUseDate(unDoneTask.getUseDate());
             doSnatchInfo.setSession(unDoneTask.getSession());
-            doSnatchInfo.setIp(unDoneTask.getIp());
-            doSnatchInfo.setPort(unDoneTask.getPort());
+            doSnatchInfo.setIp(proxyInfo.getIp());
+            doSnatchInfo.setPort(proxyInfo.getPort());
             List<Long> taskDetailIds = new ArrayList<>();
             Map<String, String> idNameMap = new HashMap<>();
             for (TaskDetailEntity detailEntity : taskDetailEntities) {
@@ -149,7 +152,7 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
         int hallScheduleId = 1;
         int priceId = 8;
         try {
-            Thread.sleep(RandomUtil.randomInt(5000, 7000));
+            //Thread.sleep(RandomUtil.randomInt(5000, 7000));
             boolean hasTicket = false;
             String getPriceByScheduleIdUrl = "https://wxmini.chnmuseum.cn/prod-api/pool/ingore/getPriceByScheduleId?hallId=%s&openPerson=1&queryDate=%s&saleMode=1&scheduleId=%s&p=wxmini";
             String getBlockUrl = "https://wxmini.chnmuseum.cn/prod-api/pool/getBlock?nonce=%s&platform=2&docType=1&p=wxmini";
@@ -158,7 +161,7 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
             Map<String, String> idNameMap = doSnatchInfo.getIdNameMap();
             String session = doSnatchInfo.getSession();
             //获取所有信息
-            RestTemplate restTemplate = ObjectUtils.isEmpty(doSnatchInfo.getIp()) ? TemplateUtil.initSSLTemplate() : TemplateUtil.initSSLTemplateWithProxyAuth(doSnatchInfo.getIp(), doSnatchInfo.getPort());
+            RestTemplate restTemplate = ObjectUtils.isEmpty(doSnatchInfo.getIp()) ? TemplateUtil.initSSLTemplate() : TemplateUtil.xieQuTemp(doSnatchInfo.getIp(), doSnatchInfo.getPort());
             HttpHeaders headers = new HttpHeaders();
             String headerStr = doSnatchInfo.getHeaders();
             JSONObject headerJson = JSON.parseObject(headerStr);
@@ -316,6 +319,7 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
             log.info("国博抢票任务出错:{}", e);
             runTaskCache.remove(taskId);
         }
+        runTaskCache.remove(taskId);
     }
 
     private JSONObject getCheckLeaderInfoParam(Map<String, String> idNameMap, String useDate, Integer hallId, Integer hallScheduleId, Integer ticketPriceId) {
@@ -366,7 +370,7 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
         httpHeaders.set("Referer", "https://servicewechat.com/wx9e2927dd595b0473/73/page-frame.html");
         httpHeaders.set("Accept-Encoding", "gzip, deflate, br");
         httpHeaders.set("Accept-Language", "zh-CN,zh;q=0.9");
-        RestTemplate restTemplate = TemplateUtil.initSSLTemplateWithProxyAuth(ip,port);
+        RestTemplate restTemplate = TemplateUtil.xieQuTemp(ip,port);
         HttpEntity httpEntity = new HttpEntity(httpHeaders);
         ResponseEntity getCheckTimeRes = restTemplate.exchange("http://vv.video.qq.com/checktime?otype=json", HttpMethod.GET, httpEntity, String.class);
         return getCheckTimeRes.getBody().toString();

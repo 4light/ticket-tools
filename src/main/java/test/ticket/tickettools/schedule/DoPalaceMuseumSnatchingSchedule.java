@@ -40,7 +40,7 @@ public class DoPalaceMuseumSnatchingSchedule {
     @Resource
     TaskDao taskDao;
 
-    @Scheduled(cron = "0/1 58 19 * * ?")
+    //@Scheduled(cron = "0/1 58 19 * * ?")
     public void initData() {
         List<TaskEntity> allUndoneTask = palaceMuseumTicketServiceImpl.getAllUndoneTask();
         if (ObjectUtils.isEmpty(allUndoneTask)) {
@@ -60,7 +60,7 @@ public class DoPalaceMuseumSnatchingSchedule {
     }
 
 
-    @Scheduled(cron = "0/1 01-29 20 * * ?")
+    @Scheduled(cron = "* 01-49 20 * * ?")
     public void doPalaceMuseumTicketSnatch() {
         List<DoSnatchInfo> doSnatchInfos = palaceMuseumTicketServiceImpl.getDoSnatchInfos();
         if (ObjectUtils.isEmpty(doSnatchInfos)) {
@@ -78,7 +78,7 @@ public class DoPalaceMuseumSnatchingSchedule {
             CompletableFuture.runAsync(() -> palaceMuseumTicketServiceImpl.doSnatchingTicket(doSnatchInfo), pool);
         }
     }
-    @Scheduled(cron = "* 0/5 20-21 * * ?")
+    //@Scheduled(cron = "* 0/5 20-21 * * ?")
     public void updateTaskProxy() {
         List<TaskEntity> allUndoneTask = palaceMuseumTicketServiceImpl.getAllUndoneTask();
         LocalTime now = LocalTime.now();

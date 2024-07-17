@@ -71,7 +71,7 @@ public class DoSnatchingSchedule {
     /**
      * 执行放票当天的任务
      */
-    @Scheduled(cron = "0/3 0-5 18 * * ?")
+    @Scheduled(cron = "* 0-5 18 * * ?")
     public void doSnatching() {
         List<DoSnatchInfo> taskForRun = ticketServiceImpl.getTaskForRun();
         if (ObjectUtils.isEmpty(taskForRun)) {
@@ -124,7 +124,7 @@ public class DoSnatchingSchedule {
     /**
      * 去除放票当天的任务需要单个执行的任务
      */
-    @Scheduled(cron = "0/3 0-5 18 * * ?")
+    @Scheduled(cron = "* 0-5 18 * * ?")
     public void doSnatchingExcludeTarget() {
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
         if (ObjectUtils.isEmpty(allTaskForRun)) {
@@ -148,7 +148,7 @@ public class DoSnatchingSchedule {
         // 对每个 useDate 异步检查并处理
         mapByUseDate.forEach((useDate, doSnatchInfos) -> {
             CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-                if (haveTicket(doSnatchInfos.get(0).getAuthorization(), doSnatchInfos.get(0).getUseDate(),doSnatchInfos.get(0).getCreator(),doSnatchInfos.get(0).getTaskId())) {
+                if (haveTicket(doSnatchInfos.get(0))) {
                     if (isTicketSnatched.compareAndSet(false, true)) {
                         ticketServiceImpl.snatchingTicket(doSnatchInfos.get(0));
                     }
@@ -375,7 +375,7 @@ public class DoSnatchingSchedule {
         // 对每个 useDate 异步检查并处理
         mapByUseDate.forEach((useDate, doSnatchInfos) -> {
             CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-                if (haveTicket(doSnatchInfos.get(0).getAuthorization(), doSnatchInfos.get(0).getUseDate(),doSnatchInfos.get(0).getCreator(),doSnatchInfos.get(0).getTaskId())) {
+                if (haveTicket(doSnatchInfos.get(0))) {
                     if (isTicketSnatched.compareAndSet(false, true)) {
                         ticketServiceImpl.snatchingTicket(doSnatchInfos.get(0));
                     }
@@ -399,12 +399,12 @@ public class DoSnatchingSchedule {
         });*/
     }
 
-    private Boolean haveTicket(String auth, Date date,String creator,Long taskId) {
+    private Boolean haveTicket(DoSnatchInfo doSnatchInfo) {
         try {
             String url = "https://pcticket.cstm.org.cn/prod-api/pool/getScheduleByHallId?hallId=1&openPerson=1&queryDate=%s&saleMode=1&single=true";
-            String format = String.format(url, DateUtils.dateToStr(date, "yyyy/MM/dd"));
+            String format = String.format(url, DateUtils.dateToStr(doSnatchInfo.getUseDate(), "yyyy/MM/dd"));
             HttpResponse response = HttpUtil.createGet(format)
-                    .header("Authorization", auth)
+                    .header("Authorization", doSnatchInfo.getAuthorization())
                     .header("Connection", "keep-alive")
                     .header("Referer", "https://pcticket.cstm.org.cn/")
                     .header("Accept", "application/json")
@@ -412,18 +412,29 @@ public class DoSnatchingSchedule {
                     .timeout(2000)
                     .execute();
             String body = response.body();
+            /*HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("authority", "pcticket.cstm.org.cn");
+            headers.set("accept", "application/json");
+            headers.set("Accept-Encoding", "gzip, deflate, br, zstd");
+            headers.set("authorization", doSnatchInfo.getAuthorization());
+            headers.set("cookie", "SL_G_WPT_TO=zh; SL_GWPT_Show_Hide_tmp=1; SL_wptGlobTipTmp=1");
+            headers.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
+            HttpEntity entity=new HttpEntity(headers);
+            ResponseEntity<JSONObject> exchange = TemplateUtil.xieQuTemp(doSnatchInfo.getIp(), doSnatchInfo.getPort()).exchange(format, HttpMethod.GET, entity, JSONObject.class);
+            */
             if (ObjectUtils.isEmpty(body)) {
                 return false;
             }
             JSONObject responseJson = JSON.parseObject(body);
             if(!ObjectUtils.isEmpty(responseJson)&&responseJson.getIntValue("code")==401&&responseJson.getString("msg").contains("认证失败")){
-                log.info("任务{}购票账号登录态异常:{}",taskId,responseJson);
+                log.info("任务{}购票账号登录态异常:{}",doSnatchInfo.getTaskId(),responseJson);
                 String phoneNo = VirtualPhoneUtil.getPhoneNo();
                 AccountInfoEntity account = new AccountInfoEntity();
                 account.setUserName("三方号" + phoneNo);
                 account.setAccount(phoneNo);
                 account.setChannel(ChannelEnum.CSTM.getCode());
-                account.setCreator(creator);
+                account.setCreator(doSnatchInfo.getCreator());
                 account.setYn(false);
                 account.setStatus(false);
                 account.setCreateDate(new Date());
@@ -431,7 +442,7 @@ public class DoSnatchingSchedule {
                 if(integer>0) {
                     ticketServiceImpl.updateAuth(phoneNo);
                     TaskEntity taskEntity=new TaskEntity();
-                    taskEntity.setId(taskId);
+                    taskEntity.setId(doSnatchInfo.getTaskId());
                     taskEntity.setAccount(phoneNo);
                     taskEntity.setUserInfoId(account.getId());
                     Integer res = taskDao.updateTask(taskEntity);
@@ -445,12 +456,11 @@ public class DoSnatchingSchedule {
             if (ObjectUtils.isEmpty(data)) {
                 return false;
             }
-            log.info("{}日期下余票{}", date, data.getJSONObject(0).getIntValue("ticketPool"));
+            log.info("{}日期下余票{}", doSnatchInfo.getUseDate(), data.getJSONObject(0).getIntValue("ticketPool"));
             return data.getJSONObject(0).getIntValue("ticketPool") > 0;
         } catch (Exception e) {
-
+            return false;
         }
-        return false;
     }
 
 }

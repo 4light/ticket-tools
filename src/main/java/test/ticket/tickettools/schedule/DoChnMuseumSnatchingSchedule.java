@@ -6,13 +6,16 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.ObjectUtils;
+import test.ticket.tickettools.dao.TaskDao;
 import test.ticket.tickettools.domain.bo.DoSnatchInfo;
 import test.ticket.tickettools.domain.bo.ProxyInfo;
+import test.ticket.tickettools.domain.entity.TaskEntity;
 import test.ticket.tickettools.service.DoSnatchTicketService;
 import test.ticket.tickettools.utils.ProxyUtil;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -24,8 +27,10 @@ import java.util.concurrent.ThreadPoolExecutor;
 public class DoChnMuseumSnatchingSchedule {
     @Resource
     DoSnatchTicketService chnMuseumTicketServiceImpl;
+    @Resource
+    TaskDao taskDao;
 
-    @Scheduled(cron = "0 0/4 16-17 * * ?")
+    //@Scheduled(cron = "* 0/4 16-17 * * ?")
     public void initData() {
         LocalDateTime localDateTime=LocalDateTime.now();
         if(localDateTime.getHour()>17&&localDateTime.getMinute()>30){
@@ -41,7 +46,7 @@ public class DoChnMuseumSnatchingSchedule {
             return;
         }
         int size = doSnatchInfos.size();
-        List<ProxyInfo> proxyList = ProxyUtil.getProxyList(size);
+        List<ProxyInfo> proxyList = ProxyUtil.getXieQuProxy(size);
         List<DoSnatchInfo> newDoSnatchInfos=new ArrayList<>();
         for (int i = 0; i < doSnatchInfos.size(); i++) {
             DoSnatchInfo doSnatchInfo = doSnatchInfos.get(i);
