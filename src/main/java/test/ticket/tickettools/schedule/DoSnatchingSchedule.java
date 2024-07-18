@@ -370,15 +370,12 @@ public class DoSnatchingSchedule {
         pool.setCorePoolSize(size);
         pool.setQueueCapacity(size);
         pool.initialize();
-        AtomicBoolean isTicketSnatched = new AtomicBoolean(false);
         List<CompletableFuture<Void>> futures = new ArrayList<>();
         // 对每个 useDate 异步检查并处理
         mapByUseDate.forEach((useDate, doSnatchInfos) -> {
             CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
                 if (haveTicket(doSnatchInfos.get(0))) {
-                    if (isTicketSnatched.compareAndSet(false, true)) {
-                        ticketServiceImpl.snatchingTicket(doSnatchInfos.get(0));
-                    }
+                    ticketServiceImpl.snatchingTicket(doSnatchInfos.get(0));
                 }
             }, pool);
             futures.add(future);

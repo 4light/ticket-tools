@@ -743,6 +743,7 @@ public class TicketServiceImpl implements TicketService {
             }*/
             JSONObject getCheckImageJson = getCheckImag(doSnatchInfo);
             if (!ObjectUtils.isEmpty(getCheckImageJson) && getCheckImageJson.getIntValue("code") == 200) {
+                long l = System.currentTimeMillis();
                 JSONObject data = getCheckImageJson.getJSONObject("data");
                 String jigsawImageBase64 = data == null ? null : data.getString("jigsawImageBase64");
                 String originalImageBase64 = data == null ? null : data.getString("originalImageBase64");
@@ -759,6 +760,7 @@ public class TicketServiceImpl implements TicketService {
                 param.put("x", x);
                 param.put("y", 5);
                 String point = EncDecUtil.doAES(JSON.toJSONString(param), secretKey);
+                log.info("验证码处理完毕，处理时长:{}",System.currentTimeMillis()-l);
                 Integer childrenTicketNum = priceNameCountMap.get("childrenTicket");
                 HttpEntity shoppingCartUrlEntity = new HttpEntity<>(buildParam(token, childrenTicketNum == null ? 0 : childrenTicketNum, point, doSnatchInfo.getSession(), doSnatchInfo.getUseDate(), priceId, childrenPriceId, discountPriceId, olderPriceId, phone, nameIDMap), headers);
                 JSONObject bodyJson = TemplateUtil.getResponse(restTemplate, shoppingCartUrl, HttpMethod.POST, shoppingCartUrlEntity);
