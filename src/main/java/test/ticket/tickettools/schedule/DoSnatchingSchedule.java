@@ -71,7 +71,7 @@ public class DoSnatchingSchedule {
     /**
      * 执行放票当天的任务
      */
-    @Scheduled(cron = "* 0-3 18 * * ?")
+    //@Scheduled(cron = "* 0-3 18 * * ?")
     public void doSnatching() {
         List<DoSnatchInfo> taskForRun = ticketServiceImpl.getTaskForRun();
         if (ObjectUtils.isEmpty(taskForRun)) {
@@ -124,7 +124,7 @@ public class DoSnatchingSchedule {
     /**
      * 去除放票当天的任务需要单个执行的任务
      */
-    @Scheduled(cron = "* 0-3 18 * * ?")
+    @Scheduled(cron = "0/1 0-3 18 * * ?")
     public void doSnatchingExcludeTarget() {
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
         if (ObjectUtils.isEmpty(allTaskForRun)) {
@@ -183,22 +183,22 @@ public class DoSnatchingSchedule {
         });*/
     }
 
-    @Scheduled(cron = "* 4-59 18 * * ?")
+    @Scheduled(cron = "0/1 4-59 18 * * ?")
     public void doSingleSnatch() {
         runNormalTask();
     }
 
-    @Scheduled(cron = "* * 7-17 * * ?")
+    @Scheduled(cron = "0/1 * 7-17 * * ?")
     public void doSingleSnatchOtherTime() {
         runNormalTask();
     }
 
-    @Scheduled(cron = "* * 0-6,19-23 * * ?")
+    @Scheduled(cron = "0/1 * 0-6,19-23 * * ?")
     public void doSingleSnatchOtherTime2() {
         runNormalTask();
     }
 
-    @Scheduled(cron = "0/20 * * * * ?")
+    //@Scheduled(cron = "0/20 * * * * ?")
     public void updateOrderPayStatus() {
         try {
             RestTemplate restTemplate = TemplateUtil.initSSLTemplate();
