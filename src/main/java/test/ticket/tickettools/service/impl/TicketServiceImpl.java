@@ -48,7 +48,6 @@ import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -690,7 +689,7 @@ public class TicketServiceImpl implements TicketService {
     @Override
     public void snatchingTicket(DoSnatchInfo doSnatchInfo) {
         Map<String, String> nameIDMap = doSnatchInfo.getIdNameMap();
-        //RestTemplate restTemplate = ObjectUtils.isEmpty(doSnatchInfo.getIp())?TemplateUtil.initSSLTemplate():TemplateUtil.xieQuTemp(doSnatchInfo.getIp(),doSnatchInfo.getPort());
+        RestTemplate currentRestTemp=ObjectUtils.isEmpty(doSnatchInfo.getIp())?TemplateUtil.initSSLTemplate():TemplateUtil.xieQuTemp(doSnatchInfo.getIp(),doSnatchInfo.getPort());
         //RestTemplate restTemplate = TemplateUtil.initSSLTemplateWithProxyTunnelAuth();
         try {
             HttpHeaders headers = getHeader(doSnatchInfo.getAuthorization());
@@ -739,27 +738,6 @@ public class TicketServiceImpl implements TicketService {
                     }
                 }
             }
-            /*for (Map.Entry<String, String> entry : nameIDMap.entrySet()) {
-                HttpEntity addEntity = new HttpEntity<>(buildAddParam(entry.getKey(), entry.getValue(), userId), headers);
-                //restTemplate.exchange(addUrl, HttpMethod.POST, addEntity, String.class);
-                JSONObject response = TemplateUtil.getResponse(restTemplate, addUrl, HttpMethod.POST, addEntity);
-                if (ObjectUtils.isEmpty(response) || response.getIntValue("code") != 200) {
-                    List<Long> taskDetailIds = doSnatchInfo.getTaskDetailIds();
-                    for (Long taskDetailId : taskDetailIds) {
-                        TaskDetailEntity taskDetailEntity = new TaskDetailEntity();
-                        taskDetailEntity.setId(taskDetailId);
-                        taskDetailEntity.setUpdateDate(new Date());
-                        taskDetailEntity.setExt(ObjectUtils.isEmpty(response)?"添加用户异常":response.getString("msg"));
-                        taskDetailDao.updateTaskDetail(taskDetailEntity);
-                    }
-                    if (!msgCache.containsKey(doSnatchInfo.getTaskId())) {
-                        WebSocketServer.sendInfo(socketMsg("抢票异常", "账号:" + doSnatchInfo.getAccount() + response.getString("msg"), 0), doSnatchInfo.getCreator());
-                        SendMessageUtil.send(ChannelEnum.CSTM.getDesc(), DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"), "账号：", doSnatchInfo.getAccount(), response.getString("msg"));
-                    }
-                    msgCache.put(doSnatchInfo.getTaskId(), true);
-                    return;
-                }
-            }*/
             JSONObject getCheckImageJson = getCheckImag(doSnatchInfo);
             if (!ObjectUtils.isEmpty(getCheckImageJson) && getCheckImageJson.getIntValue("code") == 200) {
                 long l = System.currentTimeMillis();
@@ -782,7 +760,7 @@ public class TicketServiceImpl implements TicketService {
                 log.info("验证码处理完毕，处理时长:{}",System.currentTimeMillis()-l);
                 Integer childrenTicketNum = priceNameCountMap.get("childrenTicket");
                 HttpEntity shoppingCartUrlEntity = new HttpEntity<>(buildParam(token, childrenTicketNum == null ? 0 : childrenTicketNum, point, doSnatchInfo.getSession(), doSnatchInfo.getUseDate(), priceId, childrenPriceId, discountPriceId, olderPriceId, phone, nameIDMap), headers);
-                JSONObject bodyJson = TemplateUtil.getResponse(ObjectUtils.isEmpty(doSnatchInfo.getIp())?TemplateUtil.initSSLTemplate():TemplateUtil.xieQuTemp(doSnatchInfo.getIp(),doSnatchInfo.getPort()), shoppingCartUrl, HttpMethod.POST, shoppingCartUrlEntity);
+                JSONObject bodyJson = TemplateUtil.getResponse(currentRestTemp, shoppingCartUrl, HttpMethod.POST, shoppingCartUrlEntity);
                 log.info("账号：{}下游客：{},提交订单结果：{}", doSnatchInfo.getAccount(), doSnatchInfo.getIdNameMap().values(), bodyJson);
                 if (!ObjectUtils.isEmpty(bodyJson) && (bodyJson.getIntValue("code") == 550 || bodyJson.getIntValue("code") == 503)) {
                     log.info("提交订单异常！账号：{}下游客：{},提交订单结果：{}", doSnatchInfo.getAccount(), doSnatchInfo.getIdNameMap().values(), bodyJson);
@@ -1152,11 +1130,13 @@ public class TicketServiceImpl implements TicketService {
 
     private JSONObject getCheckImag(DoSnatchInfo doSnatchInfo) {
         int retryCount = 0;
-        JSONObject response=new JSONObject();
-        while (retryCount < 3) {
+        JSONObject response;
+        List<ProxyInfo> xieQuProxy = ProxyUtil.getXieQuProxy(1);
+        RestTemplate restTemplate = ObjectUtils.isEmpty(doSnatchInfo.getIp()) ? TemplateUtil.initSSLTemplate() : TemplateUtil.xieQuTemp(doSnatchInfo.getIp(), doSnatchInfo.getPort());
+        while (retryCount < 10) {
             try {
                 HttpEntity entity = new HttpEntity(getHeader(doSnatchInfo.getAuthorization()));
-                response = TemplateUtil.getResponse(ObjectUtils.isEmpty(doSnatchInfo.getIp()) ? TemplateUtil.initSSLTemplate() : TemplateUtil.xieQuTemp(doSnatchInfo.getIp(), doSnatchInfo.getPort()), getCheckImagUrl, HttpMethod.GET, entity);
+                response = TemplateUtil.getResponse(restTemplate, getCheckImagUrl, HttpMethod.GET, entity);
                 if (!ObjectUtils.isEmpty(response) && response.getIntValue("code") == 200) {
                     log.info("账号:{}获取到提单验证码成功", doSnatchInfo.getAccount());
                     return response;
@@ -1164,6 +1144,9 @@ public class TicketServiceImpl implements TicketService {
                 log.info("账号:{}获取提单验证码失败{}，重试中", doSnatchInfo.getAccount(), response);
             } catch (Exception e) {
                 //e.printStackTrace();
+                if(!ObjectUtils.isEmpty(xieQuProxy)){
+                    restTemplate=TemplateUtil.xieQuTemp(doSnatchInfo.getIp(), doSnatchInfo.getPort());
+                }
                 log.info("账号:{}获取提单验证码异常，涉及游客", String.join(",", doSnatchInfo.getIdNameMap().values()));
             }
             retryCount++;

@@ -240,7 +240,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
         String getLeagueInfoUrl="https://lotswap.dpm.org.cn/lotsapi/leaguer/api/userLeaguer/manage/leaguerInfo?id=%s&cipherText=0&merchantId=2655&merchantInfoId=2655";
         try {
             JSONObject currentParkFsyyDetail = new JSONObject();
-            RestTemplate restTemplate = ObjectUtils.isEmpty(doSnatchInfo.getIp()) ? TemplateUtil.initSSLTemplate() : TemplateUtil.xieQuTemp(doSnatchInfo.getIp(), doSnatchInfo.getPort());
+            RestTemplate restTemplate = TemplateUtil.xieQuTemp(doSnatchInfo.getIp(),doSnatchInfo.getPort());
             //RestTemplate restTemplate=TemplateUtil.initSSLTemplate();
             HttpHeaders headers = new HttpHeaders();
             String headerStr = doSnatchInfo.getHeaders();
@@ -267,7 +267,6 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
             String month = monthValue > 10 ? String.valueOf(monthValue) : "0" + monthValue;
             String formatQueryImperialPalaceTicketsUrl = String.format(queryImperialPalaceTicketsUrl, now.getYear(), month);
             JSONObject responseJson = TemplateUtil.getResponse(restTemplate, formatQueryImperialPalaceTicketsUrl, HttpMethod.GET, entity);
-            //Thread.sleep(RandomUtil.randomInt(1000, 5000));
             if (ObjectUtils.isEmpty(responseJson) || responseJson.getIntValue("status") != 200) {
                 log.info("responseJson:{}", responseJson);
                 runTaskCache.remove(taskId);
@@ -450,8 +449,17 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
                 String formatCreateUrl = String.format(createUrl, sign, timestamp);
                 log.info("header:{}", headers);
                 log.info("提交订单入参：{}", JSON.toJSONString(jsonObject));
-                createRes = TemplateUtil.getResponse(restTemplate, formatCreateUrl, HttpMethod.POST, addTicketQueryEntity);
+                try {
+                    createRes = TemplateUtil.getResponse(restTemplate, formatCreateUrl, HttpMethod.POST, addTicketQueryEntity);
+                }catch (Exception e){
+                    log.info("提交订单异常重试中");
+                }
                 log.info("请求结果{}", createRes);
+                List<ProxyInfo> xieQuProxy = ProxyUtil.getXieQuProxy(1);
+                if(ObjectUtils.isEmpty(xieQuProxy)){
+                    continue;
+                }
+                restTemplate=TemplateUtil.xieQuTemp(xieQuProxy.get(0).getIp(),xieQuProxy.get(0).getPort());
             }
             if(ObjectUtils.isEmpty(createRes)){
                 runTaskCache.remove(taskId);
