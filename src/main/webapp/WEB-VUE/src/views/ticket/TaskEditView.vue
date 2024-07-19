@@ -246,8 +246,8 @@ export default {
 
       this.form.session = '23'
       this.form.venue = 1
-      if (this.form.channel == 0 && this.userList.length > 15) {
-        this.$alert('最多只能添加15条，请检查', '添加失败')
+      if (this.form.channel == 0 && this.userList.length > 500) {
+        this.$alert('最多只能添加500条，请检查', '添加失败')
         return
       }
       if (this.form.channel != 0) {

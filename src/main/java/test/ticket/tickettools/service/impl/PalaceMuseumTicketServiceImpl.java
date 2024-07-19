@@ -323,7 +323,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
             headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
             HttpEntity getTicketEntity = new HttpEntity<>(headers);
             String formatGetTicketGridUrl = String.format(getTicketGridUrl, formatUseDate, formatUseDate);
-            Thread.sleep(RandomUtil.randomInt(3000, 3500));
+            //Thread.sleep(RandomUtil.randomInt(3000, 3500));
             JSONObject ticketGridJson = TemplateUtil.getResponse(restTemplate, formatGetTicketGridUrl, HttpMethod.GET, getTicketEntity);
             if (ObjectUtils.isEmpty(ticketGridJson)) {
                 runTaskCache.remove(taskId);
@@ -367,7 +367,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
             }
             headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
             String addTicketUrl = String.format("https://lotswap.dpm.org.cn/lotsapi/merchant/api/merchantParkInfo/add_ticket/query?modelCodes=%s&occDate=%s&merchantId=2655&merchantInfoId=2655", String.join(",", modelCodes), formatUseDate);
-            //Thread.sleep(RandomUtil.randomInt(1000, 3500));
+            Thread.sleep(RandomUtil.randomInt(1000, 3500));
             TemplateUtil.getResponse(restTemplate, addTicketUrl, HttpMethod.GET, new HttpEntity<>(headers));
             headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
             String bodyFormat = MessageFormat.format("queryParam={0}&merchantId=2655&merchantInfoId=2655", ticketReserveList);
@@ -438,7 +438,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
             modelCodeTicketInfoMap.put("parkFsyyDetailDTO", currentParkFsyyDetail);
             JSONObject createRes=new JSONObject();
             JSONObject jsonObject = buildCreateParam(mpOpenId, checkUserBody, doSnatchInfo, modelCodeTicketInfoMap,idNameTreeMap);
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < 50; i++) {
                 Thread.sleep(RandomUtil.randomInt(1000, 3000));
                 long timestamp = System.currentTimeMillis();
                 String ts = String.valueOf(timestamp).substring(0, 11);

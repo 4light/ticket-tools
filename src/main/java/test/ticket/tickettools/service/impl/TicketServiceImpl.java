@@ -495,7 +495,26 @@ public class TicketServiceImpl implements TicketService {
                 taskDao.updateTask(entity);
                 continue;
             }
-            List<List<TaskDetailEntity>> partition = Lists.partition(taskDetailEntities, 5);
+                DoSnatchInfo doSnatchInfo = new DoSnatchInfo();
+                List<Long> taskDetailIds = taskDetailEntities.stream()
+                        .map(TaskDetailEntity::getId) // 提取每个对象的 ID
+                        .collect(Collectors.toList());
+                Map<String, String> idNameMap = taskDetailEntities.stream()
+                        .collect(Collectors.toMap(TaskDetailEntity::getIDCard, TaskDetailEntity::getUserName));
+                doSnatchInfo.setTaskId(id);
+                doSnatchInfo.setIp(ObjectUtils.isEmpty(proxyInfo) ? null : proxyInfo.getIp());
+                doSnatchInfo.setPort(ObjectUtils.isEmpty(proxyInfo) ? null : proxyInfo.getPort());
+                doSnatchInfo.setCreator(entity.getCreator());
+                doSnatchInfo.setUserId(Long.valueOf(accountInfoEntity.getChannelUserId()));
+                doSnatchInfo.setAccount(entity.getAccount());
+                doSnatchInfo.setAuthorization(accountInfoEntity.getHeaders());
+                doSnatchInfo.setSession(entity.getSession());
+                doSnatchInfo.setUseDate(entity.getUseDate());
+                doSnatchInfo.setTaskDetailIds(taskDetailIds);
+                doSnatchInfo.setIdNameMap(idNameMap);
+                result.add(doSnatchInfo);
+
+            /*List<List<TaskDetailEntity>> partition = Lists.partition(taskDetailEntities, 5);
             for (List<TaskDetailEntity> taskDetailEntityList : partition) {
                 DoSnatchInfo doSnatchInfo = new DoSnatchInfo();
                 List<Long> taskDetailIds = taskDetailEntityList.stream()
@@ -515,7 +534,7 @@ public class TicketServiceImpl implements TicketService {
                 doSnatchInfo.setTaskDetailIds(taskDetailIds);
                 doSnatchInfo.setIdNameMap(idNameMap);
                 result.add(doSnatchInfo);
-            }
+            }*/
         }
         return result;
     }
