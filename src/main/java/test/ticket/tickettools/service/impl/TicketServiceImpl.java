@@ -690,7 +690,7 @@ public class TicketServiceImpl implements TicketService {
     @Override
     public void snatchingTicket(DoSnatchInfo doSnatchInfo) {
         Map<String, String> nameIDMap = doSnatchInfo.getIdNameMap();
-        RestTemplate restTemplate = TemplateUtil.xieQuTunnelTemp();
+        //RestTemplate restTemplate = ObjectUtils.isEmpty(doSnatchInfo.getIp())?TemplateUtil.initSSLTemplate():TemplateUtil.xieQuTemp(doSnatchInfo.getIp(),doSnatchInfo.getPort());
         //RestTemplate restTemplate = TemplateUtil.initSSLTemplateWithProxyTunnelAuth();
         try {
             HttpHeaders headers = getHeader(doSnatchInfo.getAuthorization());
@@ -782,7 +782,7 @@ public class TicketServiceImpl implements TicketService {
                 log.info("验证码处理完毕，处理时长:{}",System.currentTimeMillis()-l);
                 Integer childrenTicketNum = priceNameCountMap.get("childrenTicket");
                 HttpEntity shoppingCartUrlEntity = new HttpEntity<>(buildParam(token, childrenTicketNum == null ? 0 : childrenTicketNum, point, doSnatchInfo.getSession(), doSnatchInfo.getUseDate(), priceId, childrenPriceId, discountPriceId, olderPriceId, phone, nameIDMap), headers);
-                JSONObject bodyJson = TemplateUtil.getResponse(restTemplate, shoppingCartUrl, HttpMethod.POST, shoppingCartUrlEntity);
+                JSONObject bodyJson = TemplateUtil.getResponse(ObjectUtils.isEmpty(doSnatchInfo.getIp())?TemplateUtil.initSSLTemplate():TemplateUtil.xieQuTemp(doSnatchInfo.getIp(),doSnatchInfo.getPort()), shoppingCartUrl, HttpMethod.POST, shoppingCartUrlEntity);
                 log.info("账号：{}下游客：{},提交订单结果：{}", doSnatchInfo.getAccount(), doSnatchInfo.getIdNameMap().values(), bodyJson);
                 if (!ObjectUtils.isEmpty(bodyJson) && (bodyJson.getIntValue("code") == 550 || bodyJson.getIntValue("code") == 503)) {
                     log.info("提交订单异常！账号：{}下游客：{},提交订单结果：{}", doSnatchInfo.getAccount(), doSnatchInfo.getIdNameMap().values(), bodyJson);
@@ -1156,8 +1156,7 @@ public class TicketServiceImpl implements TicketService {
         while (retryCount < 3) {
             try {
                 HttpEntity entity = new HttpEntity(getHeader(doSnatchInfo.getAuthorization()));
-                response = TemplateUtil.getResponse(TemplateUtil.xieQuTunnelTemp(), getCheckImagUrl, HttpMethod.GET, entity);
-                //response = TemplateUtil.getResponse(TemplateUtil.initSSLTemplateWithProxyTunnelAuth(), getCheckImagUrl, HttpMethod.GET, entity);
+                response = TemplateUtil.getResponse(ObjectUtils.isEmpty(doSnatchInfo.getIp()) ? TemplateUtil.initSSLTemplate() : TemplateUtil.xieQuTemp(doSnatchInfo.getIp(), doSnatchInfo.getPort()), getCheckImagUrl, HttpMethod.GET, entity);
                 if (!ObjectUtils.isEmpty(response) && response.getIntValue("code") == 200) {
                     log.info("账号:{}获取到提单验证码成功", doSnatchInfo.getAccount());
                     return response;
