@@ -303,18 +303,12 @@ public class DoSnatchingSchedule {
         List<CompletableFuture<Void>> futures = new ArrayList<>();
         // 对每个 useDate 异步检查并处理
         mapByUseDate.forEach((useDate, doSnatchInfos) -> {
-            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+            CompletableFuture.runAsync(() -> {
                 if (haveTicket(doSnatchInfos.get(0))) {
                     ticketServiceImpl.snatchingTicket(doSnatchInfos.get(0));
                 }
             }, pool);
-            futures.add(future);
         });
-        // 等待所有任务完成
-        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
-
-        // 关闭线程池
-        pool.shutdown();
     }
 
     private Boolean haveTicket(DoSnatchInfo doSnatchInfo) {
