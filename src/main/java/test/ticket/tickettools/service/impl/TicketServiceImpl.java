@@ -181,7 +181,7 @@ public class TicketServiceImpl implements TicketService {
             taskEntity.setPwd(accountInfoEntity.getPwd());
         }
         if (ObjectUtils.isEmpty(taskInfo.getId())) {
-            List<String> checkRes = checkUserRepeat(taskInfo.getUseDate(), taskInfo.getUserList());
+            List<String> checkRes = checkUserRepeat(taskInfo.getUseDate(), taskInfo.getUserList(),taskInfo.getChannel());
             if(!ObjectUtils.isEmpty(checkRes)){
                 return ServiceResponse.createByErrorMessage("以下用户已存在抢票任务:"+String.join(",",checkRes));
             }
@@ -229,7 +229,7 @@ public class TicketServiceImpl implements TicketService {
                 List<TaskDetailEntity> all = taskDetailDao.selectByTaskId(taskEntity.getId());
                 List<TaskDetailEntity> userList = taskInfo.getUserList();
                 List<TaskDetailEntity> addList = userList.stream().filter(o -> o.getId() == null).collect(Collectors.toList());
-                List<String> checkRes = checkUserRepeat(taskInfo.getUseDate(),addList);
+                List<String> checkRes = checkUserRepeat(taskInfo.getUseDate(),addList,taskInfo.getChannel());
                 if(!ObjectUtils.isEmpty(checkRes)){
                     return ServiceResponse.createByErrorMessage("以下用户已存在抢票任务:"+String.join(",",checkRes));
                 }
@@ -1175,12 +1175,13 @@ public class TicketServiceImpl implements TicketService {
      * @param taskDetailEntities
      * @return
      */
-    private List<String> checkUserRepeat(Date date,List<TaskDetailEntity> taskDetailEntities){
+    private List<String> checkUserRepeat(Date date,List<TaskDetailEntity> taskDetailEntities,Integer channel){
         TaskEntity taskEntity=new TaskEntity();
         taskEntity.setYn(false);
         taskEntity.setUseDate(date);
         taskEntity.setChannel(ChannelEnum.CSTM.getCode());
         List<TaskEntity> taskEntityList = taskDao.fuzzyQuery(taskEntity);
+        taskEntityList=taskEntityList.stream().filter(o->o.getChannel()==channel).collect(Collectors.toList());
         List<String> ids=new ArrayList<>();
         taskEntityList.forEach(entity->{
             List<TaskDetailEntity> taskDetailEntityList = taskDetailDao.selectByTaskId(entity.getId());
