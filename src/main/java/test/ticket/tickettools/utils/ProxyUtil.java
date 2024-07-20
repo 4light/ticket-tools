@@ -121,7 +121,6 @@ public class ProxyUtil {
                     .timeout(2000)
                     .execute();
             String body = response.body();
-            System.out.println(body);
             if (!ObjectUtils.isEmpty(body)) {
                 JSONObject bodyJson = JSON.parseObject(body);
                 if (bodyJson.getIntValue("code") == 0&&StrUtil.equals("true",bodyJson.getString("success"))) {
@@ -132,6 +131,7 @@ public class ProxyUtil {
                     }
                     return result;
                 }
+                System.out.println(body);
             }
         }catch (Exception e){
             e.printStackTrace();

@@ -338,8 +338,12 @@ public class DoSnatchingSchedule {
             if (ObjectUtils.isEmpty(data)) {
                 return false;
             }
-            log.info("{}日期下余票{}", doSnatchInfo.getUseDate(), data.getJSONObject(0).getIntValue("ticketPool"));
-            return data.getJSONObject(0).getIntValue("ticketPool") > 0;
+            if(data.getJSONObject(0).getIntValue("ticketPool") > 0){
+                log.info("{}日期下余票{}", doSnatchInfo.getUseDate(), data.getJSONObject(0).getIntValue("ticketPool"));
+                return true;
+            }else {
+                return false;
+            }
         } catch (Exception e) {
             return false;
         }
