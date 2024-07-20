@@ -760,7 +760,7 @@ public class TicketServiceImpl implements TicketService {
                 log.info("验证码处理完毕，处理时长:{}",System.currentTimeMillis()-l);
                 Integer childrenTicketNum = priceNameCountMap.get("childrenTicket");
                 HttpEntity shoppingCartUrlEntity = new HttpEntity<>(buildParam(token, childrenTicketNum == null ? 0 : childrenTicketNum, point, doSnatchInfo.getSession(), doSnatchInfo.getUseDate(), priceId, childrenPriceId, discountPriceId, olderPriceId, phone, nameIDMap), headers);
-                JSONObject bodyJson = TemplateUtil.getResponse(currentRestTemp, shoppingCartUrl, HttpMethod.POST, shoppingCartUrlEntity);
+                JSONObject bodyJson = TemplateUtil.getResponse(TemplateUtil.kuaiDaiLiTemp(), shoppingCartUrl, HttpMethod.POST, shoppingCartUrlEntity);
                 log.info("账号：{}下游客：{},提交订单结果：{}", doSnatchInfo.getAccount(), doSnatchInfo.getIdNameMap().values(), bodyJson);
                 if (!ObjectUtils.isEmpty(bodyJson) && (bodyJson.getIntValue("code") == 550 || bodyJson.getIntValue("code") == 503)) {
                     log.info("提交订单异常！账号：{}下游客：{},提交订单结果：{}", doSnatchInfo.getAccount(), doSnatchInfo.getIdNameMap().values(), bodyJson);
@@ -1132,18 +1132,18 @@ public class TicketServiceImpl implements TicketService {
         int retryCount = 0;
         JSONObject response;
         List<ProxyInfo> xieQuProxy = ProxyUtil.getXieQuProxy(1);
-        RestTemplate restTemplate = ObjectUtils.isEmpty(doSnatchInfo.getIp()) ? TemplateUtil.initSSLTemplate() : TemplateUtil.xieQuTemp(doSnatchInfo.getIp(), doSnatchInfo.getPort());
+        //RestTemplate restTemplate = ObjectUtils.isEmpty(doSnatchInfo.getIp()) ? TemplateUtil.initSSLTemplate() : TemplateUtil.xieQuTemp(doSnatchInfo.getIp(), doSnatchInfo.getPort());
         while (retryCount < 10) {
             try {
                 HttpEntity entity = new HttpEntity(getHeader(doSnatchInfo.getAuthorization()));
-                response = TemplateUtil.getResponse(restTemplate, getCheckImagUrl, HttpMethod.GET, entity);
+                response = TemplateUtil.getResponse(TemplateUtil.kuaiDaiLiTemp(), getCheckImagUrl, HttpMethod.GET, entity);
                 if (!ObjectUtils.isEmpty(response) && response.getIntValue("code") == 200) {
                     log.info("账号:{}获取到提单验证码成功", doSnatchInfo.getAccount());
                     return response;
                 }
                 log.info("账号:{}获取提单验证码失败{}，重试中", doSnatchInfo.getAccount(), response);
             } catch (Exception e) {
-                //e.printStackTrace();
+                e.printStackTrace();
                 if(!ObjectUtils.isEmpty(xieQuProxy)){
                     restTemplate=TemplateUtil.xieQuTemp(doSnatchInfo.getIp(), doSnatchInfo.getPort());
                 }
