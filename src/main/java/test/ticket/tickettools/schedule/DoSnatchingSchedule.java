@@ -235,10 +235,9 @@ public class DoSnatchingSchedule {
         Integer integer = accountInfoDao.insertOrUpdate(account);
         if(integer>0) {
             ticketServiceImpl.updateAuth(phoneNo);
-            TaskEntity updateEntity=new TaskEntity();
-            updateEntity.setAccount(phoneNo);
-            updateEntity.setUserInfoId(account.getId());
-            Integer res = taskDao.updateTask(updateEntity);
+            taskEntity.setAccount(phoneNo);
+            taskEntity.setUserInfoId(account.getId());
+            Integer res = taskDao.updateTask(taskEntity);
             log.info("更新任务结果：{}",res>0);
         }else{
             log.info("更新任务购票账号异常");
