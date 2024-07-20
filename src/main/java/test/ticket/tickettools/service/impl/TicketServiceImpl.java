@@ -504,7 +504,7 @@ public class TicketServiceImpl implements TicketService {
                 doSnatchInfo.setIp(ObjectUtils.isEmpty(proxyInfo) ? null : proxyInfo.getIp());
                 doSnatchInfo.setPort(ObjectUtils.isEmpty(proxyInfo) ? null : proxyInfo.getPort());
                 doSnatchInfo.setCreator(entity.getCreator());
-                doSnatchInfo.setUserId(Long.valueOf(accountInfoEntity.getChannelUserId()));
+                //doSnatchInfo.setUserId(ObjectUtils.isEmpty(accountInfoEntity)?null:Long.valueOf(accountInfoEntity.getChannelUserId()));
                 doSnatchInfo.setAccount(entity.getAccount());
                 doSnatchInfo.setAuthorization(accountInfoEntity.getHeaders());
                 doSnatchInfo.setSession(entity.getSession());

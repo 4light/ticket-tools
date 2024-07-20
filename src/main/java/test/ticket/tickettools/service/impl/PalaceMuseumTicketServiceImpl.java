@@ -55,6 +55,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
 
     private static Map<Long, Object> runTaskCache = new ConcurrentHashMap<>();
     private static Map<Long, Object> initTaskCache = new ConcurrentHashMap<>();
+
     static class AgeComparator implements Comparator<String> {
         private final Map<String, String> map;
 
@@ -184,7 +185,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
         List<DoSnatchInfo> doSnatchInfoList = new ArrayList<>();
         List<ProxyInfo> xieQuProxy = ProxyUtil.getXieQuProxy(unDoneTasks.size());
         for (int i = 0; i < unDoneTasks.size(); i++) {
-            TaskEntity unDoneTask=unDoneTasks.get(i);
+            TaskEntity unDoneTask = unDoneTasks.get(i);
             ProxyInfo proxyInfo = xieQuProxy.get(i);
             TaskDetailEntity taskDetailEntity = new TaskDetailEntity();
             taskDetailEntity.setTaskId(unDoneTask.getId());
@@ -237,10 +238,10 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
         String createUrl = "https://lotswap.dpm.org.cn/dubboApi/trade-core/tradeCreateService/create?sign=%s&timestamp=%s";
         String getPayTypeUrl = "https://lotswap.dpm.org.cn/lotsapi/merchant/api/merchantPayType/getMerchantPayType?payOrderNo=%s&businessType=WXXCX&merchantId=2655&merchantInfoId=2655";
         String toPayUrl = "https://lotswap.dpm.org.cn/lotsapi/order/orderPay/toPay?payOrderNo=%s&paySum=%s&openId=%s&channelProductCode=%s&payType=%s&extendParamJson=%s&accountId=2655&userType=C";
-        String getLeagueInfoUrl="https://lotswap.dpm.org.cn/lotsapi/leaguer/api/userLeaguer/manage/leaguerInfo?id=%s&cipherText=0&merchantId=2655&merchantInfoId=2655";
+        String getLeagueInfoUrl = "https://lotswap.dpm.org.cn/lotsapi/leaguer/api/userLeaguer/manage/leaguerInfo?id=%s&cipherText=0&merchantId=2655&merchantInfoId=2655";
         try {
             JSONObject currentParkFsyyDetail = new JSONObject();
-            RestTemplate restTemplate = TemplateUtil.xieQuTemp(doSnatchInfo.getIp(),doSnatchInfo.getPort());
+            RestTemplate restTemplate = TemplateUtil.xieQuTemp(doSnatchInfo.getIp(), doSnatchInfo.getPort());
             //RestTemplate restTemplate=TemplateUtil.initSSLTemplate();
             HttpHeaders headers = new HttpHeaders();
             String headerStr = doSnatchInfo.getHeaders();
@@ -388,7 +389,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
                 runTaskCache.remove(taskId);
                 return;
             }
-            TreeMap idNameTreeMap=new TreeMap<>(new AgeComparator(doSnatchInfo.getIdNameMap()));
+            TreeMap idNameTreeMap = new TreeMap<>(new AgeComparator(doSnatchInfo.getIdNameMap()));
             idNameTreeMap.putAll(doSnatchInfo.getIdNameMap());
             //校验用户信息
             headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
@@ -421,7 +422,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
             headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
             HttpEntity getLeagueInfoEntity = new HttpEntity<>(headers);
             JSONObject getLeagueInfoJson = TemplateUtil.getResponse(restTemplate, getLeagueInfoUrlFormat, HttpMethod.GET, getLeagueInfoEntity);
-            if(ObjectUtils.isEmpty(getLeagueInfoJson)||getLeagueInfoJson.getIntValue("status")!=200){
+            if (ObjectUtils.isEmpty(getLeagueInfoJson) || getLeagueInfoJson.getIntValue("status") != 200) {
                 log.info("获取LeagueInfo数据失败", getLeagueInfoJson);
                 runTaskCache.remove(taskId);
                 return;
@@ -435,9 +436,9 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
             String accessToken = headerJson.getString("access-token");
             headers.set("Accept-Encoding", "gzip,compress,deflate");
             modelCodeTicketInfoMap.put("parkFsyyDetailDTO", currentParkFsyyDetail);
-            JSONObject createRes=new JSONObject();
-            JSONObject jsonObject = buildCreateParam(mpOpenId, checkUserBody, doSnatchInfo, modelCodeTicketInfoMap,idNameTreeMap);
-            for (int i = 0; i < 50; i++) {
+            JSONObject createRes = new JSONObject();
+            JSONObject jsonObject = buildCreateParam(mpOpenId, checkUserBody, doSnatchInfo, modelCodeTicketInfoMap, idNameTreeMap);
+            for (int i = 0; i < 10; i++) {
                 Thread.sleep(RandomUtil.randomInt(1000, 3000));
                 long timestamp = System.currentTimeMillis();
                 String ts = String.valueOf(timestamp).substring(0, 11);
@@ -451,17 +452,23 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
                 log.info("提交订单入参：{}", JSON.toJSONString(jsonObject));
                 try {
                     createRes = TemplateUtil.getResponse(restTemplate, formatCreateUrl, HttpMethod.POST, addTicketQueryEntity);
-                }catch (Exception e){
+                } catch (Exception e) {
                     log.info("提交订单异常重试中");
+                }
+                if (ObjectUtils.isEmpty(createRes)) {
+                    continue;
+                }
+                if (createRes.getIntValue("code") == 200) {
+                    break;
                 }
                 log.info("请求结果{}", createRes);
                 List<ProxyInfo> xieQuProxy = ProxyUtil.getXieQuProxy(1);
-                if(ObjectUtils.isEmpty(xieQuProxy)){
+                if (ObjectUtils.isEmpty(xieQuProxy)) {
                     continue;
                 }
-                restTemplate=TemplateUtil.xieQuTemp(xieQuProxy.get(0).getIp(),xieQuProxy.get(0).getPort());
+                restTemplate = TemplateUtil.xieQuTemp(xieQuProxy.get(0).getIp(), xieQuProxy.get(0).getPort());
             }
-            if(ObjectUtils.isEmpty(createRes)){
+            if (ObjectUtils.isEmpty(createRes)) {
                 runTaskCache.remove(taskId);
                 return;
             }
@@ -473,7 +480,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
                 String formatUrl = String.format(getPayTypeUrl, orderCode);
                 HttpEntity payTypeEntity = new HttpEntity(headerJson);
                 JSONObject response = TemplateUtil.getResponse(restTemplate, formatUrl, HttpMethod.GET, payTypeEntity);
-                log.info("获取支付方式返回结果:{}",response);
+                log.info("获取支付方式返回结果:{}", response);
                 if (!ObjectUtils.isEmpty(response) || response.getIntValue("status") == 200) {
                     String message = response.getString("message");
                     JSONArray messageJsonArr = JSON.parseArray(message);
@@ -488,7 +495,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
                     headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
                     HttpEntity toPayEntity = new HttpEntity(headerJson);
                     JSONObject toPayRes = TemplateUtil.getResponse(restTemplate, toPayUrlFormat, HttpMethod.GET, toPayEntity);
-                    log.info("去支付返回结果:{}",toPayRes);
+                    log.info("去支付返回结果:{}", toPayRes);
                 }
                 TaskEntity taskEntity = new TaskEntity();
                 taskEntity.setId(doSnatchInfo.getTaskId());
@@ -585,7 +592,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
     }
 
     private JSONObject buildCreateParam(String openId, JSONObject checkParam, DoSnatchInfo doSnatchInfo,
-                                        Map<String, JSONObject> modelCodeTicketInfoMap,TreeMap<String,String> idNameTreemap) {
+                                        Map<String, JSONObject> modelCodeTicketInfoMap, TreeMap<String, String> idNameTreemap) {
         JSONObject param = new JSONObject();
         param.put("buyer", new HashMap<String, Object>() {{
             put("id", doSnatchInfo.getChannelUserId());
@@ -680,7 +687,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
         idNameMap.put("110105200306150024", "Bob");
         idNameMap.put("110105198509100023", "Charlie");
         idNameMap.put("110105201512310026", "David");
-        TreeMap treemap=new TreeMap(new AgeComparator(idNameMap));
+        TreeMap treemap = new TreeMap(new AgeComparator(idNameMap));
         treemap.putAll(idNameMap);
         treemap.forEach((id, name) -> System.out.println(id + ": " + name));
 

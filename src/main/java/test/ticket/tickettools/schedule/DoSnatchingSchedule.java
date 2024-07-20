@@ -206,30 +206,42 @@ public class DoSnatchingSchedule {
         }
     }
 
-
-    public void updateAuth() {
+    @Scheduled(cron = "* 0/1 * * * ?")
+    public void doUpdate() {
         List<TaskEntity> allUnDoneTask = ticketServiceImpl.getAllUnDoneTask();
         for (TaskEntity taskEntity : allUnDoneTask) {
-            if (ObjectUtils.isEmpty(taskEntity.getAuth())) {
-                String auth = loginService.longinCSTM(taskEntity.getAccount());
-                if (checkAuth(auth)) {
-                    taskEntity.setAuth(auth);
-                    taskEntity.setUpdateDate(new Date());
-                    ticketServiceImpl.updateTask(taskEntity);
-                }
-            } else {
-                if (!checkAuth(taskEntity.getAuth())) {
-                    while (true) {
-                        String auth = loginService.longinCSTM(taskEntity.getAccount());
-                        if (checkAuth(auth)) {
-                            taskEntity.setAuth(auth);
-                            taskEntity.setUpdateDate(new Date());
-                            ticketServiceImpl.updateTask(taskEntity);
-                            break;
-                        }
-                    }
+            Long userInfoId = taskEntity.getUserInfoId();
+            if(ObjectUtils.isEmpty(userInfoId)){
+                updateAccountAndAuth(taskEntity);
+            }else{
+                AccountInfoEntity accountInfoEntity = accountInfoDao.selectById(userInfoId);
+                if(!checkAuth(accountInfoEntity.getHeaders())){
+                    updateAccountAndAuth(taskEntity);
                 }
             }
+        }
+    }
+
+    public void updateAccountAndAuth(TaskEntity taskEntity){
+        String phoneNo = VirtualPhoneUtil.getPhoneNo();
+        AccountInfoEntity account = new AccountInfoEntity();
+        account.setUserName("三方号" + phoneNo);
+        account.setAccount(phoneNo);
+        account.setChannel(ChannelEnum.CSTM.getCode());
+        account.setCreator(taskEntity.getCreator());
+        account.setYn(false);
+        account.setStatus(false);
+        account.setCreateDate(new Date());
+        Integer integer = accountInfoDao.insertOrUpdate(account);
+        if(integer>0) {
+            ticketServiceImpl.updateAuth(phoneNo);
+            TaskEntity updateEntity=new TaskEntity();
+            taskEntity.setAccount(phoneNo);
+            updateEntity.setUserInfoId(account.getId());
+            Integer res = taskDao.updateTask(taskEntity);
+            log.info("更新任务结果：{}",res>0);
+        }else{
+            log.info("更新任务购票账号异常");
         }
     }
 
@@ -308,57 +320,21 @@ public class DoSnatchingSchedule {
 
     private Boolean haveTicket(DoSnatchInfo doSnatchInfo) {
         try {
-            String url = "https://pcticket.cstm.org.cn/prod-api/pool/getScheduleByHallId?hallId=1&openPerson=1&queryDate=%s&saleMode=1&single=true";
+            String url = "https://pcticket.cstm.org.cn/prod-api/pool/ingore/getHall?saleMode=1&openPerson=1&queryDate=%s";
             String format = String.format(url, DateUtils.dateToStr(doSnatchInfo.getUseDate(), "yyyy/MM/dd"));
-            HttpResponse response = HttpUtil.createGet(format)
-                    .header("Authorization", doSnatchInfo.getAuthorization())
-                    .header("Connection", "keep-alive")
-                    .header("Referer", "https://pcticket.cstm.org.cn/")
-                    .header("Accept", "application/json")
-                    .header("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36/")
-                    .timeout(10000)
-                    .execute();
-            String body = response.body();
-            /*HttpHeaders headers = new HttpHeaders();
+            HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.set("authority", "pcticket.cstm.org.cn");
             headers.set("accept", "application/json");
             headers.set("Accept-Encoding", "gzip, deflate, br, zstd");
-            headers.set("authorization", doSnatchInfo.getAuthorization());
             headers.set("cookie", "SL_G_WPT_TO=zh; SL_GWPT_Show_Hide_tmp=1; SL_wptGlobTipTmp=1");
             headers.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
             HttpEntity entity=new HttpEntity(headers);
             ResponseEntity<JSONObject> exchange = TemplateUtil.xieQuTemp(doSnatchInfo.getIp(), doSnatchInfo.getPort()).exchange(format, HttpMethod.GET, entity, JSONObject.class);
-            */
-            if (ObjectUtils.isEmpty(body)) {
+            if (ObjectUtils.isEmpty(exchange)) {
                 return false;
             }
-            JSONObject responseJson = JSON.parseObject(body);
-            if(!ObjectUtils.isEmpty(responseJson)&&responseJson.getIntValue("code")==401&&responseJson.getString("msg").contains("认证失败")){
-                log.info("任务{}购票账号登录态异常:{}",doSnatchInfo.getTaskId(),responseJson);
-                String phoneNo = VirtualPhoneUtil.getPhoneNo();
-                AccountInfoEntity account = new AccountInfoEntity();
-                account.setUserName("三方号" + phoneNo);
-                account.setAccount(phoneNo);
-                account.setChannel(ChannelEnum.CSTM.getCode());
-                account.setCreator(doSnatchInfo.getCreator());
-                account.setYn(false);
-                account.setStatus(false);
-                account.setCreateDate(new Date());
-                Integer integer = accountInfoDao.insertOrUpdate(account);
-                if(integer>0) {
-                    ticketServiceImpl.updateAuth(phoneNo);
-                    TaskEntity taskEntity=new TaskEntity();
-                    taskEntity.setId(doSnatchInfo.getTaskId());
-                    taskEntity.setAccount(phoneNo);
-                    taskEntity.setUserInfoId(account.getId());
-                    Integer res = taskDao.updateTask(taskEntity);
-                    log.info("更新任务结果：{}",res>0);
-                }else{
-                    log.info("更新任务购票账号异常");
-                }
-                return false;
-            }
+            JSONObject responseJson = exchange.getBody();
             JSONArray data = responseJson.getJSONArray("data");
             if (ObjectUtils.isEmpty(data)) {
                 return false;
