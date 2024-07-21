@@ -45,4 +45,6 @@ public interface TicketService {
     //支付
     ServiceResponse<String> pay(PlaceOrderInfo placeOrderInfo);
     void updateAuth(String phone);
+    //初始化账号池
+    void initAccountPool(Integer num);
 }

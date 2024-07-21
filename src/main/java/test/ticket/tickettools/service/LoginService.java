@@ -195,7 +195,7 @@ public class LoginService {
         loginParam.put("userType", 1);
         loginParam.put("username", logInCSTMParam.getPhone());
         HttpEntity loginEntity = new HttpEntity(loginParam, getBaseHeader());
-        JSONObject getLoginRes = TemplateUtil.getResponse(TemplateUtil.initSSLTemplate(),loginUrl, HttpMethod.POST, loginEntity);
+        JSONObject getLoginRes = TemplateUtil.getResponse(TemplateUtil.kuaiDaiLiTemp(),loginUrl, HttpMethod.POST, loginEntity);
         if (!ObjectUtils.isEmpty(getLoginRes)&&getLoginRes.getIntValue("code")==200) {
             String auth="Bearer " + getLoginRes.getString("token");
             Long userId = getUserId(auth);
@@ -213,8 +213,8 @@ public class LoginService {
                 AccountInfoEntity query=new AccountInfoEntity();
                 query.setAccount(logInCSTMParam.getPhone());
                 query.setChannel(ChannelEnum.CSTM.getCode());
-                List<AccountInfoEntity> queryRes = accountInfoDao.selectByEntity(query);
-                redisService.setData(RedisKeyEnum.ACCOUNT.getCode()+queryRes.get(0).getId(),JSON.toJSONString(queryRes.get(0)) );
+                //List<AccountInfoEntity> queryRes = accountInfoDao.selectByEntity(query);
+                //redisService.setData(RedisKeyEnum.ACCOUNT.getCode()+queryRes.get(0).getId(),JSON.toJSONString(queryRes.get(0)) );
                 return ServiceResponse.createBySuccessMessgge("登录态更新成功");
             }
             return ServiceResponse.createByErrorMessage("登录态保存失败");

@@ -20,6 +20,7 @@
             <arg column="order_id" javaType="java.lang.Long" jdbcType="BIGINT"/>
             <arg column="price" javaType="java.lang.Integer" jdbcType="INTEGER"/>
             <arg column="ext" javaType="java.lang.String" jdbcType="VARCHAR"/>
+            <arg column="order_creator_auth" javaType="java.lang.String" jdbcType="VARCHAR"/>
         </constructor>
     </resultMap>
     <insert id="insert" parameterType="test.ticket.tickettools.domain.entity.TaskDetailEntity">
@@ -75,7 +76,10 @@
                     price = #{entity.price},
                 </if>
                 <if test='entity.ext!=null'>
-                    ext = #{entity.ext}
+                    ext = #{entity.ext},
+                </if>
+                <if test='entity.orderCreatorAuth!=null'>
+                    order_creator_auth = #{entity.orderCreatorAuth},
                 </if>
             </set>
             <where>

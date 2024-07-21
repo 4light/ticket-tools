@@ -149,7 +149,7 @@
             <if test='updateDate!=null'>
                 update_date = #{updateDate},
             </if>
-            <if test='userInfoId!=null'>
+            <if test='userInfoId!=""'>
                 user_info_id = #{userInfoId},
             </if>
             <if test='account!=null'>

@@ -194,6 +194,11 @@ public class TicketController  extends BaseController{
         ScreenshotUtil.takeScreenshot(orderId,auth,name);
         return ServiceResponse.createBySuccess();
     }
+    @GetMapping(value = "/init/account")
+    public ServiceResponse delUser(@RequestParam Integer num) {
+        ticketServiceImpl.initAccountPool(num);
+        return ServiceResponse.createBySuccess();
+    }
 
     @GetMapping(value = "/sync")
     public void sync(@RequestParam String tag){

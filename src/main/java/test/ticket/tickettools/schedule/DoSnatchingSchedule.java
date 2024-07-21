@@ -1,10 +1,6 @@
 package test.ticket.tickettools.schedule;
 
-import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.util.ObjectUtil;
-import cn.hutool.http.HttpResponse;
-import cn.hutool.http.HttpUtil;
-import com.alibaba.fastjson.JSON;
+
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
@@ -21,15 +17,10 @@ import test.ticket.tickettools.config.TaskExecutorConfig;
 import test.ticket.tickettools.dao.AccountInfoDao;
 import test.ticket.tickettools.dao.TaskDao;
 import test.ticket.tickettools.domain.bo.DoSnatchInfo;
-import test.ticket.tickettools.domain.bo.ProxyInfo;
-import test.ticket.tickettools.domain.bo.ServiceResponse;
-import test.ticket.tickettools.domain.bo.TaskInfo;
 import test.ticket.tickettools.domain.constant.ChannelEnum;
-import test.ticket.tickettools.domain.constant.RedisKeyEnum;
 import test.ticket.tickettools.domain.entity.AccountInfoEntity;
 import test.ticket.tickettools.domain.entity.TaskDetailEntity;
 import test.ticket.tickettools.domain.entity.TaskEntity;
-import test.ticket.tickettools.service.AccountService;
 import test.ticket.tickettools.service.LoginService;
 import test.ticket.tickettools.service.RedisService;
 import test.ticket.tickettools.service.TicketService;
@@ -37,11 +28,9 @@ import test.ticket.tickettools.utils.*;
 
 import javax.annotation.Resource;
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -49,7 +38,7 @@ import java.util.stream.Collectors;
 @EnableScheduling
 public class DoSnatchingSchedule {
 
-    private static String getCurrentUserUrl = "https://pcticket.cstm.org.cn/prod-api/getUserInfoToIndividual";
+    private static String getBlockUrl = "https://pcticket.cstm.org.cn/prod-api/pool/getBlock";
     private static String searchByOrderNoUrl = "https://pcticket.cstm.org.cn/prod-api/order/OrderInfo/updateSearchByOrderNo";
     private static String searchPersonOrderUrl = "https://pcticket.cstm.org.cn/prod-api/order/OrderInfo/searchPersonOrder/";
     private static RestTemplate restTemplate = new RestTemplate();
@@ -145,7 +134,7 @@ public class DoSnatchingSchedule {
         runNormalTask();
     }
 
-    @Scheduled(cron = "* * 7-17 * * ?")
+    @Scheduled(cron = "0/1 * 7-17 * * ?")
     public void doSingleSnatchOtherTime() {
         runNormalTask();
     }
@@ -175,7 +164,7 @@ public class DoSnatchingSchedule {
                 for (Map.Entry<Long, List<TaskDetailEntity>> taskDetailEntry : orderIdTaskDetailMap.entrySet()) {
                     Long orderId = taskDetailEntry.getKey();
                     List<TaskDetailEntity> value = taskDetailEntry.getValue();
-                    HttpEntity entity = new HttpEntity<>(getHeader(accountInfoEntity.getHeaders(), orderId));
+                    HttpEntity entity = new HttpEntity<>(getHeader(ObjectUtils.isEmpty(accountInfoEntity)?value.get(0).getOrderCreatorAuth():accountInfoEntity.getHeaders(), orderId));
                     JSONObject response = TemplateUtil.getResponse(restTemplate, searchPersonOrderUrl + orderId, HttpMethod.GET, entity);
                     if (!ObjectUtils.isEmpty(response) && response.getIntValue("code") == 200) {
                         JSONObject data = response.getJSONObject("data");
@@ -187,7 +176,7 @@ public class DoSnatchingSchedule {
                         }
                         if (data.getIntValue("status") == 2) {
                             CompletableFuture.runAsync(() -> {
-                                String auth = accountInfoEntity.getHeaders();
+                                String auth = ObjectUtils.isEmpty(accountInfoEntity)?value.get(0).getOrderCreatorAuth():accountInfoEntity.getHeaders();
                                 ScreenshotUtil.takeScreenshot(String.valueOf(orderId), auth, "task" + task.getId() + "-" + UUID.randomUUID());
                             });
                             value.forEach(o -> {
@@ -206,7 +195,8 @@ public class DoSnatchingSchedule {
         }
     }
 
-    @Scheduled(cron = "* 0/1 * * * ?")
+
+    //@Scheduled(cron = "* 0/1 * * * ?")
     public void doUpdate() {
         List<TaskEntity> allUnDoneTask = ticketServiceImpl.getAllUnDoneTask();
         for (TaskEntity taskEntity : allUnDoneTask) {
@@ -220,6 +210,49 @@ public class DoSnatchingSchedule {
                 }
             }
         }
+    }
+    @Scheduled(cron = "* 0/1 * * * ?")
+    public void doUpdateAccountPool() {
+        int accountNum=20;
+        AccountInfoEntity query=new AccountInfoEntity();
+        query.setCreator("system");
+        query.setYn(false);
+        query.setChannel(ChannelEnum.CSTM.getCode());
+        List<AccountInfoEntity> accountInfoEntityList = accountInfoDao.selectByEntity(query);
+        if(!ObjectUtils.isEmpty(accountInfoEntityList)){
+            accountNum=accountNum-accountInfoEntityList.size();
+            for (AccountInfoEntity accountInfoEntity : accountInfoEntityList) {
+                if(ObjectUtils.isEmpty(accountInfoEntity.getHeaders())||!checkAuth(accountInfoEntity.getHeaders())){
+                    accountInfoDao.del(accountInfoEntity.getId());
+                    String phoneNo = insertAccount();
+                    if(ObjectUtils.isEmpty(phoneNo)){
+                        log.info("账号池数据插入失败");
+                        return;
+                    }
+                    ticketServiceImpl.updateAuth(phoneNo);
+                }
+            }
+            if(accountNum>0){
+                for (int i = 0; i < accountNum; i++) {
+                    String phoneNo =insertAccount();
+                    if(ObjectUtils.isEmpty(phoneNo)){
+                        log.info("账号池数据插入失败");
+                        return;
+                    }
+                    ticketServiceImpl.updateAuth(phoneNo);
+                }
+            }
+        }else{
+            for (int i = 0; i < accountNum; i++) {
+                String phoneNo =insertAccount();
+                if(ObjectUtils.isEmpty(phoneNo)){
+                    log.info("账号池数据插入失败");
+                    return;
+                }
+                ticketServiceImpl.updateAuth(phoneNo);
+            }
+        }
+        
     }
 
     public void updateAccountAndAuth(TaskEntity taskEntity){
@@ -262,7 +295,7 @@ public class DoSnatchingSchedule {
         headers.set("cookie", "SL_G_WPT_TO=zh; SL_GWPT_Show_Hide_tmp=1; SL_wptGlobTipTmp=1");
         headers.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
         HttpEntity entity = new HttpEntity<>(headers);
-        ResponseEntity<JSONObject> getUserRes = restTemplate.exchange(getCurrentUserUrl, HttpMethod.GET, entity, JSONObject.class);
+        ResponseEntity<JSONObject> getUserRes = TemplateUtil.kuaiDaiLiTemp().exchange(getBlockUrl, HttpMethod.GET, entity, JSONObject.class);
         JSONObject body = getUserRes.getBody();
         if (!ObjectUtils.isEmpty(body)) {
             if (body.getIntValue("code") == 200) {
@@ -289,7 +322,6 @@ public class DoSnatchingSchedule {
         if (ObjectUtils.isEmpty(allTaskForRun)) {
             return;
         }
-
         Map<Long, List<DoSnatchInfo>> mapByUseDate = allTaskForRun.stream()
                 .collect(Collectors.groupingBy(DoSnatchInfo::getTaskId));
         ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
@@ -300,7 +332,6 @@ public class DoSnatchingSchedule {
         pool.setCorePoolSize(size);
         pool.setQueueCapacity(size);
         pool.initialize();
-        List<CompletableFuture<Void>> futures = new ArrayList<>();
         // 对每个 useDate 异步检查并处理
         mapByUseDate.forEach((useDate, doSnatchInfos) -> {
             CompletableFuture.runAsync(() -> {
@@ -342,5 +373,19 @@ public class DoSnatchingSchedule {
             return false;
         }
     }
-
+    private String insertAccount(){
+        String phoneNo = VirtualPhoneUtil.getPhoneNo();
+        AccountInfoEntity account = new AccountInfoEntity();
+        account.setUserName("三方号" + phoneNo);
+        account.setAccount(phoneNo);
+        account.setChannel(ChannelEnum.CSTM.getCode());
+        account.setCreator("system");
+        account.setYn(false);
+        account.setStatus(false);
+        account.setCreateDate(new Date());
+        if(accountInfoDao.insertOrUpdate(account)>0){
+            return phoneNo;
+        }
+        return null;
+    }
 }
