@@ -354,7 +354,7 @@ public class DoSnatchingSchedule {
             headers.set("cookie", "SL_G_WPT_TO=zh; SL_GWPT_Show_Hide_tmp=1; SL_wptGlobTipTmp=1");
             headers.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
             HttpEntity entity=new HttpEntity(headers);
-            ResponseEntity<JSONObject> exchange = TemplateUtil.xieQuTemp(doSnatchInfo.getIp(), doSnatchInfo.getPort()).exchange(format, HttpMethod.GET, entity, JSONObject.class);
+            ResponseEntity<JSONObject> exchange = TemplateUtil.initSSLTemplate().exchange(format, HttpMethod.GET, entity, JSONObject.class);
             if (ObjectUtils.isEmpty(exchange)) {
                 return false;
             }
