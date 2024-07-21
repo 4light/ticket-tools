@@ -241,8 +241,8 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
         String getLeagueInfoUrl = "https://lotswap.dpm.org.cn/lotsapi/leaguer/api/userLeaguer/manage/leaguerInfo?id=%s&cipherText=0&merchantId=2655&merchantInfoId=2655";
         try {
             JSONObject currentParkFsyyDetail = new JSONObject();
-            RestTemplate restTemplate = TemplateUtil.xieQuTemp(doSnatchInfo.getIp(), doSnatchInfo.getPort());
-            //RestTemplate restTemplate=TemplateUtil.initSSLTemplate();
+            //RestTemplate restTemplate = TemplateUtil.xieQuTemp(doSnatchInfo.getIp(), doSnatchInfo.getPort());
+            RestTemplate restTemplate=TemplateUtil.kuaiDaiLiTemp();
             HttpHeaders headers = new HttpHeaders();
             String headerStr = doSnatchInfo.getHeaders();
             JSONObject headerJson = JSON.parseObject(headerStr);

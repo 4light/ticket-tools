@@ -516,7 +516,7 @@ public class TicketServiceImpl implements TicketService {
             doSnatchInfo.setPort(ObjectUtils.isEmpty(proxyInfo) ? null : proxyInfo.getPort());
             doSnatchInfo.setCreator(entity.getCreator());
             //doSnatchInfo.setUserId(ObjectUtils.isEmpty(accountInfoEntity)?null:Long.valueOf(accountInfoEntity.getChannelUserId()));
-            doSnatchInfo.setAccount(entity.getAccount());
+            doSnatchInfo.setAccount(accountInfoEntity.getAccount());
             doSnatchInfo.setAuthorization(accountInfoEntity.getHeaders());
             doSnatchInfo.setSession(entity.getSession());
             doSnatchInfo.setUseDate(entity.getUseDate());
@@ -1164,12 +1164,14 @@ public class TicketServiceImpl implements TicketService {
         return headers;
     }
 
-    private JSONObject getCheckImag(DoSnatchInfo doSnatchInfo) {
+    private JSONObject
+
+    getCheckImag(DoSnatchInfo doSnatchInfo) {
         JSONObject response;
         List<ProxyInfo> xieQuProxy = ProxyUtil.getXieQuProxy(1);
         //RestTemplate restTemplate = ObjectUtils.isEmpty(doSnatchInfo.getIp()) ? TemplateUtil.initSSLTemplate() : TemplateUtil.xieQuTemp(doSnatchInfo.getIp(), doSnatchInfo.getPort());
         try {
-            Thread.sleep(1000);
+            //Thread.sleep(1000);
             HttpEntity entity = new HttpEntity(getHeader(doSnatchInfo.getAuthorization()));
             response = TemplateUtil.getResponse(TemplateUtil.kuaiDaiLiTemp(), getCheckImagUrl, HttpMethod.GET, entity);
             if (!ObjectUtils.isEmpty(response) && response.getIntValue("code") == 200) {
