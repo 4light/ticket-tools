@@ -783,7 +783,19 @@ public class TicketServiceImpl implements TicketService {
                 JSONObject bodyJson = TemplateUtil.getResponse(TemplateUtil.kuaiDaiLiTemp(), shoppingCartUrl, HttpMethod.POST, shoppingCartUrlEntity);
                 log.info("账号：{}下游客：{},提交订单结果：{}", doSnatchInfo.getAccount(), doSnatchInfo.getIdNameMap().values(), bodyJson);
                 if (!ObjectUtils.isEmpty(bodyJson) && (bodyJson.getIntValue("code") == 550 || bodyJson.getIntValue("code") == 503)) {
-                    log.info("提交订单异常！账号：{}下游客：{},提交订单结果：{}", doSnatchInfo.getAccount(), doSnatchInfo.getIdNameMap().values(), bodyJson);
+                    if (!doneList.containsAll(doSnatchInfo.getIdNameMap().keySet())) {
+                        if(doSnatchInfo.getIdNameMap().size()>1){
+                            SendMessageUtil.send(ChannelEnum.CSTM.getDesc(), DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"), "主场馆", doSnatchInfo.getAccount(), "任务失败：" + bodyJson.getString("msg"));
+                        }else{
+                            for (Map.Entry<String, String> entry : doSnatchInfo.getIdNameMap().entrySet()) {
+                                TaskDetailEntity update=new TaskDetailEntity();
+                                update.setId(doSnatchInfo.getTaskDetailIds().get(0));
+                                update.setYn(true);
+                                update.setExt(bodyJson.getString("msg"));
+                                taskDetailDao.updateTaskDetail(update);
+                            }
+                        }
+                    }
                     try {
                         Files.delete(Paths.get(sliderImageName));
                         Files.delete(Paths.get(backImageName));
@@ -801,6 +813,7 @@ public class TicketServiceImpl implements TicketService {
                         taskDetailEntity.setDone(true);
                         redisService.setData(RedisKeyEnum.TASKDETAIL.getCode() + taskDetailId,JSON.toJSONString(taskDetailEntity));
                     }*/
+                    doneList.addAll(doSnatchInfo.getIdNameMap().keySet());
                     SendMessageUtil.send(ChannelEnum.CSTM.getDesc(), DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"), "主场馆", doSnatchInfo.getAccount(), String.join(",", doSnatchInfo.getIdNameMap().values()));
                     msgCache.remove(doSnatchInfo.getTaskId());
                     //查询个人订单
