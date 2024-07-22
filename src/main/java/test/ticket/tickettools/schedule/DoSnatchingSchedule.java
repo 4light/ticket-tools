@@ -144,7 +144,7 @@ public class DoSnatchingSchedule {
         runNormalTask();
     }
 
-    //@Scheduled(cron = "0/20 * * * * ?")
+    @Scheduled(cron = "0/20 * * * * ?")
     public void updateOrderPayStatus() {
         try {
             RestTemplate restTemplate = TemplateUtil.initSSLTemplate();
@@ -211,7 +211,7 @@ public class DoSnatchingSchedule {
             }
         }
     }
-    //@Scheduled(cron = "* 0/1 * * * ?")
+    @Scheduled(cron = "* 0/1 * * * ?")
     public void doUpdateAccountPool() {
         int accountNum=10;
         AccountInfoEntity query=new AccountInfoEntity();
