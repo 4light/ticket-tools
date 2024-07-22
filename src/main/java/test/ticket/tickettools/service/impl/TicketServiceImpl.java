@@ -1294,7 +1294,7 @@ public class TicketServiceImpl implements TicketService {
                 }
             }
             if (ObjectUtils.isEmpty(msgCode)) {
-                SendMessageUtil.send(ChannelEnum.CSTM.getDesc(), null, null, phoneNum, "获取渠道短信验证码异常!");
+                //SendMessageUtil.send(ChannelEnum.CSTM.getDesc(), null, null, phoneNum, "获取渠道短信验证码异常!");
                 return;
             }
             sourceParam.setVerificationCode(msgCode);

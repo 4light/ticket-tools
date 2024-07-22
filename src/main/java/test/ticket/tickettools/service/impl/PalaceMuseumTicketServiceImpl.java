@@ -438,7 +438,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
             modelCodeTicketInfoMap.put("parkFsyyDetailDTO", currentParkFsyyDetail);
             JSONObject createRes = new JSONObject();
             JSONObject jsonObject = buildCreateParam(mpOpenId, checkUserBody, doSnatchInfo, modelCodeTicketInfoMap, idNameTreeMap);
-            for (int i = 0; i < 10; i++) {
+            for (int i = 0; i < 5; i++) {
                 Thread.sleep(RandomUtil.randomInt(1000, 3000));
                 long timestamp = System.currentTimeMillis();
                 String ts = String.valueOf(timestamp).substring(0, 11);

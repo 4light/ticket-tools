@@ -60,7 +60,7 @@ public class DoPalaceMuseumSnatchingSchedule {
     }
 
 
-    @Scheduled(cron = "0/2 01-49 20 * * ?")
+    @Scheduled(cron = "0/2 14-49 20 * * ?")
     public void doPalaceMuseumTicketSnatch() {
         List<DoSnatchInfo> doSnatchInfos = palaceMuseumTicketServiceImpl.getDoSnatchInfos();
         if (ObjectUtils.isEmpty(doSnatchInfos)) {
