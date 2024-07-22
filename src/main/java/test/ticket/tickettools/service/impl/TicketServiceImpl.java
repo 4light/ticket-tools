@@ -1160,7 +1160,11 @@ public class TicketServiceImpl implements TicketService {
         headers.set("accept", "application/json");
         headers.set("Accept-Encoding", "gzip, deflate, br, zstd");
         headers.set("authorization", auth);
-        headers.set("cookie", "SL_G_WPT_TO=zh; SL_GWPT_Show_Hide_tmp=1; SL_wptGlobTipTmp=1");
+        headers.set("Referer", "https://pcticket.cstm.org.cn/personal/check_info?name=%E4%B8%BB%E5%B1%95%E5%8E%85");
+        headers.set("Sec-Ch-Ua", "\"Not/A)Brand\";v=\"8\", \"Chromium\";v=\"126\", \"Google Chrome\";v=\"126\"");
+        headers.set("Sec-Ch-Ua-Mobile", "?0");
+        headers.set("Sec-Ch-Ua-Platform", "\"macOS\"");
+        headers.set("Sec-Fetch-Dest", "empty");
         headers.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
         return headers;
     }
