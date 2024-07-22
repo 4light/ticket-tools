@@ -213,27 +213,23 @@ public class DoSnatchingSchedule {
     }
     @Scheduled(cron = "* 0/1 * * * ?")
     public void doUpdateAccountPool() {
-        int accountNum=20;
+        int accountNum=10;
         AccountInfoEntity query=new AccountInfoEntity();
         query.setCreator("system");
         query.setYn(false);
         query.setChannel(ChannelEnum.CSTM.getCode());
         List<AccountInfoEntity> accountInfoEntityList = accountInfoDao.selectByEntity(query);
+        int currentNum=0;
         if(!ObjectUtils.isEmpty(accountInfoEntityList)){
             accountNum=accountNum-accountInfoEntityList.size();
             for (AccountInfoEntity accountInfoEntity : accountInfoEntityList) {
                 if(ObjectUtils.isEmpty(accountInfoEntity.getHeaders())||!checkAuth(accountInfoEntity.getHeaders())){
                     accountInfoDao.del(accountInfoEntity.getId());
-                    String phoneNo = insertAccount();
-                    if(ObjectUtils.isEmpty(phoneNo)){
-                        log.info("账号池数据插入失败");
-                        return;
-                    }
-                    ticketServiceImpl.updateAuth(phoneNo);
+                    currentNum++;
                 }
             }
-            if(accountNum>0){
-                for (int i = 0; i < accountNum; i++) {
+            if(accountNum-accountNum>0){
+                for (int i = 0; i < accountNum-accountNum; i++) {
                     String phoneNo =insertAccount();
                     if(ObjectUtils.isEmpty(phoneNo)){
                         log.info("账号池数据插入失败");
