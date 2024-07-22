@@ -494,7 +494,7 @@ public class TicketServiceImpl implements TicketService {
             ProxyInfo proxyInfo = ObjectUtils.isEmpty(xieQuProxy) ? null : xieQuProxy.get(i);
             Long id = entity.getId();
             Long userInfoId = entity.getUserInfoId();
-            AccountInfoEntity accountInfoEntity = ObjectUtils.isEmpty(userInfoId) ? accountInfoEntityList.get(i) : accountInfoDao.selectById(userInfoId);
+            AccountInfoEntity accountInfoEntity = ObjectUtils.isEmpty(userInfoId) ? accountInfoEntityList.get(0) : accountInfoDao.selectById(userInfoId);
             TaskDetailEntity query = new TaskDetailEntity();
             query.setTaskId(entity.getId());
             query.setDone(false);
@@ -621,7 +621,7 @@ public class TicketServiceImpl implements TicketService {
             TaskEntity entity = allUnDoneTasks.get(i);
             ProxyInfo proxyInfo = ObjectUtils.isEmpty(xieQuProxy) ? null : xieQuProxy.get(i);
             Long userInfoId = entity.getUserInfoId();
-            AccountInfoEntity accountInfoEntity = ObjectUtils.isEmpty(userInfoId) ? accountInfoEntityList.get(i) : accountInfoDao.selectById(userInfoId);
+            AccountInfoEntity accountInfoEntity = ObjectUtils.isEmpty(userInfoId) ? accountInfoEntityList.get(0) : accountInfoDao.selectById(userInfoId);
             TaskDetailEntity query = new TaskDetailEntity();
             query.setTaskId(entity.getId());
             query.setDone(false);
