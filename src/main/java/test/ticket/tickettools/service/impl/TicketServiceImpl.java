@@ -631,6 +631,7 @@ public class TicketServiceImpl implements TicketService {
                 entity.setDone(true);
                 taskDao.updateTask(entity);
             }
+            Collections.shuffle(taskDetailEntities);
             for (TaskDetailEntity taskDetailEntity : taskDetailEntities) {
                 DoSnatchInfo doSnatchInfo = new DoSnatchInfo();
                 doSnatchInfo.setIp(ObjectUtils.isEmpty(proxyInfo) ? null : proxyInfo.getIp());
