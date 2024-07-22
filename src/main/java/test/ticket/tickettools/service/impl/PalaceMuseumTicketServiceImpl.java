@@ -183,10 +183,10 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
         taskEntity.setChannel(ChannelEnum.LOTS.getCode());
         List<TaskEntity> unDoneTasks = taskDao.getUnDoneTasks(taskEntity);
         List<DoSnatchInfo> doSnatchInfoList = new ArrayList<>();
-        List<ProxyInfo> xieQuProxy = ProxyUtil.getXieQuProxy(unDoneTasks.size());
+        //List<ProxyInfo> xieQuProxy = ProxyUtil.getXieQuProxy(unDoneTasks.size());
         for (int i = 0; i < unDoneTasks.size(); i++) {
             TaskEntity unDoneTask = unDoneTasks.get(i);
-            ProxyInfo proxyInfo = xieQuProxy.get(i);
+            //ProxyInfo proxyInfo = xieQuProxy.get(i);
             TaskDetailEntity taskDetailEntity = new TaskDetailEntity();
             taskDetailEntity.setTaskId(unDoneTask.getId());
             taskDetailEntity.setDone(false);
@@ -207,8 +207,8 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
             doSnatchInfo.setChannelUserId(accountInfoEntity.getChannelUserId());
             doSnatchInfo.setUseDate(unDoneTask.getUseDate());
             doSnatchInfo.setSession(unDoneTask.getSession());
-            doSnatchInfo.setIp(proxyInfo.getIp());
-            doSnatchInfo.setPort(proxyInfo.getPort());
+            //doSnatchInfo.setIp(proxyInfo.getIp());
+            //doSnatchInfo.setPort(proxyInfo.getPort());
             List<Long> taskDetailIds = new ArrayList<>();
             Map<String, String> idNameMap = new HashMap<>();
             for (TaskDetailEntity detailEntity : taskDetailEntities) {

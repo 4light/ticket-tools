@@ -83,13 +83,6 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
         }
     }
 
-    public static void main(String[] args) {
-        LocalDateTime localDate = LocalDateTime.now().plusDays(1L);
-
-        System.out.println(localDate);
-        long l = DateUtil.between(new Date(), DateUtils.localDateToDate(localDate), DateUnit.MINUTE);
-        System.out.println(l);
-    }
     @Override
     public List<TaskEntity> getAllUndoneTask() {
         return null;
@@ -101,10 +94,10 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
         taskEntity.setChannel(ChannelEnum.CHNMU.getCode());
         List<TaskEntity> unDoneTasks = taskDao.getUnDoneTasks(taskEntity);
         List<DoSnatchInfo> doSnatchInfoList = new ArrayList<>();
-        List<ProxyInfo> xieQuProxy = ProxyUtil.getXieQuProxy(unDoneTasks.size());
+        //List<ProxyInfo> xieQuProxy = ProxyUtil.getXieQuProxy(unDoneTasks.size());
         for (int i = 0; i < unDoneTasks.size(); i++) {
             TaskEntity unDoneTask=unDoneTasks.get(i);
-            ProxyInfo proxyInfo = xieQuProxy.get(i);
+            //ProxyInfo proxyInfo = xieQuProxy.get(i);
             TaskDetailEntity taskDetailEntity = new TaskDetailEntity();
             taskDetailEntity.setTaskId(unDoneTask.getId());
             taskDetailEntity.setDone(false);
@@ -125,8 +118,8 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
             doSnatchInfo.setChannelUserId(accountInfoEntity.getChannelUserId());
             doSnatchInfo.setUseDate(unDoneTask.getUseDate());
             doSnatchInfo.setSession(unDoneTask.getSession());
-            doSnatchInfo.setIp(proxyInfo.getIp());
-            doSnatchInfo.setPort(proxyInfo.getPort());
+            //doSnatchInfo.setIp(proxyInfo.getIp());
+            //doSnatchInfo.setPort(proxyInfo.getPort());
             List<Long> taskDetailIds = new ArrayList<>();
             Map<String, String> idNameMap = new HashMap<>();
             for (TaskDetailEntity detailEntity : taskDetailEntities) {
@@ -152,7 +145,7 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
         int hallScheduleId = 1;
         int priceId = 8;
         try {
-            //Thread.sleep(RandomUtil.randomInt(5000, 7000));
+            Thread.sleep(RandomUtil.randomInt(5000, 7000));
             boolean hasTicket = false;
             String getPriceByScheduleIdUrl = "https://wxmini.chnmuseum.cn/prod-api/pool/ingore/getPriceByScheduleId?hallId=%s&openPerson=1&queryDate=%s&saleMode=1&scheduleId=%s&p=wxmini";
             String getBlockUrl = "https://wxmini.chnmuseum.cn/prod-api/pool/getBlock?nonce=%s&platform=2&docType=1&p=wxmini";
@@ -161,7 +154,8 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
             Map<String, String> idNameMap = doSnatchInfo.getIdNameMap();
             String session = doSnatchInfo.getSession();
             //获取所有信息
-            RestTemplate restTemplate = ObjectUtils.isEmpty(doSnatchInfo.getIp()) ? TemplateUtil.initSSLTemplate() : TemplateUtil.xieQuTemp(doSnatchInfo.getIp(), doSnatchInfo.getPort());
+            //RestTemplate restTemplate = ObjectUtils.isEmpty(doSnatchInfo.getIp()) ? TemplateUtil.initSSLTemplate() : TemplateUtil.xieQuTemp(doSnatchInfo.getIp(), doSnatchInfo.getPort());
+            RestTemplate restTemplate = TemplateUtil.kuaiDaiLiTemp();
             HttpHeaders headers = new HttpHeaders();
             String headerStr = doSnatchInfo.getHeaders();
             JSONObject headerJson = JSON.parseObject(headerStr);
@@ -171,7 +165,7 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.remove("Content-Length");
             HttpEntity httpEntity = new HttpEntity(headers);
-            JSONObject getAllConfigRes = TemplateUtil.getResponse(restTemplate, gainAllSystemConfigLoginUrl, HttpMethod.GET, httpEntity);
+            JSONObject getAllConfigRes = TemplateUtil.getResponse(TemplateUtil.kuaiDaiLiTemp(), gainAllSystemConfigLoginUrl, HttpMethod.GET, httpEntity);
             if (ObjectUtils.isEmpty(getAllConfigRes) || !StrUtil.equals("操作成功", getAllConfigRes.getString("msg"))) {
                 log.info("获取配置信息失败:{}", getAllConfigRes);
                 runTaskCache.remove(taskId);
@@ -240,7 +234,9 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
                 }
                 log.info("CheckLeaderInfo结果:{}", getCheckLeaderInfoRes);
                 headers.remove("Content-Length");
-                String checkTime = getCheckTime(headerJson.getString("User-Agent"), doSnatchInfo.getIp(), doSnatchInfo.getPort());
+                String checkTime = getCheckTime(headerJson.getString("User-Agent"), restTemplate);
+                String subCheckTime = checkTime.substring(13, checkTime.length() - 1);
+                JSONObject checkJson = JSON.parseObject(subCheckTime);
                 log.info("getCheckTime:{}", checkTime);
                 String data = doSnatchInfo.getChannelUserId() + ":" + checkTime.substring(26, 36) + "000" + ":" + DateUtils.dateToStr(doSnatchInfo.getUseDate(), "yyyy/MM/dd") + ":" + hallId + ":" + hallScheduleId + ":2";
                 String nonce = doAES(data, "AyrKJRXPO3nR5Abc");
@@ -287,7 +283,7 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
                 checkLeaderInfoParam.put("captchaToken", token);
                 checkLeaderInfoParam.put("scanToken", null);
                 headers.setContentLength(JSON.toJSONString(checkLeaderInfoParam).getBytes(StandardCharsets.UTF_8).length);
-                headers.set("Host-Ip", EncDecUtil.doAES(doSnatchInfo.getIp(), "AyrKJRXPO3nR5Abc"));
+                headers.set("Host-Ip", EncDecUtil.doAES(checkJson.getString("ip"), "AyrKJRXPO3nR5Abc"));
                 log.info("header:{}", headers);
                 HttpEntity placeOrderEntity = new HttpEntity(checkLeaderInfoParam, headers);
                 JSONObject placeOrderRes = TemplateUtil.getResponse(restTemplate, placeOrderUrl, HttpMethod.POST, placeOrderEntity);
@@ -356,7 +352,7 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
         return checkLeaderInfoParam;
     }
 
-    public static String getCheckTime(String userAgent, String ip, Integer port) {
+    public static String getCheckTime(String userAgent, RestTemplate restTemplate) {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.set("Host", "vv.video.qq.com");
         httpHeaders.set("Connection", "keep-alive");
@@ -370,9 +366,16 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
         httpHeaders.set("Referer", "https://servicewechat.com/wx9e2927dd595b0473/73/page-frame.html");
         httpHeaders.set("Accept-Encoding", "gzip, deflate, br");
         httpHeaders.set("Accept-Language", "zh-CN,zh;q=0.9");
-        RestTemplate restTemplate = TemplateUtil.xieQuTemp(ip,port);
+        //RestTemplate restTemplate = TemplateUtil.xieQuTemp(ip,port);
         HttpEntity httpEntity = new HttpEntity(httpHeaders);
         ResponseEntity getCheckTimeRes = restTemplate.exchange("http://vv.video.qq.com/checktime?otype=json", HttpMethod.GET, httpEntity, String.class);
         return getCheckTimeRes.getBody().toString();
+    }
+
+    public static void main(String[] args) {
+        String checkTime = getCheckTime("Mozilla/5.0 (iPhone; CPU iPhone OS 15_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.50(0x18003231) NetType/WIFI Language/zh_CN", TemplateUtil.kuaiDaiLiTemp());
+        String subCheckTime = checkTime.substring(13, checkTime.length() - 1);
+        JSONObject checkJson = JSON.parseObject(subCheckTime);
+        System.out.println(checkJson.getString("ip"));
     }
 }

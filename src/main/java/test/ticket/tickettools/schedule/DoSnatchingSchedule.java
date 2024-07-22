@@ -1,6 +1,7 @@
 package test.ticket.tickettools.schedule;
 
 
+import cn.hutool.core.util.RandomUtil;
 import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson.JSON;
@@ -213,8 +214,13 @@ public class DoSnatchingSchedule {
             }
         }
     }
-    @Scheduled(cron = "* 0/1 * * * ?")
+    @Scheduled(cron = "* 0/2 * * * ?")
     public void doUpdateAccountPool() {
+        try {
+            Thread.sleep(RandomUtil.randomInt(1000,5000));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         int accountNum=10;
         AccountInfoEntity query=new AccountInfoEntity();
         query.setCreator("system");

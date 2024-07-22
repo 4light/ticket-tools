@@ -39,22 +39,13 @@ public class DoChnMuseumSnatchingSchedule {
         chnMuseumTicketServiceImpl.initData(null);
     }
 
-    @Scheduled(cron = "0/1 01-30 17 * * ?")
+    @Scheduled(cron = "0/1 0-59 23 * * ?")
     public void doPalaceMuseumTicketSnatch() {
         List<DoSnatchInfo> doSnatchInfos = chnMuseumTicketServiceImpl.getDoSnatchInfos();
         if (ObjectUtils.isEmpty(doSnatchInfos)) {
             return;
         }
         int size = doSnatchInfos.size();
-        List<ProxyInfo> proxyList = ProxyUtil.getXieQuProxy(size);
-        List<DoSnatchInfo> newDoSnatchInfos=new ArrayList<>();
-        for (int i = 0; i < doSnatchInfos.size(); i++) {
-            DoSnatchInfo doSnatchInfo = doSnatchInfos.get(i);
-            ProxyInfo proxyInfo = proxyList.get(i);
-            doSnatchInfo.setIp(proxyInfo.getIp());
-            doSnatchInfo.setPort(proxyInfo.getPort());
-            newDoSnatchInfos.add(doSnatchInfo);
-        }
         ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
         pool.setThreadNamePrefix("chnMuseumProcessor-");
         pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());//拒绝策略
@@ -62,7 +53,7 @@ public class DoChnMuseumSnatchingSchedule {
         pool.setCorePoolSize(size);
         pool.setQueueCapacity(size);
         pool.initialize();
-        for (DoSnatchInfo doSnatchInfo : newDoSnatchInfos) {
+        for (DoSnatchInfo doSnatchInfo : doSnatchInfos) {
             CompletableFuture.runAsync(() -> chnMuseumTicketServiceImpl.doSnatchingTicket(doSnatchInfo), pool);
         }
     }
