@@ -226,7 +226,7 @@ public class DoSnatchingSchedule {
                     currentNum++;
                 }
             }
-            if(accountInfoEntityList.size()-currentNum<0){
+            if(accountInfoEntityList.size()-currentNum<accountNum){
                 for (int i = 0; i < accountNum-accountInfoEntityList.size()-currentNum; i++) {
                     String phoneNo =insertAccount();
                     if(ObjectUtils.isEmpty(phoneNo)){
