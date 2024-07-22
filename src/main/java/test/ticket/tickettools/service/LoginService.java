@@ -196,6 +196,7 @@ public class LoginService {
         loginParam.put("username", logInCSTMParam.getPhone());
         HttpEntity loginEntity = new HttpEntity(loginParam, getBaseHeader());
         JSONObject getLoginRes = TemplateUtil.getResponse(TemplateUtil.kuaiDaiLiTemp(),loginUrl, HttpMethod.POST, loginEntity);
+        log.info("登录结果：{}",getLoginRes);
         if (!ObjectUtils.isEmpty(getLoginRes)&&getLoginRes.getIntValue("code")==200) {
             String auth="Bearer " + getLoginRes.getString("token");
             Long userId = getUserId(auth);

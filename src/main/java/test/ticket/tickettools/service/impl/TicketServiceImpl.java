@@ -1287,7 +1287,7 @@ public class TicketServiceImpl implements TicketService {
             sourceParam.setVerificationCode(msgCode);
             ServiceResponse login = loginService.login(sourceParam);
             if (login.getStatus() != 0) {
-                SendMessageUtil.send(ChannelEnum.CSTM.getDesc(), null, null, phoneNum, "登录异常");
+                SendMessageUtil.send(ChannelEnum.CSTM.getDesc(), null, null, phoneNum, "登录异常:"+login.getMsg());
                 return;
             }
             log.info("账号{}登录成功成功", sourceParam.getPhone());
