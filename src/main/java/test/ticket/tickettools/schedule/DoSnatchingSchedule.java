@@ -226,8 +226,8 @@ public class DoSnatchingSchedule {
                     currentNum++;
                 }
             }
-            if(accountNum-currentNum>0){
-                for (int i = 0; i < accountNum-currentNum; i++) {
+            if(accountInfoEntityList.size()-currentNum<0){
+                for (int i = 0; i < accountNum-accountInfoEntityList.size()-currentNum; i++) {
                     String phoneNo =insertAccount();
                     if(ObjectUtils.isEmpty(phoneNo)){
                         log.info("账号池数据插入失败");
