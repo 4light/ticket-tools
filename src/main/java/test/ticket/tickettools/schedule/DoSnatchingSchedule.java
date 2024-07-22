@@ -221,15 +221,14 @@ public class DoSnatchingSchedule {
         List<AccountInfoEntity> accountInfoEntityList = accountInfoDao.selectByEntity(query);
         int currentNum=0;
         if(!ObjectUtils.isEmpty(accountInfoEntityList)){
-            accountNum=accountNum-accountInfoEntityList.size();
             for (AccountInfoEntity accountInfoEntity : accountInfoEntityList) {
                 if(ObjectUtils.isEmpty(accountInfoEntity.getHeaders())||!checkAuth(accountInfoEntity.getHeaders())){
                     accountInfoDao.del(accountInfoEntity.getId());
                     currentNum++;
                 }
             }
-            if(accountNum-accountNum>0){
-                for (int i = 0; i < accountNum-accountNum; i++) {
+            if(accountNum-currentNum>0){
+                for (int i = 0; i < accountNum-currentNum; i++) {
                     String phoneNo =insertAccount();
                     if(ObjectUtils.isEmpty(phoneNo)){
                         log.info("账号池数据插入失败");
