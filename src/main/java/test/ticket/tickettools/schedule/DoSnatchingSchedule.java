@@ -216,6 +216,7 @@ public class DoSnatchingSchedule {
     }
     @Scheduled(cron = "0 */2 * * * ?")
     public void doUpdateAccountPool() {
+        log.info("开始更新账号池");
         int accountNum=10;
         AccountInfoEntity query=new AccountInfoEntity();
         query.setCreator("system");
@@ -250,7 +251,7 @@ public class DoSnatchingSchedule {
                 ticketServiceImpl.updateAuth(phoneNo);
             }
         }
-        
+        log.info("更新账号池结束");
     }
 
     public void updateAccountAndAuth(TaskEntity taskEntity){
