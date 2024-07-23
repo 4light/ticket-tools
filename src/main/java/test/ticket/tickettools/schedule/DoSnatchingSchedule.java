@@ -214,7 +214,7 @@ public class DoSnatchingSchedule {
             }
         }
     }
-    @Scheduled(cron = "* 0/2 * * * ?")
+    @Scheduled(cron = "0 */2 * * * ?")
     public void doUpdateAccountPool() {
         int accountNum=10;
         AccountInfoEntity query=new AccountInfoEntity();
