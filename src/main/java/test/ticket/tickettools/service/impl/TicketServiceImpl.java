@@ -294,15 +294,11 @@ public class TicketServiceImpl implements TicketService {
         taskDao.updateTask(taskEntity);
         TaskEntity targetTask = taskDao.selectByPrimaryKey(initTaskParam.getTaskId());
         List<TaskDetailEntity> taskDetailEntityList = initTaskParam.getTaskDetailEntityList();
-        TaskEntity queryEntity = new TaskEntity();
-        queryEntity.setId(initTaskParam.getTaskId());
-        TaskEntity currentTask = taskDao.queryTask(queryEntity);
-        AccountInfoEntity accountInfoEntity = accountInfoDao.selectById(currentTask.getUserInfoId());
-        HttpHeaders headers = getHeader(accountInfoEntity.getHeaders());
         RestTemplate restTemplate = TemplateUtil.initSSLTemplate();
-        HttpEntity entity = new HttpEntity(headers);
         List<String> failTicket = new ArrayList<>();
         for (TaskDetailEntity taskDetailEntity : taskDetailEntityList) {
+            HttpHeaders headers = getHeader(taskDetailEntity.getOrderCreatorAuth());
+            HttpEntity entity = new HttpEntity(headers);
             Long ticketId = taskDetailEntity.getTicketId();
             Long id = taskDetailEntity.getId();
             if (!ObjectUtils.isEmpty(ticketId) && ticketId != 0 && !ObjectUtils.isEmpty(id)) {
@@ -378,7 +374,7 @@ public class TicketServiceImpl implements TicketService {
                 //使用名字好区分
                 taskInfoListResponse.setAccountName(accountInfoEntity == null ? null : accountInfoEntity.getUserName());
                 taskInfoListResponse.setTaskYn(taskEntity.getYn());
-                taskInfoListResponse.setAccount(taskEntity.getAccount());
+                taskInfoListResponse.setAccount(taskEntity.getChannel()==0?taskDetailEntity.getOrderCreatorAccount():taskEntity.getAccount());
                 taskInfoListResponse.setUseDate(taskEntity.getUseDate());
                 taskInfoListResponse.setUserName(taskDetailEntity.getUserName());
                 taskInfoListResponse.setIDCard(taskDetailEntity.getIDCard());
@@ -848,6 +844,7 @@ public class TicketServiceImpl implements TicketService {
                                     taskDetailEntity.setDone(true);
                                     taskDetailEntity.setPrice(item.getIntValue("sourcePrice"));
                                     taskDetailEntity.setOrderCreatorAuth(doSnatchInfo.getAuthorization());
+                                    taskDetailEntity.setOrderCreatorAccount(doSnatchInfo.getAccount());
                                     //taskDetailEntity.setExt(null);
                                     taskDetailEntities.add(taskDetailEntity);
                                 }
@@ -891,7 +888,7 @@ public class TicketServiceImpl implements TicketService {
         headers.set("cookie", "SL_G_WPT_TO=zh; SL_GWPT_Show_Hide_tmp=1; SL_wptGlobTipTmp=1");
         headers.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
         try {
-            if (ObjectUtils.isEmpty(placeOrderInfo.getOrderId())) {
+            if (ObjectUtils.isEmpty(placeOrderInfo.getOrderId())||StrUtil.equals(placeOrderInfo.getOrderId(),"0")) {
                 JSONObject placeOrderRes = new JSONObject();
                 JSONObject param = new JSONObject();
                 param.put("childTicketNum", placeOrderInfo.getChildTicketNum());
@@ -905,6 +902,7 @@ public class TicketServiceImpl implements TicketService {
                 param.put("ticketNum", placeOrderInfo.getTicketInfoList().size());
                 param.put("useTicketType", 1);
                 HttpEntity entity = new HttpEntity<>(param, headers);
+                System.out.println(JSON.toJSONString(param));
                 ResponseEntity<JSONObject> exchange = restTemplate.exchange(placeOrderUrl, HttpMethod.POST, entity, JSONObject.class);
                 log.info("购物车提交结果:{}", exchange.getBody());
                 placeOrderRes = exchange.getBody();

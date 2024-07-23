@@ -38,6 +38,7 @@ public class TaskDetailEntity {
     private Integer price;
     private String ext;
     private String orderCreatorAuth;
+    private String orderCreatorAccount;
 
     public TaskDetailEntity() {
     }
@@ -46,7 +47,7 @@ public class TaskDetailEntity {
                             String IDCard, String userPhone, Integer age,
                             Date createDate, Date updateDate, Boolean done,
                             Boolean payment, Long ticketId, Boolean childrenTicket,
-                            String orderNumber, Boolean yn, Long orderId, Integer price,String ext,String orderCreatorId) {
+                            String orderNumber, Boolean yn, Long orderId, Integer price,String ext,String orderCreatorId,String orderCreatorAccount) {
         this.id = id;
         this.taskId = taskId;
         this.userName = userName;
@@ -65,6 +66,7 @@ public class TaskDetailEntity {
         this.price = price;
         this.ext=ext;
         this.orderCreatorAuth =orderCreatorId;
+        this.orderCreatorAccount=orderCreatorAccount;
     }
 
     public Long getId() {
@@ -209,5 +211,13 @@ public class TaskDetailEntity {
 
     public void setOrderCreatorAuth(String orderCreatorAuth) {
         this.orderCreatorAuth = orderCreatorAuth;
+    }
+
+    public String getOrderCreatorAccount() {
+        return orderCreatorAccount;
+    }
+
+    public void setOrderCreatorAccount(String orderCreatorAccount) {
+        this.orderCreatorAccount = orderCreatorAccount;
     }
 }

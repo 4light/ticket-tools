@@ -756,6 +756,7 @@ export default {
         payParam.id = item.id
         payParam.ticketId = item.ticketId
         payParam.userName = item.userName
+        payParam.orderCreatorAuth=item.authorization
         req.push(payParam)
       }
       intiParam.taskId = currentTaskId
