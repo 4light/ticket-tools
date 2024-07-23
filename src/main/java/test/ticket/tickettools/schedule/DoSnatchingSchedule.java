@@ -216,6 +216,11 @@ public class DoSnatchingSchedule {
     }
     @Scheduled(fixedDelay = 60000)
     public void doUpdateAccountPool() {
+        try {
+            Thread.sleep(RandomUtil.randomInt(1000,10000));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         log.info("开始更新账号池");
         int accountNum=10;
         AccountInfoEntity query=new AccountInfoEntity();
