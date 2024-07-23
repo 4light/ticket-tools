@@ -64,13 +64,33 @@ public class DoSnatchingSchedule {
     /**
      * 执行放票当天的任务
      */
-    @Scheduled(cron = "* 0-18 18 * * ?")
+    @Scheduled(cron = "* 0-3 18 * * ?")
     public void doSnatching() {
         List<DoSnatchInfo> taskForRun = ticketServiceImpl.getTaskForRun();
         if (ObjectUtils.isEmpty(taskForRun)) {
             return;
         }
-        if(!haveTicket(taskForRun.get(0))){
+        ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
+        pool.setThreadNamePrefix("CSTMDataProcessor-");
+        pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());//拒绝策略
+        int size = taskForRun.size();
+        pool.setMaxPoolSize(size);
+        pool.setCorePoolSize(size);
+        pool.setQueueCapacity(size);
+        pool.initialize();
+        List<CompletableFuture<Void>> futures = taskForRun.stream()
+                .map(doSnatchInfo -> CompletableFuture.runAsync(
+                        () -> ticketServiceImpl.snatchingTicket(doSnatchInfo),
+                        pool
+                ))
+                .collect(Collectors.toList());
+        CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+        allOf.thenRun(() -> log.info("放票日批次任务执行完成"));
+    }
+    @Scheduled(cron = "* 15-17 18 * * ?")
+    public void doSnatching2() {
+        List<DoSnatchInfo> taskForRun = ticketServiceImpl.getTaskForRun();
+        if (ObjectUtils.isEmpty(taskForRun)) {
             return;
         }
         ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
