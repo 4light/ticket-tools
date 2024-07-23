@@ -254,6 +254,7 @@ public class DoSnatchingSchedule {
         log.info("更新账号池结束");
     }
 
+    @Scheduled(fixedDelay = 300000)
     public void updateAccountAndAuth(TaskEntity taskEntity){
         String phoneNo = VirtualPhoneUtil.getPhoneNo();
         AccountInfoEntity account = new AccountInfoEntity();
