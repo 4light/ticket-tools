@@ -148,7 +148,7 @@ public class DoSnatchingSchedule {
         runNormalTask();
     }
 
-    @Scheduled(cron = "0/20 * * * * ?")
+    @Scheduled(fixedDelay = 20000)
     public void updateOrderPayStatus() {
         try {
             RestTemplate restTemplate = TemplateUtil.initSSLTemplate();
@@ -214,7 +214,7 @@ public class DoSnatchingSchedule {
             }
         }
     }
-    @Scheduled(cron = "0 */2 * * * ?")
+    @Scheduled(fixedDelay = 60000)
     public void doUpdateAccountPool() {
         log.info("开始更新账号池");
         int accountNum=10;
@@ -295,6 +295,7 @@ public class DoSnatchingSchedule {
         HttpEntity entity = new HttpEntity<>(headers);
         ResponseEntity<JSONObject> getUserRes = TemplateUtil.kuaiDaiLiTemp().exchange(getBlockUrl, HttpMethod.GET, entity, JSONObject.class);
         JSONObject body = getUserRes.getBody();
+        log.info("check返回:",body);
         if (!ObjectUtils.isEmpty(body)) {
             if (body.getIntValue("code") == 200) {
                 return true;
