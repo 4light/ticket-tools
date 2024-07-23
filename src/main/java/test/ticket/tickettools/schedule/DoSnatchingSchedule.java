@@ -216,11 +216,6 @@ public class DoSnatchingSchedule {
     }
     @Scheduled(fixedDelay = 60000)
     public void doUpdateAccountPool() {
-        try {
-            Thread.sleep(RandomUtil.randomInt(1000,10000));
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
         log.info("开始更新账号池");
         int accountNum=10;
         AccountInfoEntity query=new AccountInfoEntity();
@@ -298,6 +293,11 @@ public class DoSnatchingSchedule {
         headers.set("Sec-Fetch-Dest", "empty");
         headers.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
         HttpEntity entity = new HttpEntity<>(headers);
+        try {
+            Thread.sleep(RandomUtil.randomInt(1000,10000));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         ResponseEntity<JSONObject> getUserRes = TemplateUtil.kuaiDaiLiTemp().exchange(getBlockUrl, HttpMethod.GET, entity, JSONObject.class);
         JSONObject body = getUserRes.getBody();
         if (!ObjectUtils.isEmpty(body)) {
