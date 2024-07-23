@@ -300,12 +300,12 @@ public class DoSnatchingSchedule {
         HttpEntity entity = new HttpEntity<>(headers);
         ResponseEntity<JSONObject> getUserRes = TemplateUtil.kuaiDaiLiTemp().exchange(getBlockUrl, HttpMethod.GET, entity, JSONObject.class);
         JSONObject body = getUserRes.getBody();
-        log.info("check返回:{}",body);
         if (!ObjectUtils.isEmpty(body)) {
             if (body.getIntValue("code") == 200) {
                 return true;
             }
         }
+        log.info("check异常返回:{}",body);
         return false;
     }
 
