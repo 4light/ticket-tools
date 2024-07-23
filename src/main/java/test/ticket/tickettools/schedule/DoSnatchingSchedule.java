@@ -64,7 +64,7 @@ public class DoSnatchingSchedule {
     /**
      * 执行放票当天的任务
      */
-    @Scheduled(cron = "* 0-3 18 * * ?")
+    @Scheduled(cron = "0/2 0-3 18 * * ?")
     public void doSnatching() {
         List<DoSnatchInfo> taskForRun = ticketServiceImpl.getTaskForRun();
         if (ObjectUtils.isEmpty(taskForRun)) {
@@ -87,7 +87,7 @@ public class DoSnatchingSchedule {
         CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
         allOf.thenRun(() -> log.info("放票日批次任务执行完成"));
     }
-    @Scheduled(cron = "* 15-17 18 * * ?")
+    @Scheduled(cron = "0/2 15-17 18 * * ?")
     public void doSnatching2() {
         List<DoSnatchInfo> taskForRun = ticketServiceImpl.getTaskForRun();
         if (ObjectUtils.isEmpty(taskForRun)) {
