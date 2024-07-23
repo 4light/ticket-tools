@@ -293,25 +293,24 @@ public class DoSnatchingSchedule {
         headers.set("Sec-Fetch-Dest", "empty");
         headers.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
         HttpEntity entity = new HttpEntity<>(headers);
-        ResponseEntity<JSONObject> getUserRes= null;
         for (int i = 0; i < 3; i++) {
             try {
                 Thread.sleep(RandomUtil.randomInt(2000,5000));
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            getUserRes= TemplateUtil.kuaiDaiLiTemp().exchange(getBlockUrl, HttpMethod.GET, entity, JSONObject.class);
-        }
-        if(ObjectUtils.isEmpty(getUserRes)){
-            return false;
-        }
-        JSONObject body = getUserRes.getBody();
-        if (!ObjectUtils.isEmpty(body)) {
-            if (body.getIntValue("code") == 200) {
-                return true;
+            ResponseEntity<JSONObject> getUserRes= TemplateUtil.kuaiDaiLiTemp().exchange(getBlockUrl, HttpMethod.GET, entity, JSONObject.class);
+            if(ObjectUtils.isEmpty(getUserRes)){
+                return false;
             }
+            JSONObject body = getUserRes.getBody();
+            if (!ObjectUtils.isEmpty(body)) {
+                if (body.getIntValue("code") == 200) {
+                    return true;
+                }
+            }
+            log.info("check异常返回:{}",body);
         }
-        log.info("check异常返回:{}",body);
         return false;
     }
 
