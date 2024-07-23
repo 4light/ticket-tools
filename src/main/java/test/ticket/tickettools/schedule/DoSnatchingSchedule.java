@@ -32,6 +32,7 @@ import test.ticket.tickettools.utils.*;
 
 import javax.annotation.Resource;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -66,29 +67,13 @@ public class DoSnatchingSchedule {
      */
     @Scheduled(cron = "0/2 0-3 18 * * ?")
     public void doSnatching() {
-        List<DoSnatchInfo> taskForRun = ticketServiceImpl.getTaskForRun();
-        if (ObjectUtils.isEmpty(taskForRun)) {
-            return;
-        }
-        ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
-        pool.setThreadNamePrefix("CSTMDataProcessor-");
-        pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());//拒绝策略
-        int size = taskForRun.size();
-        pool.setMaxPoolSize(size);
-        pool.setCorePoolSize(size);
-        pool.setQueueCapacity(size);
-        pool.initialize();
-        List<CompletableFuture<Void>> futures = taskForRun.stream()
-                .map(doSnatchInfo -> CompletableFuture.runAsync(
-                        () -> ticketServiceImpl.snatchingTicket(doSnatchInfo),
-                        pool
-                ))
-                .collect(Collectors.toList());
-        CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
-        allOf.thenRun(() -> log.info("放票日批次任务执行完成"));
+        doSingleSnatch();
     }
     @Scheduled(cron = "0/2 15-17 18 * * ?")
     public void doSnatching2() {
+        doSnatchingBatch();
+    }
+    private void doSnatchingBatch(){
         List<DoSnatchInfo> taskForRun = ticketServiceImpl.getTaskForRun();
         if (ObjectUtils.isEmpty(taskForRun)) {
             return;
@@ -114,7 +99,7 @@ public class DoSnatchingSchedule {
     /**
      * 去除放票当天的任务需要单个执行的任务
      */
-    //@Scheduled(cron = "* 0-18 18 * * ?")
+    @Scheduled(cron = "* 4-13 18 * * ?")
     public void doSnatchingExcludeTarget() {
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
         if (ObjectUtils.isEmpty(allTaskForRun)) {
@@ -153,7 +138,7 @@ public class DoSnatchingSchedule {
         pool.shutdown();
     }
 
-    @Scheduled(cron = "* 19-59 18 * * ?")
+    @Scheduled(cron = "* 0-59 18 * * ?")
     public void doSingleSnatch() {
         runNormalTask();
     }
@@ -163,7 +148,7 @@ public class DoSnatchingSchedule {
         runNormalTask();
     }
 
-    @Scheduled(cron = "* * 0-6,19-23 * * ?")
+    @Scheduled(cron = "* * 0-1,19-23 * * ?")
     public void doSingleSnatchOtherTime2() {
         runNormalTask();
     }
@@ -236,6 +221,11 @@ public class DoSnatchingSchedule {
     }
     @Scheduled(fixedDelay = 60000)
     public void doUpdateAccountPool() {
+        LocalDateTime now=LocalDateTime.now();
+        int hour = now.getHour();
+        if(hour>=2&&hour<=5){
+            return;
+        }
         log.info("开始更新账号池");
         int accountNum=10;
         AccountInfoEntity query=new AccountInfoEntity();
@@ -426,4 +416,5 @@ public class DoSnatchingSchedule {
         }
         return null;
     }
+
 }
