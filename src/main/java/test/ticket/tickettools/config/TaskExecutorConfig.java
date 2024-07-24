@@ -16,7 +16,7 @@ public class TaskExecutorConfig {
     @Bean
     public ThreadPoolTaskExecutor getAsyncExecutor() {
         ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
-        pool.setCorePoolSize(50);//核心线程数
+        pool.setCorePoolSize(2);//核心线程数
         pool.setMaxPoolSize(500);//最大线
         pool.setQueueCapacity(200);//线程队列
         pool.setThreadNamePrefix("DataProcessor-");

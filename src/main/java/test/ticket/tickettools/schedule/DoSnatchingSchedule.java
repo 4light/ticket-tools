@@ -55,19 +55,13 @@ public class DoSnatchingSchedule {
     TaskDao taskDao;
     @Resource
     AccountInfoDao accountInfoDao;
-    @Resource
-    LoginService loginService;
-    @Resource
-    TaskExecutorConfig taskExecutorConfig;
-    @Resource
-    RedisService redisService;
 
     /**
      * 执行放票当天的任务
      */
     @Scheduled(cron = "0/2 0-3 18 * * ?")
     public void doSnatching() {
-        doSingleSnatch();
+        doSnatchingBatch();
     }
     @Scheduled(cron = "0/2 15-17 18 * * ?")
     public void doSnatching2() {
@@ -138,7 +132,7 @@ public class DoSnatchingSchedule {
         pool.shutdown();
     }
 
-    @Scheduled(cron = "* 0-59 18 * * ?")
+    @Scheduled(cron = "* 18-59 18 * * ?")
     public void doSingleSnatch() {
         runNormalTask();
     }

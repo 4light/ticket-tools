@@ -368,7 +368,7 @@ public class TicketServiceImpl implements TicketService {
                 TaskInfoListResponse taskInfoListResponse = new TaskInfoListResponse();
                 taskInfoListResponse.setTaskId(id);
                 taskInfoListResponse.setTaskName(taskEntity.getTaskName());
-                taskInfoListResponse.setAccount(ObjectUtils.isEmpty(accountInfoEntity) ? null : accountInfoEntity.getUserName());
+                //taskInfoListResponse.setAccount(ObjectUtils.isEmpty(accountInfoEntity) ? null : accountInfoEntity.getUserName());
                 taskInfoListResponse.setId(taskDetailEntity.getId());
                 taskInfoListResponse.setAuthorization(ObjectUtils.isEmpty(accountInfoEntity) ? taskDetailEntity.getOrderCreatorAuth() : accountInfoEntity.getHeaders());
                 //使用名字好区分
@@ -780,17 +780,7 @@ public class TicketServiceImpl implements TicketService {
                 log.info("账号：{}下游客：{},提交订单结果：{}", doSnatchInfo.getAccount(), doSnatchInfo.getIdNameMap().values(), bodyJson);
                 if (!ObjectUtils.isEmpty(bodyJson) && (bodyJson.getIntValue("code") == 550 || bodyJson.getIntValue("code") == 503)) {
                     if (!doneList.containsAll(doSnatchInfo.getIdNameMap().keySet())) {
-                        if(doSnatchInfo.getIdNameMap().size()>1){
                             SendMessageUtil.send(ChannelEnum.CSTM.getDesc(), DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"), "主场馆", doSnatchInfo.getAccount(), "任务失败：" + bodyJson.getString("msg"));
-                        }else{
-                            for (Map.Entry<String, String> entry : doSnatchInfo.getIdNameMap().entrySet()) {
-                                TaskDetailEntity update=new TaskDetailEntity();
-                                update.setId(doSnatchInfo.getTaskDetailIds().get(0));
-                                update.setYn(true);
-                                update.setExt(bodyJson.getString("msg"));
-                                taskDetailDao.updateTaskDetail(update);
-                            }
-                        }
                     }
                     try {
                         Files.delete(Paths.get(sliderImageName));
@@ -800,15 +790,7 @@ public class TicketServiceImpl implements TicketService {
                     }
                     return;
                 }
-                //WebSocketServer.sendInfo("余票不足","web");
                 if (!ObjectUtils.isEmpty(bodyJson) && bodyJson.getIntValue("code") == 200) {
-                    /*List<Long> taskDetailIds = doSnatchInfo.getTaskDetailIds();
-                    for (Long taskDetailId : taskDetailIds) {
-                        String taskDetailStr = redisService.getData(RedisKeyEnum.TASKDETAIL.getCode() + taskDetailId);
-                        TaskDetailEntity taskDetailEntity = JSON.parseObject(taskDetailStr, TaskDetailEntity.class);
-                        taskDetailEntity.setDone(true);
-                        redisService.setData(RedisKeyEnum.TASKDETAIL.getCode() + taskDetailId,JSON.toJSONString(taskDetailEntity));
-                    }*/
                     doneList.addAll(doSnatchInfo.getIdNameMap().keySet());
                     SendMessageUtil.send(ChannelEnum.CSTM.getDesc(), DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"), "主场馆", doSnatchInfo.getAccount(), String.join(",", doSnatchInfo.getIdNameMap().values()));
                     msgCache.remove(doSnatchInfo.getTaskId());

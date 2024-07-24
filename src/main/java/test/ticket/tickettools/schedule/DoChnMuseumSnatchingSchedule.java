@@ -53,8 +53,8 @@ public class DoChnMuseumSnatchingSchedule {
         pool.setCorePoolSize(size);
         pool.setQueueCapacity(size);
         pool.initialize();
-        for (DoSnatchInfo doSnatchInfo : doSnatchInfos) {
-            CompletableFuture.runAsync(() -> chnMuseumTicketServiceImpl.doSnatchingTicket(doSnatchInfo), pool);
-        }
+        doSnatchInfos.forEach(o->{
+            CompletableFuture.runAsync(() -> chnMuseumTicketServiceImpl.doSnatchingTicket(o), pool);
+        });
     }
 }

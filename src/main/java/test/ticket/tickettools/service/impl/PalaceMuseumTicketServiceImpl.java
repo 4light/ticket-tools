@@ -323,7 +323,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
             headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
             HttpEntity getTicketEntity = new HttpEntity<>(headers);
             String formatGetTicketGridUrl = String.format(getTicketGridUrl, formatUseDate, formatUseDate);
-            //Thread.sleep(RandomUtil.randomInt(3000, 3500));
+            Thread.sleep(RandomUtil.randomInt(3000, 3500));
             JSONObject ticketGridJson = TemplateUtil.getResponse(restTemplate, formatGetTicketGridUrl, HttpMethod.GET, getTicketEntity);
             if (ObjectUtils.isEmpty(ticketGridJson)) {
                 runTaskCache.remove(taskId);
@@ -438,8 +438,8 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
             modelCodeTicketInfoMap.put("parkFsyyDetailDTO", currentParkFsyyDetail);
             JSONObject createRes = new JSONObject();
             JSONObject jsonObject = buildCreateParam(mpOpenId, checkUserBody, doSnatchInfo, modelCodeTicketInfoMap, idNameTreeMap);
-            for (int i = 0; i < 5; i++) {
-                Thread.sleep(RandomUtil.randomInt(1000, 3000));
+            for (int i = 0; i < 2; i++) {
+                Thread.sleep(RandomUtil.randomInt(2000, 4000));
                 long timestamp = System.currentTimeMillis();
                 String ts = String.valueOf(timestamp).substring(0, 11);
                 headers.set("ts", String.valueOf(timestamp / 1000));

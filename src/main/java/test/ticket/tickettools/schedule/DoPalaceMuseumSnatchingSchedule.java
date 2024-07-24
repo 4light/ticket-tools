@@ -60,8 +60,19 @@ public class DoPalaceMuseumSnatchingSchedule {
     }
 
 
-    @Scheduled(cron = "0/2 14-49 20 * * ?")
+    @Scheduled(cron = "0/2 01-03 20 * * ?")
     public void doPalaceMuseumTicketSnatch() {
+        doSnatch();
+    }
+    @Scheduled(cron = "0/2 14-16 20 * * ?")
+    public void doPalaceMuseumTicketSnatch2() {
+        doSnatch();
+    }
+    @Scheduled(cron = "0/2 38-45 20 * * ?")
+    public void doPalaceMuseumTicketSnatch3() {
+        doSnatch();
+    }
+    private void doSnatch(){
         List<DoSnatchInfo> doSnatchInfos = palaceMuseumTicketServiceImpl.getDoSnatchInfos();
         if (ObjectUtils.isEmpty(doSnatchInfos)) {
             return;
