@@ -26,7 +26,7 @@ public class DoJntSnatchingSchedule {
     DoSnatchTicketService jntTicketServiceImpl;
 
 
-    @Scheduled(cron = "0/30 28-29 12 * * ?")
+    //@Scheduled(cron = "0/30 28-29 12 * * ?")
     public void initData(){
         List<TaskEntity> allUndoneTask = jntTicketServiceImpl.getAllUndoneTask();
         if (ObjectUtils.isEmpty(allUndoneTask)) {
@@ -54,7 +54,7 @@ public class DoJntSnatchingSchedule {
         }
     }
 
-    @Scheduled(cron = "0/2 30-32 12 * * ?")
+    //@Scheduled(cron = "0/2 30-32 12 * * ?")
     public void doJntTicketSnatch(){
         List<DoSnatchInfo> doSnatchInfos = jntTicketServiceImpl.getDoSnatchInfos();
         if(ObjectUtils.isEmpty(doSnatchInfos)){

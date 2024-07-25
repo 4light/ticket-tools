@@ -105,7 +105,7 @@ public class TicketServiceImpl implements TicketService {
     @Resource
     LoginService loginService;
     @Resource
-    RedisService redisService;
+    RedisService redisService1;
 
 
     @Override
@@ -265,11 +265,11 @@ public class TicketServiceImpl implements TicketService {
                     });
                     taskDetailDao.insertBatch(addList);
 
-                    List<String> list = redisService.getList(RedisKeyEnum.RELATION.getCode() + taskEntity.getId());
+                   /* List<String> list = redisService.getList(RedisKeyEnum.RELATION.getCode() + taskEntity.getId());
                     addList.forEach(o -> {
                         list.add(String.valueOf(o.getId()));
                         //redisService.setData(RedisKeyEnum.TASKDETAIL.getCode() + o.getId(), JSON.toJSONString(o));
-                    });
+                    });*/
                     //redisService.saveList(RedisKeyEnum.RELATION.getCode() + taskEntity.getId(), list);
                 }
                 if (!ObjectUtils.isEmpty(updateList)) {
@@ -309,13 +309,13 @@ public class TicketServiceImpl implements TicketService {
                     taskDetailEntity.setDone(false);
                     //successEntities.add(taskDetailEntity);
                     taskDetailDao.updateTaskDetail(taskDetailEntity);
-                    redisService.setData(RedisKeyEnum.TASKDETAIL.getCode() + taskDetailEntity.getId(), JSON.toJSONString(taskDetailEntity));
+                    //redisService.setData(RedisKeyEnum.TASKDETAIL.getCode() + taskDetailEntity.getId(), JSON.toJSONString(taskDetailEntity));
                 } else {
                     failTicket.add(taskDetailEntity.getUserName());
                 }
             }
         }
-        redisService.setData(RedisKeyEnum.TASK.getCode() + initTaskParam.getTaskId(), JSON.toJSONString(targetTask));
+        //redisService.setData(RedisKeyEnum.TASK.getCode() + initTaskParam.getTaskId(), JSON.toJSONString(targetTask));
         if (ObjectUtils.isEmpty(failTicket)) {
             return ServiceResponse.createBySuccessMessgge("重置成功");
         }
@@ -433,10 +433,10 @@ public class TicketServiceImpl implements TicketService {
             if (res > 0) {
                 List<TaskDetailEntity> taskDetailEntityList = taskDetailDao.selectByTaskId(taskId);
                 taskDetailEntityList.forEach(o -> {
-                    redisService.setData(RedisKeyEnum.TASKDETAIL.getCode() + o.getId(), JSON.toJSONString(o));
+                    //redisService.setData(RedisKeyEnum.TASKDETAIL.getCode() + o.getId(), JSON.toJSONString(o));
                 });
                 TaskEntity queryTask = taskDao.queryTask(taskEntity);
-                redisService.setData(RedisKeyEnum.TASK.getCode() + queryTask.getId(), JSON.toJSONString(queryTask));
+                //redisService.setData(RedisKeyEnum.TASK.getCode() + queryTask.getId(), JSON.toJSONString(queryTask));
                 return ServiceResponse.createBySuccess();
             }
             return ServiceResponse.createByErrorMessage("删除详情失败");
@@ -545,55 +545,6 @@ public class TicketServiceImpl implements TicketService {
         return result;
     }
 
-    @Override
-    public List<DoSnatchInfo> getTaskForRun1() {
-        LocalDate now = LocalDate.now();
-        LocalDate snatchDate = now.plusDays(7L);
-        List<String> taskKeys = redisService.searchKey(RedisKeyEnum.TASK.getCode() + "[0-9]*");
-        List<DoSnatchInfo> result = new ArrayList<>();
-        for (String taskKey : taskKeys) {
-            String taskStr = redisService.getData(taskKey);
-            TaskEntity taskEntity = JSON.parseObject(taskStr, TaskEntity.class);
-            String accountStr = redisService.getData(RedisKeyEnum.ACCOUNT.getCode() + taskEntity.getUserInfoId());
-            AccountInfoEntity accountInfoEntity = JSON.parseObject(accountStr, AccountInfoEntity.class);
-            if (taskEntity.getChannel() == ChannelEnum.CSTM.getCode()
-                    && ObjectUtil.equals(DateUtils.localDateToDate(snatchDate), taskEntity.getUseDate())
-                    && !taskEntity.getDone()
-                    && !taskEntity.getYn()) {
-                List<String> taskDetailIds = redisService.getList(RedisKeyEnum.RELATION.getCode() + taskEntity.getId());
-                List<List<String>> partition = Lists.partition(taskDetailIds, 5);
-                for (List<String> item : partition) {
-                    DoSnatchInfo doSnatchInfo = new DoSnatchInfo();
-                    Map<String, String> idNameMap = new HashMap<>();
-                    List<Long> detailIds = new ArrayList<>();
-                    for (String o : item) {
-                        String taskDetailStr = redisService.getData(RedisKeyEnum.TASKDETAIL.getCode() + o);
-                        TaskDetailEntity taskDetailEntity = JSON.parseObject(taskDetailStr, TaskDetailEntity.class);
-                        if (!taskDetailEntity.getDone() || taskDetailEntity.getYn()) {
-                            continue;
-                        }
-                        detailIds.add(Long.valueOf(o));
-                        idNameMap.put(taskDetailEntity.getIDCard(), taskDetailEntity.getUserName());
-                    }
-                    if (ObjectUtils.isEmpty(detailIds)) {
-                        continue;
-                    }
-                    doSnatchInfo.setTaskId(taskEntity.getId());
-                    doSnatchInfo.setCreator(taskEntity.getCreator());
-                    doSnatchInfo.setUserId(Long.valueOf(accountInfoEntity.getChannelUserId()));
-                    doSnatchInfo.setAccount(accountInfoEntity.getAccount());
-                    doSnatchInfo.setAuthorization(accountInfoEntity.getHeaders());
-                    doSnatchInfo.setSession(taskEntity.getSession());
-                    doSnatchInfo.setUseDate(taskEntity.getUseDate());
-                    doSnatchInfo.setTaskDetailIds(detailIds);
-                    doSnatchInfo.setIdNameMap(idNameMap);
-                    result.add(doSnatchInfo);
-                }
-            }
-        }
-        return result;
-    }
-
 
     @Override
     public List<DoSnatchInfo> getAllTaskForRun() {
@@ -651,41 +602,6 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
-    public List<DoSnatchInfo> getAllTaskForRun1() {
-        List<String> taskKeys = redisService.searchKey(RedisKeyEnum.TASK.getCode() + "[0-9]*");
-        List<DoSnatchInfo> result = new ArrayList<>();
-        for (String taskKey : taskKeys) {
-            String taskStr = redisService.getData(taskKey);
-            TaskEntity taskEntity = JSON.parseObject(taskStr, TaskEntity.class);
-            String accountStr = redisService.getData(RedisKeyEnum.ACCOUNT.getCode() + taskEntity.getUserInfoId());
-            AccountInfoEntity accountInfoEntity = JSON.parseObject(accountStr, AccountInfoEntity.class);
-            if (taskEntity.getChannel() == ChannelEnum.CSTM.getCode() && !taskEntity.getDone() && !taskEntity.getYn()) {
-                List<String> taskDetailIds = redisService.getList(RedisKeyEnum.RELATION.getCode() + taskEntity.getId());
-                for (String taskDetailId : taskDetailIds) {
-                    String taskDetailStr = redisService.getData(RedisKeyEnum.TASKDETAIL.getCode() + taskDetailId);
-                    TaskDetailEntity taskDetailEntity = JSON.parseObject(taskDetailStr, TaskDetailEntity.class);
-                    if (!taskDetailEntity.getDone() && !taskDetailEntity.getYn()) {
-                        DoSnatchInfo doSnatchInfo = new DoSnatchInfo();
-                        doSnatchInfo.setCreator(taskEntity.getCreator());
-                        doSnatchInfo.setTaskId(taskEntity.getId());
-                        doSnatchInfo.setUserId(accountInfoEntity.getChannelUserId() == null ? null : Long.valueOf(accountInfoEntity.getChannelUserId()));
-                        doSnatchInfo.setAccount(accountInfoEntity.getAccount());
-                        doSnatchInfo.setAuthorization(accountInfoEntity.getHeaders());
-                        doSnatchInfo.setUseDate(taskEntity.getUseDate());
-                        doSnatchInfo.setSession(taskEntity.getSession());
-                        doSnatchInfo.setTaskDetailIds(Arrays.asList(taskDetailEntity.getId()));
-                        doSnatchInfo.setIdNameMap(new HashMap<String, String>() {{
-                            put(taskDetailEntity.getIDCard(), taskDetailEntity.getUserName());
-                        }});
-                        result.add(doSnatchInfo);
-                    }
-                }
-            }
-        }
-        return result;
-    }
-
-    @Override
     public List<TaskEntity> getAllUnDoneTask() {
         TaskEntity taskEntity = new TaskEntity();
         taskEntity.setUseDate(DateUtils.localDateToDate(LocalDate.now()));
@@ -697,7 +613,7 @@ public class TicketServiceImpl implements TicketService {
         Integer integer = taskDetailDao.updateTaskDetail(taskDetailEntity);
         if (integer > 0) {
             TaskDetailEntity res = taskDetailDao.selectByTaskDetailId(taskDetailEntity.getId());
-            redisService.setData(RedisKeyEnum.TASKDETAIL.getCode() + res.getId(), JSON.toJSONString(res));
+            //redisService.setData(RedisKeyEnum.TASKDETAIL.getCode() + res.getId(), JSON.toJSONString(res));
         }
         return integer > 0;
     }
@@ -1162,9 +1078,7 @@ public class TicketServiceImpl implements TicketService {
         return headers;
     }
 
-    private JSONObject
-
-    getCheckImag(DoSnatchInfo doSnatchInfo) {
+    private JSONObject getCheckImag(DoSnatchInfo doSnatchInfo) {
         JSONObject response;
         List<ProxyInfo> xieQuProxy = ProxyUtil.getXieQuProxy(1);
         //RestTemplate restTemplate = ObjectUtils.isEmpty(doSnatchInfo.getIp()) ? TemplateUtil.initSSLTemplate() : TemplateUtil.xieQuTemp(doSnatchInfo.getIp(), doSnatchInfo.getPort());
