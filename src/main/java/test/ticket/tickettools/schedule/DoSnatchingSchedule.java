@@ -25,8 +25,6 @@ import test.ticket.tickettools.domain.constant.ChannelEnum;
 import test.ticket.tickettools.domain.entity.AccountInfoEntity;
 import test.ticket.tickettools.domain.entity.TaskDetailEntity;
 import test.ticket.tickettools.domain.entity.TaskEntity;
-import test.ticket.tickettools.service.LoginService;
-import test.ticket.tickettools.service.RedisService;
 import test.ticket.tickettools.service.TicketService;
 import test.ticket.tickettools.utils.*;
 
@@ -147,7 +145,7 @@ public class DoSnatchingSchedule {
         runNormalTask();
     }
 
-    @Scheduled(fixedDelay = 20000)
+    //@Scheduled(fixedDelay = 20000)
     public void updateOrderPayStatus() {
         try {
             RestTemplate restTemplate = TemplateUtil.initSSLTemplate();
@@ -213,7 +211,7 @@ public class DoSnatchingSchedule {
             }
         }
     }
-    @Scheduled(fixedDelay = 60000)
+    //@Scheduled(fixedDelay = 60000)
     public void doUpdateAccountPool() {
         LocalDateTime now=LocalDateTime.now();
         int hour = now.getHour();
