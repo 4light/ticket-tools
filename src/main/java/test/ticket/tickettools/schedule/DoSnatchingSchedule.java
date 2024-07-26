@@ -219,7 +219,7 @@ public class DoSnatchingSchedule {
             return;
         }
         log.info("开始更新账号池");
-        int accountNum=10;
+        int accountNum=15;
         AccountInfoEntity query=new AccountInfoEntity();
         query.setCreator("system");
         query.setYn(false);
