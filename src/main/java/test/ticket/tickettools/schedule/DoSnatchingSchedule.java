@@ -57,11 +57,11 @@ public class DoSnatchingSchedule {
     /**
      * 执行放票当天的任务
      */
-    //@Scheduled(cron = "0/2 0-3 18 * * ?")
+    @Scheduled(cron = "0/2 0-3 18 * * ?")
     public void doSnatching() {
         doSnatchingBatch();
     }
-    //@Scheduled(cron = "0/2 15-17 18 * * ?")
+    @Scheduled(cron = "0/2 15-17 18 * * ?")
     public void doSnatching2() {
         doSnatchingBatch();
     }
@@ -91,7 +91,7 @@ public class DoSnatchingSchedule {
     /**
      * 去除放票当天的任务需要单个执行的任务
      */
-   // @Scheduled(cron = "* 0-18 18 * * ?")
+    @Scheduled(cron = "* 0-18 18 * * ?")
     public void doSnatchingExcludeTarget() {
         List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
         if (ObjectUtils.isEmpty(allTaskForRun)) {
@@ -130,22 +130,22 @@ public class DoSnatchingSchedule {
         pool.shutdown();
     }
 
-    //@Scheduled(cron = "* 18-59 18 * * ?")
+    @Scheduled(cron = "* 18-59 18 * * ?")
     public void doSingleSnatch() {
         runNormalTask();
     }
 
-    //@Scheduled(cron = "* * 7-17 * * ?")
+    @Scheduled(cron = "* * 7-17 * * ?")
     public void doSingleSnatchOtherTime() {
         runNormalTask();
     }
 
-    //@Scheduled(cron = "* * 0-1,19-23 * * ?")
+    @Scheduled(cron = "* * 0-1,19-23 * * ?")
     public void doSingleSnatchOtherTime2() {
         runNormalTask();
     }
 
-    //@Scheduled(fixedDelay = 20000)
+    @Scheduled(fixedDelay = 20000)
     public void updateOrderPayStatus() {
         try {
             RestTemplate restTemplate = TemplateUtil.initSSLTemplate();
@@ -211,7 +211,7 @@ public class DoSnatchingSchedule {
             }
         }
     }
-    //@Scheduled(fixedDelay = 60000)
+    @Scheduled(fixedDelay = 60000)
     public void doUpdateAccountPool() {
         LocalDateTime now=LocalDateTime.now();
         int hour = now.getHour();

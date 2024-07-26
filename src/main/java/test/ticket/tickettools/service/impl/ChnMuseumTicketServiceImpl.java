@@ -373,9 +373,10 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
     }
 
     public static void main(String[] args) {
-        String checkTime = getCheckTime("Mozilla/5.0 (iPhone; CPU iPhone OS 15_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.50(0x18003231) NetType/WIFI Language/zh_CN", TemplateUtil.kuaiDaiLiTemp());
-        String subCheckTime = checkTime.substring(13, checkTime.length() - 1);
-        JSONObject checkJson = JSON.parseObject(subCheckTime);
-        System.out.println(checkJson.getString("ip"));
+        RestTemplate restTemplate = TemplateUtil.kuaiDaiLiTemp();
+        for (int i = 0; i < 3; i++) {
+            String checkTime = getCheckTime("Mozilla/5.0 (iPhone; CPU iPhone OS 15_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.50(0x18003231) NetType/WIFI Language/zh_CN",restTemplate );
+            System.out.println(checkTime);
+        }
     }
 }

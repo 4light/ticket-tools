@@ -4,6 +4,9 @@ import cn.hutool.crypto.digest.MD5;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.codec.binary.Hex;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
@@ -108,9 +111,20 @@ public class EncDecUtil {
     }
 
     public static void main(String[] args) {
-        String data = 9793430 + ":"  + "1715165544000" + ":" + "2024/05/11" + ":" + 1 + ":" + 1 + ":2";
-        String ayrKJRXPO3nR5Abc = doAES(data, "AyrKJRXPO3nR5Abc");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.set("Host", "vv.video.qq.com");
+        httpHeaders.set("Accept", "*/*");
+        httpHeaders.set("Connection", "keep-alive");
+        httpHeaders.set("Accept-Encoding", "gzip;q=1.0, compress;q=0.5");
+        httpHeaders.set("Accept-Language", "zh-CN,zh;q=0.9");
+        HttpEntity httpEntity = new HttpEntity(httpHeaders);
+        String getBlockUrl = "https://wxmini.chnmuseum.cn/prod-api/pool/getBlock?nonce=%s&platform=2&docType=1&p=wxmini";
+        String data=":1721907884000"+":11";
+        String ayrKJRXPO3nR5Abc = doAES(data, "mjnkHYmu0jpURBTQ");
         System.out.println(ayrKJRXPO3nR5Abc);
+       /* String formatUrl = String.format(getBlockUrl, ayrKJRXPO3nR5Abc);
+        JSONObject getBlockRes = TemplateUtil.getResponse(TemplateUtil.kuaiDaiLiTemp(), formatUrl, HttpMethod.GET, httpEntity);
+        System.out.println(getBlockRes);*/
     }
 
 }
