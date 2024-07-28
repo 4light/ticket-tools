@@ -135,15 +135,15 @@ public class DoSnatchingSchedule {
         runNormalTask();
     }
 
-    @Scheduled(cron = "* * 7-17 * * ?")
+    @Scheduled(cron = "* * 0-17,19-23 * * ?")
     public void doSingleSnatchOtherTime() {
         runNormalTask();
     }
 
-    @Scheduled(cron = "* * 0-1,19-23 * * ?")
+    /*@Scheduled(cron = "* * 0-17,19-23 * * ?")
     public void doSingleSnatchOtherTime2() {
         runNormalTask();
-    }
+    }*/
 
     @Scheduled(fixedDelay = 20000)
     public void updateOrderPayStatus() {
@@ -213,11 +213,11 @@ public class DoSnatchingSchedule {
     }
    @Scheduled(fixedDelay = 60000)
     public void doUpdateAccountPool() {
-        LocalDateTime now=LocalDateTime.now();
+        /*LocalDateTime now=LocalDateTime.now();
         int hour = now.getHour();
         if(hour>=2&&hour<=5){
             return;
-        }
+        }*/
         log.info("开始更新账号池");
         int accountNum=15;
         AccountInfoEntity query=new AccountInfoEntity();
