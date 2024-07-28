@@ -145,7 +145,7 @@ public class DoSnatchingSchedule {
         runNormalTask();
     }
 
-    @Scheduled(fixedDelay = 20000)
+    //@Scheduled(fixedDelay = 20000)
     public void updateOrderPayStatus() {
         try {
             RestTemplate restTemplate = TemplateUtil.initSSLTemplate();
@@ -211,7 +211,7 @@ public class DoSnatchingSchedule {
             }
         }
     }
-   @Scheduled(fixedDelay = 60000)
+   //@Scheduled(fixedDelay = 60000)
     public void doUpdateAccountPool() {
         LocalDateTime now=LocalDateTime.now();
         int hour = now.getHour();
@@ -237,7 +237,7 @@ public class DoSnatchingSchedule {
                 for (int i = 0; i < accountNum-accountInfoEntityList.size()-currentNum; i++) {
                     String phoneNo =insertAccount();
                     if(ObjectUtils.isEmpty(phoneNo)){
-                        log.info("账号池数据插入失败");
+                        log.info("获取账号失败或账号池数据插入失败");
                         return;
                     }
                     ticketServiceImpl.updateAuth(phoneNo);
@@ -394,6 +394,9 @@ public class DoSnatchingSchedule {
     }
     private String insertAccount(){
         String phoneNo = VirtualPhoneUtil.getPhoneNo();
+        if(ObjectUtils.isEmpty(phoneNo)){
+            return null;
+        }
         AccountInfoEntity account = new AccountInfoEntity();
         account.setUserName("三方号" + phoneNo);
         account.setAccount(phoneNo);
