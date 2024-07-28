@@ -697,8 +697,8 @@ public class TicketServiceImpl implements TicketService {
                 JSONObject bodyJson = TemplateUtil.getResponse(TemplateUtil.kuaiDaiLiTemp(), shoppingCartUrl, HttpMethod.POST, shoppingCartUrlEntity);
                 log.info("账号：{}下游客：{},提交订单结果：{}", doSnatchInfo.getAccount(), doSnatchInfo.getIdNameMap().values(), bodyJson);
                 if (!ObjectUtils.isEmpty(bodyJson) && (bodyJson.getIntValue("code") == 550 || bodyJson.getIntValue("code") == 503)) {
-                    if (!doneList.containsAll(doSnatchInfo.getIdNameMap().keySet())) {
-                            SendMessageUtil.send(ChannelEnum.CSTM.getDesc(), DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"), "主场馆", doSnatchInfo.getAccount(), "任务失败：" + bodyJson.getString("msg"));
+                    if (!doneList.containsAll(doSnatchInfo.getIdNameMap().keySet())&&bodyJson.getString("msg").contains("已有订单")) {
+                            SendMessageUtil.send(ChannelEnum.CSTM.getDesc(), DateUtil.format(doSnatchInfo.getUseDate(), "yyyy/MM/dd"), "主场馆", doSnatchInfo.getAccount(), doSnatchInfo.getIdNameMap().values() + bodyJson.getString("msg"));
                     }
                     /*try {
                        Files.delete(Paths.get(sliderImageName));
