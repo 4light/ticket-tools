@@ -145,7 +145,7 @@ public class DoSnatchingSchedule {
         runNormalTask();
     }
 
-    //@Scheduled(fixedDelay = 20000)
+    @Scheduled(fixedDelay = 20000)
     public void updateOrderPayStatus() {
         try {
             RestTemplate restTemplate = TemplateUtil.initSSLTemplate();
@@ -211,7 +211,7 @@ public class DoSnatchingSchedule {
             }
         }
     }
-    //@Scheduled(fixedDelay = 60000)
+   @Scheduled(fixedDelay = 60000)
     public void doUpdateAccountPool() {
         LocalDateTime now=LocalDateTime.now();
         int hour = now.getHour();
@@ -341,7 +341,7 @@ public class DoSnatchingSchedule {
         int size = mapByUseDate.size();
         pool.setMaxPoolSize(size);
         pool.setCorePoolSize(size);
-        pool.setQueueCapacity(size);
+        pool.setQueueCapacity(100);
         pool.initialize();
         // 对每个 useDate 异步检查并处理
         mapByUseDate.forEach((useDate, doSnatchInfos) -> {
@@ -351,34 +351,33 @@ public class DoSnatchingSchedule {
                 }
             }, pool);
         });
+        pool.shutdown();
     }
 
     private Boolean haveTicket(DoSnatchInfo doSnatchInfo) {
         try {
             String url = "https://pcticket.cstm.org.cn/prod-api/pool/ingore/getHall?saleMode=1&openPerson=1&queryDate=%s";
             String format = String.format(url, DateUtils.dateToStr(doSnatchInfo.getUseDate(), "yyyy/MM/dd"));
-            /*HttpHeaders headers = new HttpHeaders();
+            HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.set("authority", "pcticket.cstm.org.cn");
             headers.set("accept", "application/json");
             headers.set("Accept-Encoding", "gzip, deflate, br, zstd");
-            headers.set("cookie", "SL_G_WPT_TO=zh; SL_GWPT_Show_Hide_tmp=1; SL_wptGlobTipTmp=1");
             headers.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
             HttpEntity entity=new HttpEntity(headers);
             ResponseEntity<JSONObject> exchange = TemplateUtil.initSSLTemplate().exchange(format, HttpMethod.GET, entity, JSONObject.class);
-            */
-            HttpResponse response = HttpUtil.createGet(format)
+            /*HttpResponse response = HttpUtil.createGet(format)
                     .header("Connection", "keep-alive")
                     .header("Referer", "https://pcticket.cstm.org.cn/")
                     .header("Accept", "application/json")
                     .header("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36/")
                     .timeout(2000)
-                    .execute();
-            String body = response.body();
-            if (ObjectUtils.isEmpty(body)) {
+                    .execute();*/
+            JSONObject responseJson = exchange.getBody();
+            if (ObjectUtils.isEmpty(responseJson)) {
                 return false;
             }
-            JSONObject responseJson = JSON.parseObject(body);
+            //JSONObject responseJson = JSON.parseObject(body);
             JSONArray data = responseJson.getJSONArray("data");
             if (ObjectUtils.isEmpty(data)) {
                 return false;
