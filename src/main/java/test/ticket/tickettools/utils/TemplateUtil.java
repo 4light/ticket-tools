@@ -170,6 +170,8 @@ public class TemplateUtil {
         CloseableHttpClient client = clientBuilder.build();
         HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
         factory.setHttpClient(client);
+        factory.setConnectTimeout(30000);
+        factory.setReadTimeout(30000);
 
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.setRequestFactory(factory);
