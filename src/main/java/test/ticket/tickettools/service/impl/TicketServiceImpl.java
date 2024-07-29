@@ -565,10 +565,10 @@ public class TicketServiceImpl implements TicketService {
         List<AccountInfoEntity> accountInfoEntityList = accountInfoDao.selectByEntity(queryAccount);
         accountInfoEntityList = accountInfoEntityList.stream().filter(o -> !ObjectUtils.isEmpty(o.getHeaders())).collect(Collectors.toList());
         Collections.shuffle(accountInfoEntityList);
-        List<ProxyInfo> xieQuProxy = ProxyUtil. getXieQuProxy(allUnDoneTasks.size());
+        //List<ProxyInfo> xieQuProxy = ProxyUtil. getXieQuProxy(allUnDoneTasks.size());
         for (int i = 0; i < allUnDoneTasks.size(); i++) {
             TaskEntity entity = allUnDoneTasks.get(i);
-            ProxyInfo proxyInfo = ObjectUtils.isEmpty(xieQuProxy) ? null : xieQuProxy.get(i);
+            //ProxyInfo proxyInfo = ObjectUtils.isEmpty(xieQuProxy) ? null : xieQuProxy.get(i);
             Long userInfoId = entity.getUserInfoId();
             AccountInfoEntity accountInfoEntity = ObjectUtils.isEmpty(userInfoId) ? accountInfoEntityList.get(0) : accountInfoDao.selectById(userInfoId);
             TaskDetailEntity query = new TaskDetailEntity();
@@ -583,8 +583,8 @@ public class TicketServiceImpl implements TicketService {
             Collections.shuffle(taskDetailEntities);
             for (TaskDetailEntity taskDetailEntity : taskDetailEntities) {
                 DoSnatchInfo doSnatchInfo = new DoSnatchInfo();
-                doSnatchInfo.setIp(ObjectUtils.isEmpty(proxyInfo) ? null : proxyInfo.getIp());
-                doSnatchInfo.setPort(ObjectUtils.isEmpty(proxyInfo) ? null : proxyInfo.getPort());
+                //doSnatchInfo.setIp(ObjectUtils.isEmpty(proxyInfo) ? null : proxyInfo.getIp());
+                //doSnatchInfo.setPort(ObjectUtils.isEmpty(proxyInfo) ? null : proxyInfo.getPort());
                 doSnatchInfo.setCreator(entity.getCreator());
                 doSnatchInfo.setTaskId(entity.getId());
                 doSnatchInfo.setUserId(ObjectUtils.isEmpty(accountInfoEntity) ? null : accountInfoEntity.getChannelUserId() == null ? null : Long.valueOf(accountInfoEntity.getChannelUserId()));
