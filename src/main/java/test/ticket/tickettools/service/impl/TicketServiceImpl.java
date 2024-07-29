@@ -486,10 +486,10 @@ public class TicketServiceImpl implements TicketService {
         queryAccount.setCreator("system");
         List<AccountInfoEntity> accountInfoEntityList = accountInfoDao.selectByEntity(queryAccount);
         Collections.shuffle(accountInfoEntityList);
-        List<ProxyInfo> xieQuProxy = ProxyUtil.getXieQuProxy(taskEntities.size());
+        //List<ProxyInfo> xieQuProxy = ProxyUtil.getXieQuProxy(taskEntities.size());
         for (int i = 0; i < taskEntities.size(); i++) {
             TaskEntity entity = taskEntities.get(i);
-            ProxyInfo proxyInfo = ObjectUtils.isEmpty(xieQuProxy) ? null : xieQuProxy.get(i);
+            //ProxyInfo proxyInfo = ObjectUtils.isEmpty(xieQuProxy) ? null : xieQuProxy.get(i);
             Long id = entity.getId();
             Long userInfoId = entity.getUserInfoId();
             AccountInfoEntity accountInfoEntity = ObjectUtils.isEmpty(userInfoId) ? accountInfoEntityList.get(0) : accountInfoDao.selectById(userInfoId);
@@ -510,8 +510,8 @@ public class TicketServiceImpl implements TicketService {
             Map<String, String> idNameMap = taskDetailEntities.stream()
                     .collect(Collectors.toMap(TaskDetailEntity::getIDCard, TaskDetailEntity::getUserName));
             doSnatchInfo.setTaskId(id);
-            doSnatchInfo.setIp(ObjectUtils.isEmpty(proxyInfo) ? null : proxyInfo.getIp());
-            doSnatchInfo.setPort(ObjectUtils.isEmpty(proxyInfo) ? null : proxyInfo.getPort());
+            //doSnatchInfo.setIp(ObjectUtils.isEmpty(proxyInfo) ? null : proxyInfo.getIp());
+            //doSnatchInfo.setPort(ObjectUtils.isEmpty(proxyInfo) ? null : proxyInfo.getPort());
             doSnatchInfo.setCreator(entity.getCreator());
             //doSnatchInfo.setUserId(ObjectUtils.isEmpty(accountInfoEntity)?null:Long.valueOf(accountInfoEntity.getChannelUserId()));
             doSnatchInfo.setAccount(accountInfoEntity.getAccount());
@@ -1112,7 +1112,7 @@ public class TicketServiceImpl implements TicketService {
 
     private JSONObject getCheckImag(DoSnatchInfo doSnatchInfo) {
         JSONObject response;
-        List<ProxyInfo> xieQuProxy = ProxyUtil.getXieQuProxy(1);
+        //List<ProxyInfo> xieQuProxy = ProxyUtil.getXieQuProxy(1);
         //RestTemplate restTemplate = ObjectUtils.isEmpty(doSnatchInfo.getIp()) ? TemplateUtil.initSSLTemplate() : TemplateUtil.xieQuTemp(doSnatchInfo.getIp(), doSnatchInfo.getPort());
         try {
             //Thread.sleep(1000);
@@ -1125,9 +1125,9 @@ public class TicketServiceImpl implements TicketService {
             log.info("账号:{}获取提单验证码失败{}，重试中", doSnatchInfo.getAccount(), response);
         } catch (Exception e) {
             e.printStackTrace();
-            if (!ObjectUtils.isEmpty(xieQuProxy)) {
+            /*if (!ObjectUtils.isEmpty(xieQuProxy)) {
                 restTemplate = TemplateUtil.xieQuTemp(doSnatchInfo.getIp(), doSnatchInfo.getPort());
-            }
+            }*/
             log.info("账号:{}获取提单验证码异常，涉及游客", String.join(",", doSnatchInfo.getIdNameMap().values()));
         }
         return null;
