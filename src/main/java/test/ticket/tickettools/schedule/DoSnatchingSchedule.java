@@ -211,7 +211,7 @@ public class DoSnatchingSchedule {
             }
         }
     }
-    //@Scheduled(fixedDelay = 60000)
+    @Scheduled(fixedDelay = 60000)
     public void doUpdateAccountPool() {
         /*LocalDateTime now=LocalDateTime.now();
         int hour = now.getHour();
@@ -357,7 +357,7 @@ public class DoSnatchingSchedule {
         try {
             String url = "https://pcticket.cstm.org.cn/prod-api/pool/ingore/getHall?saleMode=1&openPerson=1&queryDate=%s";
             String format = String.format(url, DateUtils.dateToStr(doSnatchInfo.getUseDate(), "yyyy/MM/dd"));
-            HttpHeaders headers = new HttpHeaders();
+            /*HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.set("authority", "pcticket.cstm.org.cn");
             headers.set("accept", "application/json");
@@ -365,18 +365,19 @@ public class DoSnatchingSchedule {
             headers.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
             HttpEntity entity = new HttpEntity(headers);
             ResponseEntity<JSONObject> exchange = TemplateUtil.initSSLTemplate().exchange(format, HttpMethod.GET, entity, JSONObject.class);
-            /*HttpResponse response = HttpUtil.createGet(format)
+            */
+            HttpResponse response = HttpUtil.createGet(format)
                     .header("Connection", "keep-alive")
                     .header("Referer", "https://pcticket.cstm.org.cn/")
                     .header("Accept", "application/json")
                     .header("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36/")
                     .timeout(2000)
-                    .execute();*/
-            JSONObject responseJson = exchange.getBody();
-            if (ObjectUtils.isEmpty(responseJson)) {
+                    .execute();
+            String body = response.body();
+            if (ObjectUtils.isEmpty(body)) {
                 return false;
             }
-            //JSONObject responseJson = JSON.parseObject(body);
+            JSONObject responseJson = JSON.parseObject(body);
             JSONArray data = responseJson.getJSONArray("data");
             if (ObjectUtils.isEmpty(data)) {
                 return false;
