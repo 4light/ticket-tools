@@ -165,7 +165,7 @@ public class DoSnatchingSchedule {
                 for (Map.Entry<Long, List<TaskDetailEntity>> taskDetailEntry : orderIdTaskDetailMap.entrySet()) {
                     Long orderId = taskDetailEntry.getKey();
                     List<TaskDetailEntity> value = taskDetailEntry.getValue();
-                    HttpEntity entity = new HttpEntity<>(getHeader(ObjectUtils.isEmpty(accountInfoEntity)?value.get(0).getOrderCreatorAuth():accountInfoEntity.getHeaders(), orderId));
+                    HttpEntity entity = new HttpEntity<>(getHeader(ObjectUtils.isEmpty(accountInfoEntity) ? value.get(0).getOrderCreatorAuth() : accountInfoEntity.getHeaders(), orderId));
                     JSONObject response = TemplateUtil.getResponse(restTemplate, searchPersonOrderUrl + orderId, HttpMethod.GET, entity);
                     if (!ObjectUtils.isEmpty(response) && response.getIntValue("code") == 200) {
                         JSONObject data = response.getJSONObject("data");
@@ -177,7 +177,7 @@ public class DoSnatchingSchedule {
                         }
                         if (data.getIntValue("status") == 2) {
                             CompletableFuture.runAsync(() -> {
-                                String auth = ObjectUtils.isEmpty(accountInfoEntity)?value.get(0).getOrderCreatorAuth():accountInfoEntity.getHeaders();
+                                String auth = ObjectUtils.isEmpty(accountInfoEntity) ? value.get(0).getOrderCreatorAuth() : accountInfoEntity.getHeaders();
                                 ScreenshotUtil.takeScreenshot(String.valueOf(orderId), auth, "task" + task.getId() + "-" + UUID.randomUUID());
                             });
                             value.forEach(o -> {
@@ -201,11 +201,11 @@ public class DoSnatchingSchedule {
         List<TaskEntity> allUnDoneTask = ticketServiceImpl.getAllUnDoneTask();
         for (TaskEntity taskEntity : allUnDoneTask) {
             Long userInfoId = taskEntity.getUserInfoId();
-            if(ObjectUtils.isEmpty(userInfoId)){
+            if (ObjectUtils.isEmpty(userInfoId)) {
                 updateAccountAndAuth(taskEntity);
-            }else{
+            } else {
                 AccountInfoEntity accountInfoEntity = accountInfoDao.selectById(userInfoId);
-                if(!checkAuth(accountInfoEntity.getHeaders())){
+                if (!checkAuth(accountInfoEntity.getHeaders())) {
                     updateAccountAndAuth(taskEntity);
                 }
             }
@@ -219,34 +219,34 @@ public class DoSnatchingSchedule {
             return;
         }*/
         log.info("开始更新账号池");
-        int accountNum=15;
-        AccountInfoEntity query=new AccountInfoEntity();
+        int accountNum = 15;
+        AccountInfoEntity query = new AccountInfoEntity();
         query.setCreator("system");
         query.setYn(false);
         query.setChannel(ChannelEnum.CSTM.getCode());
         List<AccountInfoEntity> accountInfoEntityList = accountInfoDao.selectByEntity(query);
-        int currentNum=0;
-        if(!ObjectUtils.isEmpty(accountInfoEntityList)){
+        int currentNum = 0;
+        if (!ObjectUtils.isEmpty(accountInfoEntityList)) {
             for (AccountInfoEntity accountInfoEntity : accountInfoEntityList) {
-                if(ObjectUtils.isEmpty(accountInfoEntity.getHeaders())||!checkAuth(accountInfoEntity.getHeaders())){
+                if (ObjectUtils.isEmpty(accountInfoEntity.getHeaders()) || !checkAuth(accountInfoEntity.getHeaders())) {
                     accountInfoDao.del(accountInfoEntity.getId());
                     currentNum++;
                 }
             }
-            if(accountInfoEntityList.size()-currentNum<accountNum){
-                for (int i = 0; i < accountNum-accountInfoEntityList.size()-currentNum; i++) {
-                    String phoneNo =insertAccount();
-                    if(ObjectUtils.isEmpty(phoneNo)){
+            if (accountInfoEntityList.size() - currentNum < accountNum) {
+                for (int i = 0; i < accountNum - accountInfoEntityList.size() - currentNum; i++) {
+                    String phoneNo = insertAccount();
+                    if (ObjectUtils.isEmpty(phoneNo)) {
                         log.info("获取账号失败或账号池数据插入失败");
                         return;
                     }
                     ticketServiceImpl.updateAuth(phoneNo);
                 }
             }
-        }else{
+        } else {
             for (int i = 0; i < accountNum; i++) {
-                String phoneNo =insertAccount();
-                if(ObjectUtils.isEmpty(phoneNo)){
+                String phoneNo = insertAccount();
+                if (ObjectUtils.isEmpty(phoneNo)) {
                     log.info("账号池数据插入失败");
                     return;
                 }
@@ -256,7 +256,7 @@ public class DoSnatchingSchedule {
         log.info("更新账号池结束");
     }
 
-    public void updateAccountAndAuth(TaskEntity taskEntity){
+    public void updateAccountAndAuth(TaskEntity taskEntity) {
         String phoneNo = VirtualPhoneUtil.getPhoneNo();
         AccountInfoEntity account = new AccountInfoEntity();
         account.setUserName("三方号" + phoneNo);
@@ -267,13 +267,13 @@ public class DoSnatchingSchedule {
         account.setStatus(false);
         account.setCreateDate(new Date());
         Integer integer = accountInfoDao.insertOrUpdate(account);
-        if(integer>0) {
+        if (integer > 0) {
             ticketServiceImpl.updateAuth(phoneNo);
             taskEntity.setAccount(phoneNo);
             taskEntity.setUserInfoId(account.getId());
             Integer res = taskDao.updateTask(taskEntity);
-            log.info("更新任务结果：{}",res>0);
-        }else{
+            log.info("更新任务结果：{}", res > 0);
+        } else {
             log.info("更新任务购票账号异常");
         }
     }
@@ -295,14 +295,11 @@ public class DoSnatchingSchedule {
         headers.set("Sec-Fetch-Dest", "empty");
         headers.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
         HttpEntity entity = new HttpEntity<>(headers);
-        for (int i = 0; i < 3; i++) {
-            try {
-                Thread.sleep(RandomUtil.randomInt(2000,5000));
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            ResponseEntity<JSONObject> getUserRes= TemplateUtil.kuaiDaiLiTemp().exchange(getBlockUrl, HttpMethod.GET, entity, JSONObject.class);
-            if(ObjectUtils.isEmpty(getUserRes)){
+        try {
+            Thread.sleep(RandomUtil.randomInt(2000, 5000));
+
+            ResponseEntity<JSONObject> getUserRes = TemplateUtil.kuaiDaiLiTemp().exchange(getBlockUrl, HttpMethod.GET, entity, JSONObject.class);
+            if (ObjectUtils.isEmpty(getUserRes)) {
                 return false;
             }
             JSONObject body = getUserRes.getBody();
@@ -311,7 +308,9 @@ public class DoSnatchingSchedule {
                     return true;
                 }
             }
-            log.info("check异常返回:{}",body);
+            log.info("check异常返回:{}", body);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return false;
     }
@@ -364,7 +363,7 @@ public class DoSnatchingSchedule {
             headers.set("accept", "application/json");
             headers.set("Accept-Encoding", "gzip, deflate, br, zstd");
             headers.set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
-            HttpEntity entity=new HttpEntity(headers);
+            HttpEntity entity = new HttpEntity(headers);
             ResponseEntity<JSONObject> exchange = TemplateUtil.initSSLTemplate().exchange(format, HttpMethod.GET, entity, JSONObject.class);
             /*HttpResponse response = HttpUtil.createGet(format)
                     .header("Connection", "keep-alive")
@@ -385,7 +384,7 @@ public class DoSnatchingSchedule {
             if(data.getJSONObject(0).getIntValue("ticketPool") > 0){
                 log.info("{}日期下余票{}", doSnatchInfo.getUseDate(), data.getJSONObject(0).getIntValue("ticketPool"));
                 return true;
-            }else {
+            } else {
                 return false;
             }
         } catch (Exception e) {
@@ -394,7 +393,7 @@ public class DoSnatchingSchedule {
     }
     private String insertAccount(){
         String phoneNo = VirtualPhoneUtil.getPhoneNo();
-        if(ObjectUtils.isEmpty(phoneNo)){
+        if (ObjectUtils.isEmpty(phoneNo)) {
             return null;
         }
         AccountInfoEntity account = new AccountInfoEntity();
@@ -405,7 +404,7 @@ public class DoSnatchingSchedule {
         account.setYn(false);
         account.setStatus(false);
         account.setCreateDate(new Date());
-        if(accountInfoDao.insertOrUpdate(account)>0){
+        if (accountInfoDao.insertOrUpdate(account) > 0) {
             return phoneNo;
         }
         return null;
