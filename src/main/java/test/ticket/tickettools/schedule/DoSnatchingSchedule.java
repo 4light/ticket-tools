@@ -145,7 +145,7 @@ public class DoSnatchingSchedule {
         runNormalTask();
     }*/
 
-    //@Scheduled(fixedDelay = 20000)
+    @Scheduled(fixedDelay = 20000)
     public void updateOrderPayStatus() {
         try {
             RestTemplate restTemplate = TemplateUtil.initSSLTemplate();
