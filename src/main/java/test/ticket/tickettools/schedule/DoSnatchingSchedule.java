@@ -145,7 +145,7 @@ public class DoSnatchingSchedule {
         runNormalTask();
     }*/
 
-    @Scheduled(fixedDelay = 20000)
+    //@Scheduled(fixedDelay = 20000)
     public void updateOrderPayStatus() {
         try {
             RestTemplate restTemplate = TemplateUtil.initSSLTemplate();
@@ -196,7 +196,7 @@ public class DoSnatchingSchedule {
         }
     }
 
-    //@Scheduled(cron = "* 0/1 * * * ?")
+    /*@Scheduled(cron = "* 0/1 * * * ?")
     public void doUpdate() {
         List<TaskEntity> allUnDoneTask = ticketServiceImpl.getAllUnDoneTask();
         for (TaskEntity taskEntity : allUnDoneTask) {
@@ -210,8 +210,8 @@ public class DoSnatchingSchedule {
                 }
             }
         }
-    }
-    @Scheduled(fixedDelay = 60000)
+    }*/
+    //@Scheduled(fixedDelay = 60000)
     public void doUpdateAccountPool() {
         /*LocalDateTime now=LocalDateTime.now();
         int hour = now.getHour();
