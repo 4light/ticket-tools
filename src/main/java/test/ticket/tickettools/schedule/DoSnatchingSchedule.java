@@ -2,6 +2,7 @@ package test.ticket.tickettools.schedule;
 
 
 import cn.hutool.core.util.RandomUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson.JSON;
@@ -21,10 +22,13 @@ import test.ticket.tickettools.config.TaskExecutorConfig;
 import test.ticket.tickettools.dao.AccountInfoDao;
 import test.ticket.tickettools.dao.TaskDao;
 import test.ticket.tickettools.domain.bo.DoSnatchInfo;
+import test.ticket.tickettools.domain.bo.LogInCSTMParam;
+import test.ticket.tickettools.domain.bo.ServiceResponse;
 import test.ticket.tickettools.domain.constant.ChannelEnum;
 import test.ticket.tickettools.domain.entity.AccountInfoEntity;
 import test.ticket.tickettools.domain.entity.TaskDetailEntity;
 import test.ticket.tickettools.domain.entity.TaskEntity;
+import test.ticket.tickettools.service.LoginService;
 import test.ticket.tickettools.service.TicketService;
 import test.ticket.tickettools.utils.*;
 
@@ -34,6 +38,8 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -53,6 +59,8 @@ public class DoSnatchingSchedule {
     TaskDao taskDao;
     @Resource
     AccountInfoDao accountInfoDao;
+    @Resource
+    LoginService loginService;
 
     /**
      * 执行放票当天的任务
@@ -61,11 +69,13 @@ public class DoSnatchingSchedule {
     public void doSnatching() {
         doSnatchingBatch();
     }
+
     @Scheduled(cron = "0/2 15-17 18 * * ?")
     public void doSnatching2() {
         doSnatchingBatch();
     }
-    private void doSnatchingBatch(){
+
+    private void doSnatchingBatch() {
         List<DoSnatchInfo> taskForRun = ticketServiceImpl.getTaskForRun();
         if (ObjectUtils.isEmpty(taskForRun)) {
             return;
@@ -145,7 +155,7 @@ public class DoSnatchingSchedule {
         runNormalTask();
     }*/
 
-    @Scheduled(fixedDelay = 20000)
+    //@Scheduled(fixedDelay = 20000)
     public void updateOrderPayStatus() {
         try {
             RestTemplate restTemplate = TemplateUtil.initSSLTemplate();
@@ -213,13 +223,8 @@ public class DoSnatchingSchedule {
     }*/
     @Scheduled(fixedDelay = 60000)
     public void doUpdateAccountPool() {
-        /*LocalDateTime now=LocalDateTime.now();
-        int hour = now.getHour();
-        if(hour>=2&&hour<=5){
-            return;
-        }*/
         log.info("开始更新账号池");
-        int accountNum = 15;
+        int accountNum = 10;
         AccountInfoEntity query = new AccountInfoEntity();
         query.setCreator("system");
         query.setYn(false);
@@ -234,26 +239,128 @@ public class DoSnatchingSchedule {
                 }
             }
             if (accountInfoEntityList.size() - currentNum < accountNum) {
-                for (int i = 0; i < accountNum - accountInfoEntityList.size() - currentNum; i++) {
-                    String phoneNo = insertAccount();
-                    if (ObjectUtils.isEmpty(phoneNo)) {
-                        log.info("获取账号失败或账号池数据插入失败");
-                        return;
-                    }
-                    ticketServiceImpl.updateAuth(phoneNo);
+                for (int i = 0; i < accountNum-accountInfoEntityList.size() - currentNum; i++) {
+                    updateAccountWhitMiHouTao();
                 }
             }
         } else {
             for (int i = 0; i < accountNum; i++) {
-                String phoneNo = insertAccount();
-                if (ObjectUtils.isEmpty(phoneNo)) {
-                    log.info("账号池数据插入失败");
-                    return;
-                }
-                ticketServiceImpl.updateAuth(phoneNo);
+                updateAccountWhitMiHouTao();
             }
         }
         log.info("更新账号池结束");
+    }
+
+
+    private void updateAccountWhitMiHouTao() {
+        String phoneNo = null;
+        String msg = null;
+        for (int j = 0; j < 5; j++) {
+            HttpResponse execute = HttpUtil.createGet("http://ergyiphd.hgsaeuyrgd.club:6747/takebysard?The=Api&acc=919306156@qq.com&apimiyao=9a121360b7b23a4c9d310e11f734bb67&apiid=67938601&yys=2")
+                    .timeout(60000)
+                    .execute();
+            String body = execute.body();
+            log.info("获取到手机号结果:{}", body);
+            if (!ObjectUtils.isEmpty(body)) {
+                JSONObject response = JSON.parseObject(body);
+                if (response.getIntValue("code") == 200 && response.getBoolean("stat")) {
+                    phoneNo = response.getString("data");
+                    msg = response.getString("message");
+                    break;
+                }
+            }
+            try {
+                Thread.sleep(2100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        if (ObjectUtils.isEmpty(phoneNo) || ObjectUtils.isEmpty(msg)) {
+            return;
+        }
+        String s = insertAccount(phoneNo);
+        if (ObjectUtils.isEmpty(s)) {
+            log.info("插入账号数据失败");
+            return;
+        }
+        try {
+            LogInCSTMParam sourceParam = new LogInCSTMParam();
+            for (int l = 0; l < 5; l++) {
+                ServiceResponse<LogInCSTMParam> captchaImage = loginService.getCaptchaImage();
+                if (captchaImage.getStatus() == 0) {
+                    log.info("获取渠道图片验证码成功");
+                    LogInCSTMParam data = captchaImage.getData();
+                    data.setPhone(phoneNo);
+                    String captchaImageBase64 = data.getCaptchaImageBase64();
+                    String code = null;
+                    //重试3次
+                    for (int j = 0; j < 3; j++) {
+                        String verCode = ImageUtils.getVerCode(captchaImageBase64);
+                        if (!ObjectUtils.isEmpty(verCode)) {
+                            code = verCode;
+                            break;
+                        }
+                    }
+                    if (ObjectUtils.isEmpty(code)) {
+                        continue;
+                    }
+                    data.setCaptchaImage(code);
+                    ServiceResponse sendMsgCodeRes = loginService.sendMessageCode(data);
+                    if (sendMsgCodeRes.getStatus() == 0) {
+                        log.info("发送渠道短信验证码成功");
+                        sourceParam = data;
+                        break;
+                    }
+                }
+            }
+            String msgCode = null;
+            //等待100秒
+            for (int k = 0; k < 10; k++) {
+                String url = "http://ergyiphd.hgsaeuyrgd.club:6747/ssbar?The=Api&acc=919306156@qq.com&apimiyao=9a121360b7b23a4c9d310e11f734bb67&phone=%s&message=%s";
+                String formatUrl = String.format(url, phoneNo, msg);
+                HttpResponse execute = HttpUtil.createGet(formatUrl)
+                        .timeout(60000)
+                        .execute();
+                String body = execute.body();
+                log.info("获取到手机验证码结果：{}", body);
+                if (!ObjectUtils.isEmpty(body)) {
+                    JSONObject response = JSON.parseObject(body);
+                    if (response.getIntValue("code") == 200 && response.getBoolean("stat")) {
+                        String data = response.getString("data");
+                        String regex = "\\d{6}";
+                        // 创建Pattern对象
+                        Pattern pattern = Pattern.compile(regex);
+
+                        // 创建Matcher对象
+                        Matcher matcher = pattern.matcher(data);
+
+                        // 查找并提取验证码
+                        if (matcher.find()) {
+                            msgCode = matcher.group();
+                        }
+                    }
+                }
+                try {
+                    Thread.sleep(10000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (ObjectUtils.isEmpty(msgCode)) {
+                //SendMessageUtil.send(ChannelEnum.CSTM.getDesc(), null, null, phoneNum, "获取渠道短信验证码异常!");
+                return;
+            }
+            sourceParam.setVerificationCode(msgCode);
+            ServiceResponse login = loginService.login(sourceParam);
+            if (login.getStatus() != 0) {
+                SendMessageUtil.send(ChannelEnum.CSTM.getDesc(), null, null, phoneNo, "登录异常:" + login.getMsg());
+                return;
+            }
+            log.info("账号{}登录成功成功", sourceParam.getPhone());
+        } catch (Exception e) {
+            log.info("获取手机号异常:{}", e);
+        }
+        ticketServiceImpl.updateAuth(phoneNo);
     }
 
     public void updateAccountAndAuth(TaskEntity taskEntity) {
@@ -383,7 +490,7 @@ public class DoSnatchingSchedule {
             if (ObjectUtils.isEmpty(data)) {
                 return false;
             }
-            if(data.getJSONObject(0).getIntValue("ticketPool") > 0){
+            if (data.getJSONObject(0).getIntValue("ticketPool") > 0) {
                 log.info("{}日期下余票{}", doSnatchInfo.getUseDate(), data.getJSONObject(0).getIntValue("ticketPool"));
                 return true;
             } else {
@@ -393,13 +500,16 @@ public class DoSnatchingSchedule {
             return false;
         }
     }
-    private String insertAccount(){
-        String phoneNo = VirtualPhoneUtil.getPhoneNo();
+
+    private String insertAccount(String phoneNo) {
+        if (ObjectUtils.isEmpty(phoneNo)) {
+            phoneNo = VirtualPhoneUtil.getPhoneNo();
+        }
         if (ObjectUtils.isEmpty(phoneNo)) {
             return null;
         }
         AccountInfoEntity account = new AccountInfoEntity();
-        account.setUserName("三方号" + phoneNo);
+        account.setUserName("猕猴桃" + phoneNo);
         account.setAccount(phoneNo);
         account.setChannel(ChannelEnum.CSTM.getCode());
         account.setCreator("system");
