@@ -5,12 +5,10 @@ import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import jdk.nashorn.internal.scripts.JO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.client.RestTemplate;
@@ -242,7 +240,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
         try {
             JSONObject currentParkFsyyDetail = new JSONObject();
             //RestTemplate restTemplate = TemplateUtil.xieQuTemp(doSnatchInfo.getIp(), doSnatchInfo.getPort());
-            RestTemplate restTemplate=TemplateUtil.kuaiDaiLiTemp();
+            RestTemplate restTemplate = TemplateUtil.kuaiDaiLiTempChnMu();
             HttpHeaders headers = new HttpHeaders();
             String headerStr = doSnatchInfo.getHeaders();
             JSONObject headerJson = JSON.parseObject(headerStr);
@@ -267,7 +265,16 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
             int monthValue = localDate.getMonthValue();
             String month = monthValue > 10 ? String.valueOf(monthValue) : "0" + monthValue;
             String formatQueryImperialPalaceTicketsUrl = String.format(queryImperialPalaceTicketsUrl, now.getYear(), month);
-            JSONObject responseJson = TemplateUtil.getResponse(restTemplate, formatQueryImperialPalaceTicketsUrl, HttpMethod.GET, entity);
+            HttpHeaders queryHeaders = new HttpHeaders();
+            queryHeaders.set("Accept-Encoding", "gzip, deflate, br");
+            queryHeaders.set("Connection", "keep-alive");
+            queryHeaders.set("Host", "lotswap.dpm.org.cn");
+            queryHeaders.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
+            queryHeaders.set("Content-Type", "application/json");
+            queryHeaders.set("xweb_xhr", "1");
+            HttpEntity queryEntity = new HttpEntity<>(queryHeaders);
+            ResponseEntity<JSONObject> exchange = restTemplate.exchange(formatQueryImperialPalaceTicketsUrl, HttpMethod.GET, queryEntity, JSONObject.class);
+            JSONObject responseJson = exchange.getBody();
             if (ObjectUtils.isEmpty(responseJson) || responseJson.getIntValue("status") != 200) {
                 log.info("responseJson:{}", responseJson);
                 runTaskCache.remove(taskId);
@@ -316,10 +323,10 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
             }
             //如果没有余票继续查询
             if (!haveTicket) {
-                log.info("没有余票");
                 runTaskCache.remove(taskId);
                 return;
             }
+            log.info("故宫获取到余票:{}", currentParkFsyyDetail);
             headers.set("ts", String.valueOf(System.currentTimeMillis() / 1000));
             HttpEntity getTicketEntity = new HttpEntity<>(headers);
             String formatGetTicketGridUrl = String.format(getTicketGridUrl, formatUseDate, formatUseDate);
@@ -436,38 +443,20 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
             String accessToken = headerJson.getString("access-token");
             headers.set("Accept-Encoding", "gzip,compress,deflate");
             modelCodeTicketInfoMap.put("parkFsyyDetailDTO", currentParkFsyyDetail);
-            JSONObject createRes = new JSONObject();
             JSONObject jsonObject = buildCreateParam(mpOpenId, checkUserBody, doSnatchInfo, modelCodeTicketInfoMap, idNameTreeMap);
-            for (int i = 0; i < 2; i++) {
-                Thread.sleep(RandomUtil.randomInt(2000, 4000));
-                long timestamp = System.currentTimeMillis();
-                String ts = String.valueOf(timestamp).substring(0, 11);
-                headers.set("ts", String.valueOf(timestamp / 1000));
-                String signStr = "VDsdxfwljhy#@!94857access-token=" + accessToken + ts + "AAXY";
-                String sign = DigestUtils.md5Hex(signStr);
-                headers.setContentLength(Integer.valueOf(JSON.toJSONString(jsonObject).getBytes(StandardCharsets.UTF_8).length));
-                HttpEntity addTicketQueryEntity = new HttpEntity<>(jsonObject, headers);
-                String formatCreateUrl = String.format(createUrl, sign, timestamp);
-                log.info("header:{}", headers);
-                log.info("提交订单入参：{}", JSON.toJSONString(jsonObject));
-                try {
-                    createRes = TemplateUtil.getResponse(restTemplate, formatCreateUrl, HttpMethod.POST, addTicketQueryEntity);
-                } catch (Exception e) {
-                    log.info("提交订单异常重试中");
-                }
-                if (ObjectUtils.isEmpty(createRes)) {
-                    continue;
-                }
-                if (createRes.getIntValue("code") == 200) {
-                    break;
-                }
-                log.info("请求结果{}", createRes);
-                List<ProxyInfo> xieQuProxy = ProxyUtil.getXieQuProxy(1);
-                if (ObjectUtils.isEmpty(xieQuProxy)) {
-                    continue;
-                }
-                restTemplate = TemplateUtil.xieQuTemp(xieQuProxy.get(0).getIp(), xieQuProxy.get(0).getPort());
-            }
+            Thread.sleep(RandomUtil.randomInt(2000, 4000));
+            long timestamp = System.currentTimeMillis();
+            String ts = String.valueOf(timestamp).substring(0, 11);
+            headers.set("ts", String.valueOf(timestamp / 1000));
+            String signStr = "VDsdxfwljhy#@!94857access-token=" + accessToken + ts + "AAXY";
+            String sign = DigestUtils.md5Hex(signStr);
+            headers.setContentLength(Integer.valueOf(JSON.toJSONString(jsonObject).getBytes(StandardCharsets.UTF_8).length));
+            HttpEntity addTicketQueryEntity = new HttpEntity<>(jsonObject, headers);
+            String formatCreateUrl = String.format(createUrl, sign, timestamp);
+            log.info("header:{}", headers);
+            log.info("提交订单入参：{}", JSON.toJSONString(jsonObject));
+            JSONObject createRes = TemplateUtil.getResponse(restTemplate, formatCreateUrl, HttpMethod.POST, addTicketQueryEntity);
+            log.info("请求结果{}", createRes);
             if (ObjectUtils.isEmpty(createRes)) {
                 runTaskCache.remove(taskId);
                 return;

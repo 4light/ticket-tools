@@ -60,7 +60,7 @@ public class DoPalaceMuseumSnatchingSchedule {
     }
 
 
-    @Scheduled(cron = "0/2 01-03 20 * * ?")
+    @Scheduled(cron = "0/2 0-05 20 * * ?")
     public void doPalaceMuseumTicketSnatch() {
         doSnatch();
     }
@@ -68,7 +68,7 @@ public class DoPalaceMuseumSnatchingSchedule {
     public void doPalaceMuseumTicketSnatch2() {
         doSnatch();
     }
-    @Scheduled(cron = "0/2 38-45 20 * * ?")
+    @Scheduled(cron = "0/2 38-40 20 * * ?")
     public void doPalaceMuseumTicketSnatch3() {
         doSnatch();
     }

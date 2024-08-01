@@ -177,7 +177,30 @@ public class TemplateUtil {
         restTemplate.setRequestFactory(factory);
         return restTemplate;
     }
+    public static RestTemplate kuaiDaiLiTempChnMu(){
+        CredentialsProvider credsProvider = new BasicCredentialsProvider();
+        credsProvider.setCredentials(
+                new AuthScope("j440.kdltpspro.com", 15818),
+                new UsernamePasswordCredentials("t12243081624540", "ldwu1xee")
+        );
 
+        HttpHost proxy = new HttpHost("j440.kdltpspro.com", 15818);
+        HttpClientBuilder clientBuilder = HttpClientBuilder.create();
+        clientBuilder.useSystemProperties();
+        clientBuilder.setProxy(proxy);
+        clientBuilder.setDefaultCredentialsProvider(credsProvider);
+        clientBuilder.setProxyAuthenticationStrategy(new ProxyAuthenticationStrategy());
+
+        CloseableHttpClient client = clientBuilder.build();
+        HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
+        factory.setHttpClient(client);
+        factory.setConnectTimeout(30000);
+        factory.setReadTimeout(30000);
+
+        RestTemplate restTemplate = new RestTemplate();
+        restTemplate.setRequestFactory(factory);
+        return restTemplate;
+    }
     public static RestTemplate initSSLTemplateWithProxyTunnelAuth() {
         // 配置代理服务器地址和端口
         HttpHost proxy = new HttpHost("overseas.tunnel.qg.net", 16150);

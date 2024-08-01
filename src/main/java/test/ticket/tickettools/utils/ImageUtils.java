@@ -1,5 +1,6 @@
 package test.ticket.tickettools.utils;
 
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson.JSON;
@@ -17,6 +18,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.util.ObjectUtils;
+import test.ticket.tickettools.domain.constant.ChannelEnum;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -28,6 +30,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Base64;
+import java.util.Date;
 
 import static org.bytedeco.opencv.global.opencv_imgcodecs.imread;
 
@@ -161,6 +164,10 @@ public class ImageUtils {
                 .execute();
         String res = execute.body();
         if (!ObjectUtils.isEmpty(res)) {
+            if(res.contains("余额不足")){
+                SendMessageUtil.send("云码平台", DateUtil.format(new Date(), "yyyy/MM/dd"), "云码平台", "云码平台", res);
+                return null;
+            }
             JSONObject resJson = JSON.parseObject(res);
             if (resJson.getIntValue("code") == 10000) {
                 return resJson.getJSONObject("data").getString("data");

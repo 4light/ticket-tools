@@ -51,7 +51,7 @@ public class DoChnMuseumSnatchingSchedule {
         chnMuseumTicketServiceImpl.initData(null);
     }
 
-    @Scheduled(cron = "0/1 0-10 17 * * ?")
+    @Scheduled(cron = "0/1 0-3 17 * * ?")
     public void doPalaceMuseumTicketSnatch() {
         List<DoSnatchInfo> doSnatchInfos = chnMuseumTicketServiceImpl.getDoSnatchInfos();
         if (ObjectUtils.isEmpty(doSnatchInfos)) {

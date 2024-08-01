@@ -145,7 +145,7 @@ public class DoSnatchingSchedule {
         runNormalTask();
     }*/
 
-    //@Scheduled(fixedDelay = 20000)
+    @Scheduled(fixedDelay = 20000)
     public void updateOrderPayStatus() {
         try {
             RestTemplate restTemplate = TemplateUtil.initSSLTemplate();
@@ -211,7 +211,7 @@ public class DoSnatchingSchedule {
             }
         }
     }*/
-    //@Scheduled(fixedDelay = 60000)
+    @Scheduled(fixedDelay = 60000)
     public void doUpdateAccountPool() {
         /*LocalDateTime now=LocalDateTime.now();
         int hour = now.getHour();
@@ -300,19 +300,20 @@ public class DoSnatchingSchedule {
 
             ResponseEntity<JSONObject> getUserRes = TemplateUtil.kuaiDaiLiTemp().exchange(getBlockUrl, HttpMethod.GET, entity, JSONObject.class);
             if (ObjectUtils.isEmpty(getUserRes)) {
-                return false;
+                return true;
             }
             JSONObject body = getUserRes.getBody();
             if (!ObjectUtils.isEmpty(body)) {
                 if (body.getIntValue("code") == 200) {
                     return true;
                 }
+                log.info("check异常返回:{}", body);
             }
             log.info("check异常返回:{}", body);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return false;
+        return true;
     }
 
     private HttpHeaders getHeader(String auth, Long orderId) {
