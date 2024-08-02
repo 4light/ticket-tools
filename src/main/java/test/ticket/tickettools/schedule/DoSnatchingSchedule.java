@@ -420,7 +420,7 @@ public class DoSnatchingSchedule {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return true;
+        return false;
     }
 
     private HttpHeaders getHeader(String auth, Long orderId) {
