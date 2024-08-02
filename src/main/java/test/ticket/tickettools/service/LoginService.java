@@ -209,6 +209,7 @@ public class LoginService {
             accountInfoEntity.setUpdateDate(new Date());
             accountInfoEntity.setChannelUserId(String.valueOf(userId));
             accountInfoEntity.setHeaders(auth);
+            accountInfoEntity.setYn(false);
             Integer integer = accountInfoDao.updateByChannelAccount(accountInfoEntity);
             if(integer>0){
                 AccountInfoEntity query=new AccountInfoEntity();
