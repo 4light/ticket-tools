@@ -145,7 +145,7 @@ public class DoSnatchingSchedule {
         runNormalTask();
     }
 
-    @Scheduled(cron = "* * 0-17,19-23 * * ?")
+    //@Scheduled(cron = "* * 0-17,19-23 * * ?")
     public void doSingleSnatchOtherTime() {
         runNormalTask();
     }
@@ -256,7 +256,7 @@ public class DoSnatchingSchedule {
         String phoneNo = null;
         String msg = null;
         for (int j = 0; j < 5; j++) {
-            HttpResponse execute = HttpUtil.createGet("http://ergyiphd.hgsaeuyrgd.club:6747/takebysard?The=Api&acc=919306156@qq.com&apimiyao=9a121360b7b23a4c9d310e11f734bb67&apiid=64668854&yys=2")
+            HttpResponse execute = HttpUtil.createGet("http://ergyiphd.hgsaeuyrgd.club:6747/takebysard?The=Api&acc=919306156@qq.com&apimiyao=9a121360b7b23a4c9d310e11f734bb67&apiid=60697343")
                     .timeout(60000)
                     .execute();
             String body = execute.body();
@@ -360,7 +360,7 @@ public class DoSnatchingSchedule {
         } catch (Exception e) {
             log.info("获取手机号异常:{}", e);
         }
-        ticketServiceImpl.updateAuth(phoneNo);
+        //ticketServiceImpl.updateAuth(phoneNo);
     }
 
     public void updateAccountAndAuth(TaskEntity taskEntity) {
@@ -414,7 +414,6 @@ public class DoSnatchingSchedule {
                 if (body.getIntValue("code") == 200) {
                     return true;
                 }
-                log.info("check异常返回:{}", body);
             }
             log.info("check异常返回:{}", body);
         } catch (Exception e) {
