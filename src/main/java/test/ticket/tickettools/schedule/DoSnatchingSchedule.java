@@ -256,7 +256,7 @@ public class DoSnatchingSchedule {
         String phoneNo = null;
         String msg = null;
         for (int j = 0; j < 5; j++) {
-            HttpResponse execute = HttpUtil.createGet("http://ergyiphd.hgsaeuyrgd.club:6747/takebysard?The=Api&acc=919306156@qq.com&apimiyao=9a121360b7b23a4c9d310e11f734bb67&apiid=67938601&yys=2")
+            HttpResponse execute = HttpUtil.createGet("http://ergyiphd.hgsaeuyrgd.club:6747/takebysard?The=Api&acc=919306156@qq.com&apimiyao=9a121360b7b23a4c9d310e11f734bb67&apiid=65001102&yys=2")
                     .timeout(60000)
                     .execute();
             String body = execute.body();
