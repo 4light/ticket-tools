@@ -47,6 +47,7 @@ public class DoSnatchingSchedule {
     private static String searchPersonOrderUrl = "https://pcticket.cstm.org.cn/prod-api/order/OrderInfo/searchPersonOrder/";
     private static RestTemplate restTemplate = new RestTemplate();
     private static ExecutorService queryExecutor = Executors.newFixedThreadPool(5);
+    private static List<DoSnatchInfo> currentData=new ArrayList<>();
 
     @Resource
     TicketService ticketServiceImpl;
@@ -146,7 +147,7 @@ public class DoSnatchingSchedule {
         runNormalTask();
     }*/
 
-    @Scheduled(fixedDelay = 20000)
+    //@Scheduled(fixedDelay = 20000)
     public void updateOrderPayStatus() {
         try {
             RestTemplate restTemplate = TemplateUtil.initSSLTemplate();
@@ -212,7 +213,7 @@ public class DoSnatchingSchedule {
             }
         }
     }*/
-    @Scheduled(fixedDelay = 60000)
+    //@Scheduled(fixedDelay = 90000)
     public void doUpdateAccountPool() {
         /*LocalDateTime now=LocalDateTime.now();
         int hour = now.getHour();
@@ -329,7 +330,7 @@ public class DoSnatchingSchedule {
 
 
     private void runNormalTask() {
-        List<DoSnatchInfo> allTaskForRun = ticketServiceImpl.getAllTaskForRun();
+        List<DoSnatchInfo> allTaskForRun = ObjectUtils.isEmpty(currentData)?ticketServiceImpl.getAllTaskForRun():currentData;
         if (ObjectUtils.isEmpty(allTaskForRun)) {
             return;
         }
@@ -352,6 +353,10 @@ public class DoSnatchingSchedule {
             }, pool);
         });
         pool.shutdown();
+    }
+    @Scheduled(cron = "0/3 * * * * ?")
+    public void getData(){
+        currentData=ticketServiceImpl.getAllTaskForRun();
     }
 
     private Boolean haveTicket(DoSnatchInfo doSnatchInfo) {
