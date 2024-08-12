@@ -212,7 +212,7 @@ public class DoSnatchingSchedule {
             }
         }
     }*/
-    @Scheduled(fixedDelay = 90000)
+    @Scheduled(fixedDelay = 65000)
     public void doUpdateAccountPool() {
         /*LocalDateTime now=LocalDateTime.now();
         int hour = now.getHour();
