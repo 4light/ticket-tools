@@ -155,7 +155,7 @@ public class ChnMuseumTicketServiceImpl implements DoSnatchTicketService {
             String session = doSnatchInfo.getSession();
             //获取所有信息
             //RestTemplate restTemplate = ObjectUtils.isEmpty(doSnatchInfo.getIp()) ? TemplateUtil.initSSLTemplate() : TemplateUtil.xieQuTemp(doSnatchInfo.getIp(), doSnatchInfo.getPort());
-            RestTemplate restTemplate = TemplateUtil.kuaiDaiLiTempChnMu();
+            RestTemplate restTemplate = TemplateUtil.kuaiDaiLiTemp();
             HttpHeaders headers = new HttpHeaders();
             String headerStr = doSnatchInfo.getHeaders();
             JSONObject headerJson = JSON.parseObject(headerStr);

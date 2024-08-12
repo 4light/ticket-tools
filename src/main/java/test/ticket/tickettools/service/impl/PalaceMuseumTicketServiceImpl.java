@@ -240,7 +240,7 @@ public class PalaceMuseumTicketServiceImpl implements DoSnatchTicketService {
         try {
             JSONObject currentParkFsyyDetail = new JSONObject();
             //RestTemplate restTemplate = TemplateUtil.xieQuTemp(doSnatchInfo.getIp(), doSnatchInfo.getPort());
-            RestTemplate restTemplate = TemplateUtil.kuaiDaiLiTempChnMu();
+            RestTemplate restTemplate = TemplateUtil.kuaiDaiLiTemp();
             HttpHeaders headers = new HttpHeaders();
             String headerStr = doSnatchInfo.getHeaders();
             JSONObject headerJson = JSON.parseObject(headerStr);
