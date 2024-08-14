@@ -71,6 +71,9 @@ public class DoSnatchingSchedule {
         if (ObjectUtils.isEmpty(taskForRun)) {
             return;
         }
+        if(!haveTicket(taskForRun.get(0))){
+            return;
+        }
         ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
         pool.setThreadNamePrefix("CSTMDataProcessor-");
         pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());//拒绝策略
