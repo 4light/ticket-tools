@@ -149,7 +149,7 @@ public class DoSnatchingSchedule {
         runNormalTask();
     }*/
 
-    @Scheduled(fixedDelay = 20000)
+    //@Scheduled(fixedDelay = 20000)
     public void updateOrderPayStatus() {
         try {
             RestTemplate restTemplate = TemplateUtil.initSSLTemplate();
@@ -215,7 +215,7 @@ public class DoSnatchingSchedule {
             }
         }
     }*/
-    @Scheduled(fixedDelay = 75000)
+    //@Scheduled(fixedDelay = 75000)
     public void doUpdateAccountPool() {
         /*LocalDateTime now=LocalDateTime.now();
         int hour = now.getHour();
